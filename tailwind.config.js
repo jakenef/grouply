@@ -8,9 +8,15 @@ module.exports = {
       colors: {
         primary: "#4f47e5",
         accent: "#e1e6fe",
-        muted: "#6d7281",
+        muted: {
+          DEFAULT: "#6d7281",
+          darker: "#4a5562",
+        },
         foreground: "#1f2836",
-        background: "#ffffff",
+        background: {
+          DEFAULT: "#ffffff",
+          darker: "#f8fbfb",
+        },
         border: "#f3f4f6",
         success: {
           DEFAULT: "#065e47",
