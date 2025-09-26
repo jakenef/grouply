@@ -1,0 +1,209 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../backend/generated/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ---------- Enums ----------
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum LocationPrecision {
+  city
+  point
+}
+
+// ---------- Core ----------
+model User {
+  id          String   @id @default(uuid())
+  authUserId  String   @unique // from your auth provider
+  role        UserRole @default(USER)
+  email       String   @unique
+  displayName String
+  avatarUrl   String?
+  joinedAt    DateTime @default(now())
+
+  // Coarse location (optional)
+  locationId String?
+  location   Location? @relation(fields: [locationId], references: [id])
+
+  // Relations
+  organizedEvents Event[] @relation("EventOrganizer")
+
+  interests       UserInterest[]
+  registrations   EventRegistration[]
+  chatMemberships ChatMember[]
+  chatMessages    ChatMessage[]
+  savedEvents     SavedEvent[]
+
+  @@index([locationId])
+}
+
+model Location {
+  id          String            @id @default(uuid())
+  // City-level (for users)
+  city        String?
+  region      String?
+  countryCode String?
+  // Point/venue (for events)
+  formatted   String? // full address / place line
+  lat         Float?
+  lng         Float?
+  precision   LocationPrecision
+
+  users  User[]
+  events Event[]
+
+  @@index([precision])
+  @@index([lat, lng])
+}
+
+// ---------- Interests (for basic similarity) ----------
+model Interest {
+  id    String         @id @default(uuid())
+  slug  String         @unique // "hiking"
+  label String
+  users UserInterest[]
+}
+
+model UserInterest {
+  userId     String
+  interestId String
+  weight     Float  @default(1)
+
+  user     User     @relation(fields: [userId], references: [id])
+  interest Interest @relation(fields: [interestId], references: [id])
+
+  @@id([userId, interestId])
+  @@index([interestId])
+}
+
+// ---------- Activities & Events ----------
+model Activity {
+  id     String  @id @default(uuid())
+  slug   String  @unique // canonical id: "pickup-basketball"
+  label  String
+  events Event[]
+}
+
+model Event {
+  id            String   @id @default(uuid())
+  name          String
+  desc          String?
+  startsAt      DateTime
+  endsAt        DateTime
+  isCancelled   Boolean  @default(false)
+  upperAgeLimit Int?
+  lowerAgeLimit Int?
+  eventUrl      String
+  imageUrls     String[]
+
+  // organizer relationship
+  organizerId String
+  organizer   User   @relation("EventOrganizer", fields: [organizerId], references: [id])
+
+  // One main activity
+  activityId String
+  activity   Activity @relation(fields: [activityId], references: [id])
+
+  // Precise venue
+  locationId String
+  location   Location @relation(fields: [locationId], references: [id])
+
+  // Attendees
+  maxAttendees Int?
+  isFull       Boolean             @default(false)
+  regs         EventRegistration[]
+  savedByUsers SavedEvent[]
+
+  // Chat (one channel per event)
+  chatChannel ChatChannel? @relation("EventChannel")
+
+  createdAt DateTime @default(now())
+
+  @@index([activityId])
+  @@index([startsAt])
+  @@index([locationId])
+}
+
+model EventRegistration {
+  userId     String
+  eventId    String
+  createdAt  DateTime  @default(now())
+  canceledAt DateTime?
+
+  user  User  @relation(fields: [userId], references: [id])
+  event Event @relation(fields: [eventId], references: [id])
+
+  @@id([userId, eventId])
+  @@index([eventId])
+}
+
+model SavedEvent {
+  userId  String
+  eventId String
+  savedAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id])
+  event Event @relation(fields: [eventId], references: [id])
+
+  @@id([userId, eventId])
+  @@index([userId])
+  @@index([eventId])
+}
+
+// ---------- Chat (lean) ----------
+model ChatChannel {
+  id        String   @id @default(uuid())
+  kind      String // "event" for now
+  name      String?
+  createdAt DateTime @default(now())
+
+  // 1:1 event ↔ channel
+  eventId String? @unique
+  event   Event?  @relation("EventChannel", fields: [eventId], references: [id])
+
+  messages ChatMessage[]
+  members  ChatMember[]
+}
+
+model ChatMember {
+  channelId String
+  userId    String
+  role      String   @default("member")
+  joinedAt  DateTime @default(now())
+
+  channel ChatChannel @relation(fields: [channelId], references: [id])
+  user    User        @relation(fields: [userId], references: [id])
+
+  @@id([channelId, userId])
+  @@index([userId])
+}
+
+model ChatMessage {
+  id        String    @id @default(uuid())
+  channelId String
+  authorId  String
+  body      String
+  createdAt DateTime  @default(now())
+  editedAt  DateTime?
+  deletedAt DateTime?
+
+  channel ChatChannel @relation(fields: [channelId], references: [id])
+  author  User        @relation(fields: [authorId], references: [id])
+
+  @@index([channelId, createdAt])
+}
