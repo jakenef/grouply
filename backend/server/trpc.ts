@@ -1,31 +1,49 @@
+import { createClient } from "@supabase/supabase-js";
 import { initTRPC, TRPCError } from "@trpc/server";
 import type { CreateExpressContextOptions } from "@trpc/server/adapters/express";
 import { prisma } from "./prisma";
 
+// Create Supabase client for server-side operations
+const supabaseAdmin = createClient(
+  process.env.EXPO_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!, // Server-side key, not anon key
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  }
+);
+
 // Create context with auth info
 export const createContext = async ({ req }: CreateExpressContextOptions) => {
-  // Extract auth token from Authorization header
   const token = req.headers.authorization?.replace("Bearer ", "");
 
   let user = null;
   if (token) {
     try {
-      // TODO: Validate JWT token with Supabase
-      // For now, we'll simulate by assuming token is the userId
-      // In real implementation, you'd decode/verify the JWT
-      const userId = token; // Placeholder - will be replaced with proper JWT validation
-      user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: {
-          id: true,
-          email: true,
-          displayName: true,
-          role: true,
-          authUserId: true,
-        },
-      });
+      // Verify the Supabase JWT token
+      const {
+        data: { user: supabaseUser },
+        error,
+      } = await supabaseAdmin.auth.getUser(token);
+
+      if (supabaseUser && !error) {
+        // Look up the user in your Prisma database
+        user = await prisma.user.findUnique({
+          where: { authUserId: supabaseUser.id },
+          select: {
+            id: true,
+            email: true,
+            displayName: true,
+            role: true,
+            authUserId: true,
+          },
+        });
+      }
     } catch (error) {
       // Invalid token - user stays null
+      console.log("Token validation failed:", error);
     }
   }
 
@@ -35,16 +53,13 @@ export const createContext = async ({ req }: CreateExpressContextOptions) => {
   };
 };
 
+// Rest of your tRPC setup stays the same...
 type Context = Awaited<ReturnType<typeof createContext>>;
 
 const t = initTRPC.context<Context>().create();
 
 export const router = t.router;
-
-// Public procedure (no auth required)
 export const publicProcedure = t.procedure;
-
-// Protected procedure (auth required)
 export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
   if (!ctx.user) {
     throw new TRPCError({

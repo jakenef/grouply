@@ -1,10 +1,47 @@
+import { useAuth } from "@/lib/auth";
+import { trpc } from "@/lib/trpc";
 import React, { useState } from "react";
-import { Text, TextInput, View } from "react-native";
+import { Alert, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import GrouplyButton from "../../components/GrouplyButton";
 
 const Login = () => {
   const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [step, setStep] = useState<"email" | "otp">("email");
+  const { sendOTP, verifyOTP } = useAuth();
+
+  // Test calling a protected endpoint
+  const { data: profile, error } = trpc.users.getMyProfile.useQuery(undefined, {
+    enabled: false, // Don't auto-run
+  });
+
+  const handleSendOTP = async () => {
+    const result = await sendOTP(email);
+    if (result.error) {
+      Alert.alert("Error", result.error.message);
+    } else {
+      Alert.alert("Success", "Check your email for the OTP code!");
+      setStep("otp");
+    }
+  };
+
+  const handleVerifyOTP = async () => {
+    const result = await verifyOTP(email, otp);
+    if (result.error) {
+      Alert.alert("Error", result.error.message);
+    } else {
+      Alert.alert("Success", "Logged in!");
+    }
+  };
+
+  const {
+    data: users,
+    isLoading,
+    error: PublicError,
+  } = trpc.users.getPublicProfiles.useQuery({
+    limit: 4,
+  });
 
   return (
     <SafeAreaView className="flex-1 bg-background-darker">
@@ -15,7 +52,8 @@ const Login = () => {
 
         {/* Welcome back header */}
         <Text className="text-3xl font-bold text-foreground mt-12">
-          Welcome Back!
+          Welcome Back! {isLoading ? "loading..." : ""}
+          {users && users.length}
         </Text>
 
         {/* Login subheader */}
@@ -44,7 +82,7 @@ const Login = () => {
             variant="primary"
             size="large"
             fullWidth
-            onPress={() => console.log("Login pressed")}
+            onPress={handleSendOTP}
           />
         </View>
         <View className="w-full mt-auto flex-row justify-center items-center">

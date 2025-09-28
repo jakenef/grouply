@@ -1,9 +1,9 @@
+import { useAuth } from "@/lib/auth";
 import { Redirect } from "expo-router";
 import { ActivityIndicator, Text, View } from "react-native";
-import { useAuth } from "./_layout";
 
 export default function Index() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { session, isLoading } = useAuth();
 
   // While checking auth status, show loading UI
   if (isLoading) {
@@ -16,8 +16,8 @@ export default function Index() {
   }
 
   // After loading, redirect based on authentication status
-  if (isAuthenticated) {
-    return <Redirect href="/" />;
+  if (session) {
+    return <Redirect href="/(app)/home/Home" />;
   } else {
     return <Redirect href="/(auth)/LandingPage" />;
   }
