@@ -21,29 +21,29 @@ const Login = () => {
 
         {/* Welcome back header */}
         <Text className="text-3xl font-bold text-foreground mt-12">
-          Welcome Back!
+          Welcome!
         </Text>
 
         {/* Login subheader */}
         <Text className="text-base text-muted mt-2">
-          Login to continue discovering events
+          Enter your email to discover events
         </Text>
 
         {/* Email/OTP flow component */}
         <ConfirmEmail
-          onSendOTP={sendLoginOTP}
+          onSendOTP={sendLoginOTP} // TODO: make this signup
           onVerifyOTP={verifyOTP}
           onSuccess={handleSuccess}
-          sendButtonLabel="Log In"
+          sendButtonLabel="Verify Email"
         />
 
         <View className="w-full mt-auto flex-row justify-center items-center">
-          <Text className="text-s text-muted">Don't have an account? </Text>
+          <Text className="text-s text-muted">Already have an account? </Text>
           <Text
             className="text-s text-primary font-semibold"
             onPress={() => console.log("Navigate to register")}
           >
-            Sign Up
+            Log In
           </Text>
         </View>
       </View>

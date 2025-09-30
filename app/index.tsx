@@ -17,7 +17,7 @@ export default function Index() {
 
   // After loading, redirect based on authentication status
   if (session) {
-    return <Redirect href="/(app)/home/Home" />;
+    return <Redirect href="/(app)/Home" />;
   } else {
     return <Redirect href="/(auth)/LandingPage" />;
   }

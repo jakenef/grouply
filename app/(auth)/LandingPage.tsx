@@ -38,7 +38,7 @@ const LandingPage = () => {
             size="large"
             fullWidth
             onPress={() => {
-              /* We'll implement this when register screen exists */
+              router.push("/SignupEmail");
             }}
           />
         </View>

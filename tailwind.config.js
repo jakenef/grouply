@@ -1,3 +1,5 @@
+const { colors } = require("./lib/theme.ts");
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   // NOTE: Update this to include the paths to all files that contain Nativewind classes.
@@ -5,32 +7,7 @@ module.exports = {
   presets: [require("nativewind/preset")],
   theme: {
     extend: {
-      colors: {
-        primary: "#4f47e5",
-        accent: "#e1e6fe",
-        muted: {
-          DEFAULT: "#6d7281",
-          darker: "#4a5562",
-        },
-        foreground: "#1f2836",
-        background: {
-          DEFAULT: "#ffffff",
-          darker: "#f8fbfb",
-        },
-        border: "#f3f4f6",
-        success: {
-          DEFAULT: "#065e47",
-          accent: "#d1fae6",
-        },
-        warning: {
-          DEFAULT: "#93410f",
-          accent: "#fef3c7",
-        },
-        danger: {
-          DEFAULT: "#b91d1a",
-          accent: "#fff3f2",
-        },
-      },
+      colors: colors,
     },
   },
   plugins: [],
