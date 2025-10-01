@@ -6,10 +6,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import ConfirmEmail from "../../components/ConfirmEmail";
 
 const Login = () => {
-  const { sendLoginOTP, verifyOTP } = useAuth();
+  const { sendSignUpOTP, verifyOTP } = useAuth();
 
   const handleSuccess = () => {
-    router.replace("/(app)/Home");
+    router.replace("/(auth)/AboutYouSetup");
   };
 
   return (
@@ -31,7 +31,7 @@ const Login = () => {
 
         {/* Email/OTP flow component */}
         <ConfirmEmail
-          onSendOTP={sendLoginOTP} // TODO: make this signup
+          onSendOTP={sendSignUpOTP}
           onVerifyOTP={verifyOTP}
           onSuccess={handleSuccess}
           sendButtonLabel="Verify Email"
@@ -41,7 +41,7 @@ const Login = () => {
           <Text className="text-s text-muted">Already have an account? </Text>
           <Text
             className="text-s text-primary font-semibold"
-            onPress={() => console.log("Navigate to register")}
+            onPress={() => router.replace("/(auth)/LoginEmail")}
           >
             Log In
           </Text>

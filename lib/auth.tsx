@@ -97,6 +97,7 @@ interface AuthContextType {
   user: Session["user"] | null;
   isLoading: boolean;
   sendLoginOTP: (email: string) => Promise<{ data?: any; error?: any }>;
+  sendSignUpOTP: (email: string) => Promise<{ data?: any; error?: any }>;
   verifyOTP: (
     email: string,
     token: string
@@ -110,6 +111,7 @@ export const AuthContext = createContext<AuthContextType>({
   user: null,
   isLoading: true,
   sendLoginOTP: async () => ({}),
+  sendSignUpOTP: async () => ({}),
   verifyOTP: async () => ({}),
   signOut: async () => {},
 });
@@ -160,6 +162,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     });
   };
 
+  const sendSignUpOTP = async (email: string) => {
+    return await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: true,
+      },
+    });
+  };
+
   // Verify OTP code
   const verifyOTP = async (email: string, token: string) => {
     const result = await supabase.auth.verifyOtp({
@@ -180,6 +191,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     user: session?.user ?? null,
     isLoading,
     sendLoginOTP,
+    sendSignUpOTP,
     verifyOTP,
     signOut,
   };

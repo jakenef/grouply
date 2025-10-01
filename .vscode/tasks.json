@@ -46,8 +46,8 @@
     {
       "label": "Open Working Terminal",
       "type": "shell",
-      "command": "echo",
-      "args": ["Ready to work! 🚀"],
+      "command": "zsh",
+      "args": ["-c", "echo 'Ready to work! 🚀' && exec zsh"],
       "group": "build",
       "presentation": {
         "echo": true,
@@ -57,7 +57,8 @@
         "showReuseMessage": false,
         "clear": true,
         "group": "working"
-      }
+      },
+      "isBackground": true
     },
     {
       "label": "Start All Development Servers",

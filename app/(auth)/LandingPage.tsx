@@ -41,6 +41,15 @@ const LandingPage = () => {
               router.push("/SignupEmail");
             }}
           />
+          <GrouplyButton
+            label="Skip to what i'm working on"
+            variant="outline"
+            size="large"
+            fullWidth
+            onPress={() => {
+              router.push("/AboutYouSetup");
+            }}
+          />
         </View>
       </View>
     </SafeAreaView>

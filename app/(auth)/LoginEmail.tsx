@@ -41,7 +41,7 @@ const Login = () => {
           <Text className="text-s text-muted">Don't have an account? </Text>
           <Text
             className="text-s text-primary font-semibold"
-            onPress={() => console.log("Navigate to register")}
+            onPress={() => router.replace("/(auth)/SignupEmail")}
           >
             Sign Up
           </Text>
