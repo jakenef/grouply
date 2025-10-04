@@ -8,7 +8,7 @@ export const colors = {
   foreground: "#1f2836",
   background: {
     DEFAULT: "#ffffff",
-    darker: "#f8fbfb",
+    darker: "#f5f5f5",
   },
   border: "#f3f4f6",
   success: {

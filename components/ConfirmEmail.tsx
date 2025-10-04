@@ -1,8 +1,9 @@
 import { AuthErrorType, getAuthErrorMessage, parseAuthError } from "@/lib/auth";
 import { colors } from "@/lib/theme";
 import React, { useState } from "react";
-import { Alert, Pressable, Text, TextInput, View } from "react-native";
+import { Alert, Pressable, Text, View } from "react-native";
 import { OtpInput } from "react-native-otp-entry";
+import FormField from "./FormField";
 import GrouplyButton from "./GrouplyButton";
 
 interface ConfirmEmailProps {
@@ -73,15 +74,26 @@ const ConfirmEmail: React.FC<ConfirmEmailProps> = ({
       <>
         {/* Email input field */}
         <View className="w-full mt-12">
-          <Text className="text-m text-muted-darker mb-2 ml-1">Email</Text>
-          <TextInput
-            className="w-full h-14 bg-white rounded-lg px-4 text-foreground border-border border"
+          <FormField
+            label="Email"
+            labelClassName="text-m text-muted-darker mb-2 ml-1"
+            containerClassName=""
             placeholder="you@email.com"
             placeholderTextColor="#9CA3AF"
             keyboardType="email-address"
             autoCapitalize="none"
             value={email}
             onChangeText={setEmail}
+            style={{
+              height: 56, // Equivalent to h-14
+              borderRadius: 8, // Equivalent to rounded-lg
+              width: "100%",
+              paddingHorizontal: 16,
+              borderWidth: 1,
+              borderColor: colors.border,
+              backgroundColor: "white",
+              color: colors.foreground,
+            }}
           />
         </View>
 
