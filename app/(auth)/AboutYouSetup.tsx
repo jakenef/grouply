@@ -1,12 +1,19 @@
+import CoarseLocationPicker, {
+  LocationData,
+} from "@/components/CoarseLocationPicker";
 import FormField from "@/components/FormField";
 import ProfileImagePicker from "@/components/ProfileImagePicker";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/lib/supabase";
 import { colors } from "@/lib/theme";
+import { trpc } from "@/lib/trpc";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { format } from "date-fns";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
+  Alert,
   Platform,
   Pressable,
   ScrollView,
@@ -20,14 +27,100 @@ import GrouplyButton from "../../components/GrouplyButton";
 type Gender = "Male" | "Female" | "Other" | null;
 
 const AboutYouSetup = () => {
+  const { user, session } = useAuth(); // Get authentication context
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
   const [birthday, setBirthday] = useState("");
   const [gender, setGender] = useState<Gender>(null);
-  const [location, setLocation] = useState("");
+  const [location, setLocation] = useState<LocationData | null>(null);
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<{
+    displayName?: string;
+    birthday?: string;
+    gender?: string;
+    location?: string;
+  }>({});
+
+  // If user is not authenticated, redirect to login
+  useEffect(() => {
+    if (!session && !isSubmitting) {
+      Alert.alert(
+        "Authentication Required",
+        "You must be logged in to complete your profile.",
+        [
+          {
+            text: "OK",
+            onPress: () => router.replace("/(auth)/LandingPage"),
+          },
+        ]
+      );
+    }
+  }, [session]);
+
+  // Debug auth status and try to refresh session on component mount
+  useEffect(() => {
+    const checkAndRefreshSession = async () => {
+      if (__DEV__) {
+        debugAuthStatus();
+      }
+
+      // Try to refresh the session automatically
+      const { error } = await supabase.auth.refreshSession();
+      if (error && __DEV__) {
+        console.error("Failed to refresh session:", error);
+      }
+    };
+
+    checkAndRefreshSession();
+  }, []);
+
+  // Set up tRPC mutation
+  const createUserMutation = trpc.users.createUserAndUserProfile.useMutation();
+
+  // Debug function to check auth status
+  const debugAuthStatus = async () => {
+    const { data } = await supabase.auth.getSession();
+    console.log("Current auth session:", data.session ? "Active" : "None");
+    if (data.session) {
+      console.log(
+        "Session expires at:",
+        new Date(data.session.expires_at! * 1000)
+      );
+      console.log("User ID:", data.session.user.id);
+      console.log(
+        "Access token:",
+        data.session.access_token.substring(0, 20) + "..."
+      );
+
+      // Make a direct fetch to test the token
+      try {
+        const response = await fetch("http://localhost:3001/health", {
+          headers: {
+            Authorization: `Bearer ${data.session.access_token}`,
+          },
+        });
+        console.log("Health check response:", await response.json());
+      } catch (error) {
+        console.error("Health check failed:", error);
+      }
+    } else {
+      console.log("No active session found");
+
+      // Try to refresh the session
+      const { data: refreshData, error } = await supabase.auth.refreshSession();
+      if (error) {
+        console.error("Session refresh failed:", error);
+      } else {
+        console.log(
+          "Session refresh result:",
+          refreshData.session ? "Success" : "Failed"
+        );
+      }
+    }
+  };
 
   const onBirthdayChange = (event: any, selectedDate?: Date) => {
     // If user canceled the picker on iOS
@@ -54,26 +147,111 @@ const AboutYouSetup = () => {
     setShowDatePicker((prevState) => !prevState);
   };
 
-  const handleLocationPress = () => {
-    // TODO: Implement location picker/search
-    console.log("Location picker would open here");
+  const handleLocationChange = (locationData: LocationData | null) => {
+    if (locationData) {
+      // Set the formatted location name to the state
+      setLocation(locationData);
+      console.log("Selected location:", locationData);
+    } else {
+      // Clear the location if null is passed
+      setLocation(null);
+      console.log("Location cleared or not selected");
+    }
   };
 
-  const handleSaveAndContinue = () => {
-    // TODO: Implement tRPC mutation to save user data
-    console.log("Saving user data:", {
-      displayName,
-      bio,
-      birthday,
-      gender,
-      location,
-      avatarUri,
-    });
+  const validateForm = () => {
+    const newErrors: {
+      displayName?: string;
+      birthday?: string;
+      gender?: string;
+      location?: string;
+    } = {};
 
-    // Navigate to preferences setup
-    router.push("/(auth)/PreferencesSetup");
+    if (!displayName.trim()) {
+      newErrors.displayName = "Display name is required";
+    }
+
+    if (!birthday) {
+      newErrors.birthday = "Birthday is required";
+    }
+
+    if (!gender) {
+      newErrors.gender = "Please select your gender";
+    }
+
+    if (!location) {
+      newErrors.location = "Location is required";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
+  const handleSaveAndContinue = async () => {
+    // Check if user is authenticated
+    if (!session || !user) {
+      Alert.alert(
+        "Authentication Required",
+        "You must be logged in to complete your profile.",
+        [
+          {
+            text: "Go to Login",
+            onPress: () => router.replace("/(auth)/LandingPage"),
+          },
+        ]
+      );
+      return;
+    }
+
+    // Validate form
+    if (!validateForm()) {
+      Alert.alert("Missing Information", "Please fill in all required fields.");
+      return;
+    }
+
+    // Prevent multiple submissions
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+
+    try {
+      // Call the mutation with the form data
+      await createUserMutation.mutateAsync({
+        displayName,
+        birthday: date, // Send the actual Date object, not the formatted string
+        gender: gender as "Male" | "Female" | "Other", // Type assertion since we validated gender is not null
+        location: location as LocationData, // Type assertion since we validated location is not null
+        bio: bio || undefined, // Only send if not empty
+      });
+
+      // Navigate to preferences setup on success
+      router.push("/(auth)/PreferencesSetup");
+    } catch (error: any) {
+      console.error("Error creating profile:", error);
+
+      // Check if it's an authentication error
+      if (error.message && error.message.includes("must be logged in")) {
+        Alert.alert(
+          "Session Expired",
+          "Your login session has expired. Please log in again.",
+          [
+            {
+              text: "Go to Login",
+              onPress: () => router.replace("/(auth)/LandingPage"),
+            },
+          ]
+        );
+      } else {
+        // Generic error
+        Alert.alert(
+          "Error",
+          error.message || "Failed to create your profile. Please try again."
+        );
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   const genderOptions: Gender[] = ["Male", "Female", "Other"];
 
   // Handle outside touch to dismiss date picker
@@ -109,6 +287,7 @@ const AboutYouSetup = () => {
             value={displayName}
             onChangeText={setDisplayName}
             placeholder="What should people call you?"
+            error={errors.displayName}
           />
 
           {/* Birthday */}
@@ -117,7 +296,9 @@ const AboutYouSetup = () => {
               Birthday
             </Text>
             <Pressable
-              className="bg-white border border-border rounded-xl px-4 py-3 flex-row items-center justify-between"
+              className={`bg-white border rounded-xl px-4 py-3 flex-row items-center justify-between ${
+                errors.birthday ? "border-danger" : "border-border"
+              }`}
               onPress={toggleDatePicker}
             >
               <Text
@@ -149,6 +330,11 @@ const AboutYouSetup = () => {
                 } // Can't select dates more than 100 years ago
               />
             )}
+            {errors.birthday && (
+              <Text className="text-sm text-danger mt-1">
+                {errors.birthday}
+              </Text>
+            )}
           </View>
 
           {/* Gender */}
@@ -177,31 +363,17 @@ const AboutYouSetup = () => {
                 </Pressable>
               ))}
             </View>
+            {errors.gender && (
+              <Text className="text-sm text-danger mt-1">{errors.gender}</Text>
+            )}
           </View>
 
           {/* Location */}
-          <View className="mb-6">
-            <Text className="text-base font-semibold text-foreground mb-2">
-              Location
-            </Text>
-            <Pressable
-              onPress={handleLocationPress}
-              className="bg-white border border-border rounded-xl px-4 py-3 flex-row items-center justify-between"
-            >
-              <Text
-                className={`text-base ${
-                  location ? "text-foreground" : "text-muted"
-                }`}
-              >
-                {location || "Add your city"}
-              </Text>
-              <Ionicons
-                name="location-outline"
-                size={20}
-                color={colors.muted.DEFAULT}
-              />
-            </Pressable>
-          </View>
+          <CoarseLocationPicker
+            onChange={handleLocationChange}
+            placeholder={location ? location.formatted : undefined}
+            error={errors.location}
+          />
 
           {/* Bio (Optional) */}
           <FormField
@@ -218,13 +390,52 @@ const AboutYouSetup = () => {
           {/* Save and Continue Button */}
           <View className="mb-8">
             <GrouplyButton
-              label="Save & Continue"
+              label={isSubmitting ? "Creating Profile..." : "Save & Continue"}
               variant="primary"
               size="large"
               fullWidth
               onPress={handleSaveAndContinue}
-              disabled={!displayName || !birthday || !gender || !location}
+              disabled={
+                !displayName ||
+                !birthday ||
+                !gender ||
+                !location ||
+                isSubmitting
+              }
+              isLoading={isSubmitting}
             />
+
+            {/* Debug buttons for development */}
+            {__DEV__ && (
+              <View className="mt-4 gap-2">
+                <GrouplyButton
+                  label="Debug Auth"
+                  variant="outline"
+                  size="small"
+                  fullWidth
+                  onPress={debugAuthStatus}
+                />
+                <GrouplyButton
+                  label="Show Auth Status"
+                  variant="outline"
+                  size="small"
+                  fullWidth
+                  onPress={async () => {
+                    const { data } = await supabase.auth.getSession();
+                    Alert.alert(
+                      "Auth Status",
+                      data.session
+                        ? `Logged in as: ${
+                            data.session.user.email
+                          }\nExpires: ${new Date(
+                            data.session.expires_at! * 1000
+                          ).toLocaleTimeString()}`
+                        : "Not logged in"
+                    );
+                  }}
+                />
+              </View>
+            )}
           </View>
         </ScrollView>
       </TouchableWithoutFeedback>

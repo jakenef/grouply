@@ -20,18 +20,23 @@ export const createContext = async ({ req }: CreateExpressContextOptions) => {
   const token = req.headers.authorization?.replace("Bearer ", "");
 
   let user = null;
+  let supabaseUser = null;
+  
   if (token) {
     try {
       // Verify the Supabase JWT token
       const {
-        data: { user: supabaseUser },
+        data: { user: authUser },
         error,
       } = await supabaseAdmin.auth.getUser(token);
 
-      if (supabaseUser && !error) {
+      if (authUser && !error) {
+        // Store the Supabase user info
+        supabaseUser = authUser;
+        
         // Look up the user in your Prisma database
         user = await prisma.user.findUnique({
-          where: { authUserId: supabaseUser.id },
+          where: { authUserId: authUser.id },
           select: {
             id: true,
             email: true,
@@ -50,6 +55,9 @@ export const createContext = async ({ req }: CreateExpressContextOptions) => {
   return {
     prisma,
     user, // Current authenticated user (or null)
+    supabaseUser, // Supabase auth user (or null)
+    req, // Include the request object for debugging
+    token, // Include the token for debugging
   };
 };
 
@@ -60,8 +68,37 @@ const t = initTRPC.context<Context>().create();
 
 export const router = t.router;
 export const publicProcedure = t.procedure;
+
+// Protected procedure requires a fully registered user in the database
 export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
   if (!ctx.user) {
+    // Get more information about why the auth failed
+    console.error("Auth failed:", {
+      hasToken: !!ctx.token,
+      hasSupabaseUser: !!ctx.supabaseUser,
+      tokenPrefix: ctx.token ? ctx.token.substring(0, 10) + "..." : "none",
+    });
+    
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: ctx.token 
+        ? "Valid authentication token required. The provided token may be expired or invalid." 
+        : "No authentication token provided. You must be logged in to access this endpoint.",
+    });
+  }
+  return next({
+    ctx: {
+      ...ctx,
+      user: ctx.user,
+    },
+  });
+});
+
+// Auth procedure only requires a valid Supabase token but not necessarily a DB user
+// This is used for endpoints like user registration
+export const authProcedure = t.procedure.use(({ ctx, next }) => {
+  if (!ctx.supabaseUser) {
+    console.error("Auth failed - no Supabase user");
     throw new TRPCError({
       code: "UNAUTHORIZED",
       message: "You must be logged in to access this endpoint",
@@ -70,7 +107,7 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
   return next({
     ctx: {
       ...ctx,
-      user: ctx.user,
+      supabaseUser: ctx.supabaseUser,
     },
   });
 });

@@ -68,6 +68,12 @@ export class GooglePlacesApi {
       url
     );
 
+    // Handle "ZERO_RESULTS" as a normal case - just return empty predictions
+    if (response.status === "ZERO_RESULTS") {
+      return [];
+    }
+
+    // Other non-OK statuses are still errors
     if (response.status !== "OK") {
       throw new ApiError(`Google Places API Error: ${response.status}`, 500);
     }
@@ -75,11 +81,17 @@ export class GooglePlacesApi {
     return response.predictions;
   }
 
-  async getPlaceDetails(placeId: string): Promise<PlaceDetails> {
+  async getPlaceDetails(placeId: string): Promise<PlaceDetails | null> {
     const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,geometry,address_component&key=${this.apiKey}`;
 
     const response = await fetchWithErrorHandling<PlaceDetailsResponse>(url);
 
+    // Handle "ZERO_RESULTS" as a normal case - return null
+    if (response.status === "ZERO_RESULTS") {
+      return null;
+    }
+
+    // Other non-OK statuses are still errors
     if (response.status !== "OK") {
       throw new ApiError(`Google Places API Error: ${response.status}`, 500);
     }
@@ -92,6 +104,12 @@ export class GooglePlacesApi {
 
     const response = await fetchWithErrorHandling<GeocodeResponse>(url);
 
+    // Handle "ZERO_RESULTS" as a normal case - return response with empty results
+    if (response.status === "ZERO_RESULTS") {
+      return { ...response, results: [] };
+    }
+
+    // Other non-OK statuses are still errors
     if (response.status !== "OK") {
       throw new ApiError(`Google Geocoding API Error: ${response.status}`, 500);
     }
@@ -102,7 +120,20 @@ export class GooglePlacesApi {
   /**
    * Extract location data from place details
    */
-  extractLocationData(placeDetails: PlaceDetails) {
+  extractLocationData(placeDetails: PlaceDetails | null) {
+    // If no place details provided, return empty/default data
+    if (!placeDetails) {
+      return {
+        city: null,
+        region: null,
+        country: null,
+        countryCode: null,
+        lat: null,
+        lng: null,
+        formatted: "",
+      };
+    }
+
     const addressComponents = placeDetails.address_components;
     let city, region, country, countryCode;
 

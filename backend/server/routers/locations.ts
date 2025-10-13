@@ -46,12 +46,27 @@ export const locationsRouter = router({
       try {
         const { placeId } = input;
         const placeDetails = await googlePlacesApi.getPlaceDetails(placeId);
+
+        // If no place details found, return appropriate response
+        if (!placeDetails) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "No location found for this place ID",
+          });
+        }
+
         return {
           placeId,
           name: placeDetails.name,
           ...googlePlacesApi.extractLocationData(placeDetails),
         };
       } catch (error) {
+        // If it's already a TRPC error, re-throw it
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+
+        // Otherwise log and throw a generic error
         console.error("Error getting place details:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
@@ -86,11 +101,24 @@ export const locationsRouter = router({
         // Use the place ID to get detailed information
         const placeDetails = await googlePlacesApi.getPlaceDetails(placeId);
 
+        // If no place details found, return appropriate response
+        if (!placeDetails) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "No location details found for these coordinates",
+          });
+        }
+
         return {
           placeId,
           ...googlePlacesApi.extractLocationData(placeDetails),
         };
       } catch (error) {
+        // If it's already a TRPC error, re-throw it
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+
         console.error("Error in reverse geocoding:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",

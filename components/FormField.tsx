@@ -1,4 +1,4 @@
-import { colors } from "@/lib/theme";
+import { colors, textInputStyles, fontSizes } from "@/lib/theme";
 import React, { ReactNode } from "react";
 import { Text, TextInput, TextInputProps, View } from "react-native";
 
@@ -64,18 +64,8 @@ export const FormField: React.FC<FormFieldProps> = ({
         <TextInput
           placeholderTextColor={placeholderTextColor}
           style={[
-            {
-              backgroundColor: "white",
-              borderWidth: 1,
-              borderColor: error ? colors.danger.DEFAULT : colors.border,
-              borderRadius: 12,
-              paddingHorizontal: 16,
-              height: textInputProps.multiline ? undefined : 45,
-              fontSize: 16,
-              color: colors.foreground,
-              textAlignVertical: textInputProps.multiline ? "top" : "center",
-              paddingVertical: textInputProps.multiline ? 12 : undefined,
-            },
+            textInputProps.multiline ? textInputStyles.multiline : textInputStyles.standard,
+            error ? textInputStyles.error : null,
             style,
           ]}
           {...textInputProps}

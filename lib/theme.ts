@@ -37,3 +37,52 @@ export const {
   warning,
   danger,
 } = colors;
+
+/**
+ * Standard font sizes for the application
+ */
+export const fontSizes = {
+  xs: 10,
+  sm: 12,
+  base: 14,
+  lg: 18,
+  xl: 20,
+  xxl: 24,
+};
+
+/**
+ * Standardized text input styles for consistent appearance across the app
+ */
+/**
+ * Properly typed text input styles with correct TypeScript types
+ * for textAlignVertical and other properties
+ */
+export const textInputStyles = {
+  standard: {
+    height: 45,
+    fontSize: fontSizes.base,
+    color: colors.foreground,
+    backgroundColor: "white",
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    textAlignVertical: "center" as const, // Type assertion for strict typing
+  },
+  // Add variants as needed (e.g., multiline, search, etc.)
+  multiline: {
+    minHeight: 100,
+    fontSize: fontSizes.base,
+    color: colors.foreground,
+    backgroundColor: "white",
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    textAlignVertical: "top" as const, // Type assertion for strict typing
+  },
+  error: {
+    borderColor: colors.danger.DEFAULT,
+  },
+};
