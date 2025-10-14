@@ -4,7 +4,6 @@ import CoarseLocationPicker, {
 import FormField from "@/components/FormField";
 import ProfileImagePicker from "@/components/ProfileImagePicker";
 import { useAuth } from "@/lib/auth";
-import { supabase } from "@/lib/supabase";
 import uploadImageUri from "@/lib/storage";
 import { colors } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";
@@ -61,67 +60,8 @@ const AboutYouSetup = () => {
     }
   }, [session]);
 
-  // Debug auth status and try to refresh session on component mount
-  useEffect(() => {
-    const checkAndRefreshSession = async () => {
-      if (__DEV__) {
-        debugAuthStatus();
-      }
-
-      // Try to refresh the session automatically
-      const { error } = await supabase.auth.refreshSession();
-      if (error && __DEV__) {
-        console.error("Failed to refresh session:", error);
-      }
-    };
-
-    checkAndRefreshSession();
-  }, []);
-
   // Set up tRPC mutation
   const createUserMutation = trpc.users.createUserAndUserProfile.useMutation();
-
-  // Debug function to check auth status
-  const debugAuthStatus = async () => {
-    const { data } = await supabase.auth.getSession();
-    console.log("Current auth session:", data.session ? "Active" : "None");
-    if (data.session) {
-      console.log(
-        "Session expires at:",
-        new Date(data.session.expires_at! * 1000)
-      );
-      console.log("User ID:", data.session.user.id);
-      console.log(
-        "Access token:",
-        data.session.access_token.substring(0, 20) + "..."
-      );
-
-      // Make a direct fetch to test the token
-      try {
-        const response = await fetch("http://localhost:3001/health", {
-          headers: {
-            Authorization: `Bearer ${data.session.access_token}`,
-          },
-        });
-        console.log("Health check response:", await response.json());
-      } catch (error) {
-        console.error("Health check failed:", error);
-      }
-    } else {
-      console.log("No active session found");
-
-      // Try to refresh the session
-      const { data: refreshData, error } = await supabase.auth.refreshSession();
-      if (error) {
-        console.error("Session refresh failed:", error);
-      } else {
-        console.log(
-          "Session refresh result:",
-          refreshData.session ? "Success" : "Failed"
-        );
-      }
-    }
-  };
 
   const onBirthdayChange = (event: any, selectedDate?: Date) => {
     // If user canceled the picker on iOS
@@ -228,7 +168,10 @@ const AboutYouSetup = () => {
           avatarUrlToSend = publicUrl;
         } catch (err: any) {
           console.error("Error uploading avatar:", err);
-          Alert.alert("Upload error", err?.message || "Failed to upload avatar. Please try again.");
+          Alert.alert(
+            "Upload error",
+            err?.message || "Failed to upload avatar. Please try again."
+          );
           setIsSubmitting(false);
           return;
         }
@@ -424,38 +367,6 @@ const AboutYouSetup = () => {
               }
               isLoading={isSubmitting}
             />
-
-            {/* Debug buttons for development */}
-            {__DEV__ && (
-              <View className="mt-4 gap-2">
-                <GrouplyButton
-                  label="Debug Auth"
-                  variant="outline"
-                  size="small"
-                  fullWidth
-                  onPress={debugAuthStatus}
-                />
-                <GrouplyButton
-                  label="Show Auth Status"
-                  variant="outline"
-                  size="small"
-                  fullWidth
-                  onPress={async () => {
-                    const { data } = await supabase.auth.getSession();
-                    Alert.alert(
-                      "Auth Status",
-                      data.session
-                        ? `Logged in as: ${
-                            data.session.user.email
-                          }\nExpires: ${new Date(
-                            data.session.expires_at! * 1000
-                          ).toLocaleTimeString()}`
-                        : "Not logged in"
-                    );
-                  }}
-                />
-              </View>
-            )}
           </View>
         </ScrollView>
       </TouchableWithoutFeedback>

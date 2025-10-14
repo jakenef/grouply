@@ -47,7 +47,7 @@ const LandingPage = () => {
             size="large"
             fullWidth
             onPress={() => {
-              router.push("/AboutYouSetup");
+              router.push("/PreferencesSetup");
             }}
           />
         </View>
