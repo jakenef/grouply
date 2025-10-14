@@ -5,6 +5,7 @@ import FormField from "@/components/FormField";
 import ProfileImagePicker from "@/components/ProfileImagePicker";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
+import uploadImageUri from "@/lib/storage";
 import { colors } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";
 import { Ionicons } from "@expo/vector-icons";
@@ -215,17 +216,36 @@ const AboutYouSetup = () => {
     setIsSubmitting(true);
 
     try {
-      // Call the mutation with the form data
+      // If the user selected an avatar, upload it first and get a public URL
+      let avatarUrlToSend: string | undefined = undefined;
+      if (avatarUri) {
+        try {
+          const { publicUrl } = await uploadImageUri(avatarUri, {
+            bucket: "avatars",
+            userId: user?.id,
+            maxSizeBytes: 1.5 * 1024 * 1024,
+          });
+          avatarUrlToSend = publicUrl;
+        } catch (err: any) {
+          console.error("Error uploading avatar:", err);
+          Alert.alert("Upload error", err?.message || "Failed to upload avatar. Please try again.");
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      // Call the mutation with the form data (include avatarUrl if present)
       await createUserMutation.mutateAsync({
         displayName,
         birthday: date, // Send the actual Date object, not the formatted string
         gender: gender as "Male" | "Female" | "Other", // Type assertion since we validated gender is not null
         location: location as LocationData, // Type assertion since we validated location is not null
         bio: bio || undefined, // Only send if not empty
+        avatarUrl: avatarUrlToSend,
       });
 
       // Navigate to preferences setup on success
-      router.push("/(auth)/PreferencesSetup");
+      router.replace("/(auth)/PreferencesSetup");
     } catch (error: any) {
       console.error("Error creating profile:", error);
 

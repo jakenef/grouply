@@ -17,6 +17,7 @@ export const usersRouter = router({
         gender: genderEnum,
         location: locationDataSchema,
         bio: z.string().optional(),
+        avatarUrl: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -78,6 +79,7 @@ export const usersRouter = router({
               email: ctx.supabaseUser.email || "",
               displayName: input.displayName,
               locationId: locationId,
+              avatarUrl: input.avatarUrl,
             },
           });
 
