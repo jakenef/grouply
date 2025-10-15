@@ -111,10 +111,13 @@ model Location {
 
 // ---------- Traits (extensible personality dims) ----------
 model Trait {
-  id    String  @id @default(uuid())
-  slug  String  @unique // e.g. "introversion", "risk-tolerance"
-  label String // human-readable name
-  desc  String? // optional: explain to users/admins
+  id         String   @id @default(uuid())
+  slug       String   @unique // e.g. "introversion", "risk-tolerance"
+  label      String // human-readable name
+  desc       String? // optional: explain to users/admins
+  isApproved Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   UserTraitScore UserTraitScore[]
 }
@@ -133,11 +136,12 @@ model UserTraitScore {
 
 // ---------- Interests (user-side preferences) ----------
 model Interest {
-  id        String   @id @default(uuid())
-  slug      String   @unique // "hiking"
-  label     String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(uuid())
+  slug       String   @unique // "hiking"
+  label      String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  isApproved Boolean  @default(false)
 
   users UserInterest[]
 }
@@ -156,9 +160,10 @@ model UserInterest {
 
 // ---------- Activities (supply taxonomy) ----------
 model Activity {
-  id        String   @id @default(uuid())
-  slug      String   @unique // canonical id: "pickup-basketball"
-  label     String
+  id         String  @id @default(uuid())
+  slug       String  @unique // canonical id: "pickup-basketball"
+  label      String
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

@@ -1,7 +1,13 @@
 import { colors } from "@/lib/theme";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import React, { useRef, useState } from "react";
+import {
+  Pressable,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import SelectableOption from "./SelectableOption";
 
 interface OptionsSelectorProps {
@@ -12,6 +18,7 @@ interface OptionsSelectorProps {
   minRequired?: number;
   allowOther?: boolean;
   error?: string;
+  onCustomOptionAdded?: (option: { id: string; label: string }) => void;
 }
 
 const OptionsSelector = ({
@@ -22,12 +29,24 @@ const OptionsSelector = ({
   minRequired = 0,
   allowOther = false,
   error,
+  onCustomOptionAdded,
 }: OptionsSelectorProps) => {
   const [displayedOptions, setDisplayedOptions] = useState(
     options.slice(0, 12)
   );
   const [otherValue, setOtherValue] = useState("");
   const [otherSelected, setOtherSelected] = useState(false);
+  const [customOptions, setCustomOptions] = useState<
+    Array<{ id: string; label: string }>
+  >([]);
+  const otherInputRef = useRef<TextInput>(null);
+
+  // Focus the text input whenever "Other" is selected
+  React.useEffect(() => {
+    if (otherSelected && otherInputRef.current) {
+      setTimeout(() => otherInputRef.current?.focus(), 100);
+    }
+  }, [otherSelected]);
 
   const handleOptionToggle = (id: string) => {
     let newSelection = [...selectedOptions];
@@ -51,6 +70,43 @@ const OptionsSelector = ({
 
   const handleOtherToggle = () => {
     setOtherSelected(!otherSelected);
+    setOtherValue(""); // Clear the input when toggling
+  };
+
+  const handleAddCustomOption = () => {
+    // Validate input
+    if (!otherValue.trim()) {
+      return; // Don't add empty values
+    }
+
+    // Generate a unique ID for the custom option (prefix with 'custom-' to distinguish it)
+    const customId = `custom-${Date.now()}-${otherValue
+      .replace(/\s+/g, "-")
+      .toLowerCase()}`;
+
+    // Add to custom options
+    const newCustomOption = { id: customId, label: otherValue.trim() };
+    setCustomOptions([...customOptions, newCustomOption]);
+
+    // Add to selected options
+    onSelectionChange([...selectedOptions, customId]);
+
+    // Notify parent component of custom option if callback exists
+    if (onCustomOptionAdded) {
+      onCustomOptionAdded(newCustomOption);
+    }
+
+    // Reset the other input and deselect it
+    setOtherValue("");
+    setOtherSelected(false);
+  };
+
+  const handleRemoveCustomOption = (id: string) => {
+    // Remove from custom options
+    setCustomOptions(customOptions.filter((option) => option.id !== id));
+
+    // Remove from selected options
+    onSelectionChange(selectedOptions.filter((optionId) => optionId !== id));
   };
 
   return (
@@ -60,6 +116,7 @@ const OptionsSelector = ({
       </Text>
 
       <View className="flex-row flex-wrap gap-1">
+        {/* Predefined options */}
         {displayedOptions.map((option) => (
           <SelectableOption
             key={option.id}
@@ -69,6 +126,46 @@ const OptionsSelector = ({
           />
         ))}
 
+        {/* Custom options added by user */}
+        {customOptions.map((option) => (
+          <View key={option.id} className="mb-2 mr-2">
+            <Pressable
+              onPress={() => handleOptionToggle(option.id)}
+              className={`flex-row items-center px-4 py-2 rounded-full border ${
+                selectedOptions.includes(option.id)
+                  ? "bg-primary border-primary"
+                  : "bg-white border-border"
+              }`}
+            >
+              <Text
+                className={`text-base ${
+                  selectedOptions.includes(option.id)
+                    ? "text-white"
+                    : "text-foreground"
+                }`}
+              >
+                {option.label}
+              </Text>
+              <TouchableOpacity
+                onPress={() => handleRemoveCustomOption(option.id)}
+                hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+                className="ml-2"
+              >
+                <Ionicons
+                  name="close-circle"
+                  size={16}
+                  color={
+                    selectedOptions.includes(option.id)
+                      ? "white"
+                      : colors.border
+                  }
+                />
+              </TouchableOpacity>
+            </Pressable>
+          </View>
+        ))}
+
+        {/* "Other..." option button */}
         {allowOther && (
           <View className="mb-2 mr-2">
             <Pressable
@@ -87,18 +184,41 @@ const OptionsSelector = ({
                 Other...
               </Text>
             </Pressable>
-
-            {otherSelected && (
-              <TextInput
-                className="mt-2 bg-white border border-border rounded-xl px-4 py-2 text-foreground"
-                placeholder="Add your own..."
-                value={otherValue}
-                onChangeText={setOtherValue}
-              />
-            )}
           </View>
         )}
       </View>
+
+      {/* Separate container for the text input to avoid affecting button layout */}
+      {allowOther && otherSelected && (
+        <View className="mb-4">
+          <View className="relative">
+            <TextInput
+              ref={otherInputRef}
+              className="w-full bg-white border border-border rounded-xl px-4 py-3 text-foreground pr-10"
+              placeholder="Add your own..."
+              value={otherValue}
+              onChangeText={setOtherValue}
+              returnKeyType="done"
+              onSubmitEditing={handleAddCustomOption}
+              blurOnSubmit={false}
+              multiline={false}
+            />
+            {otherValue.trim() && (
+              <TouchableOpacity
+                onPress={handleAddCustomOption}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons
+                  name="checkmark-circle"
+                  size={20}
+                  color={colors.primary}
+                />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      )}
 
       {displayedOptions.length < options.length && (
         <Pressable

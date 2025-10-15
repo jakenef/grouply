@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Alert, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -7,50 +7,39 @@ import GrouplyButton from "@/components/GrouplyButton";
 import OptionsSelector from "@/components/OptionsSelector";
 import RangeSlider from "@/components/RangeSlider";
 import SliderSingle from "@/components/SliderSingle";
+import { useAuth } from "@/lib/auth";
+import { trpc } from "@/lib/trpc";
 
-// Mock data for interests and traits (would come from API in real app)
-const MOCK_INTERESTS = [
-  { id: "1", label: "Hiking" },
-  { id: "2", label: "Movies" },
-  { id: "3", label: "Reading" },
-  { id: "4", label: "Cooking" },
-  { id: "5", label: "Gaming" },
-  { id: "6", label: "Photography" },
-  { id: "7", label: "Music" },
-  { id: "8", label: "Dancing" },
-  { id: "9", label: "Sports" },
-  { id: "10", label: "Art" },
-  { id: "11", label: "Travel" },
-  { id: "12", label: "Technology" },
-  { id: "13", label: "Yoga" },
-  { id: "14", label: "Meditation" },
-  { id: "15", label: "Fishing" },
-  { id: "16", label: "Gardening" },
-  { id: "17", label: "DIY" },
-  { id: "18", label: "Board Games" },
-  { id: "19", label: "Coding" },
-  { id: "20", label: "Coffee" },
-];
+// Use real data from the backend
+interface Interest {
+  id: string;
+  label: string;
+  slug: string;
+}
 
-const MOCK_TRAITS = [
-  { id: "1", label: "Adventurous" },
-  { id: "2", label: "Creative" },
-  { id: "3", label: "Relaxed" },
-  { id: "4", label: "Energetic" },
-  { id: "5", label: "Intellectual" },
-  { id: "6", label: "Funny" },
-  { id: "7", label: "Outgoing" },
-  { id: "8", label: "Quiet" },
-  { id: "9", label: "Spontaneous" },
-  { id: "10", label: "Organized" },
-  { id: "11", label: "Artistic" },
-  { id: "12", label: "Athletic" },
-  { id: "13", label: "Analytical" },
-  { id: "14", label: "Compassionate" },
-  { id: "15", label: "Ambitious" },
-];
+interface Trait {
+  id: string;
+  label: string;
+  slug: string;
+  desc?: string;
+}
+
+interface CustomOption {
+  id: string;
+  label: string;
+}
 
 const PreferencesSetup = () => {
+  const { user, session } = useAuth();
+
+  // Fetch interests and traits from the backend (approved only)
+  const interestsQuery = trpc.users.getAllApprovedInterests.useQuery();
+  const traitsQuery = trpc.users.getAllApprovedTraits.useQuery();
+
+  // Track custom options for sending to backend
+  const [customInterests, setCustomInterests] = useState<CustomOption[]>([]);
+  const [customTraits, setCustomTraits] = useState<CustomOption[]>([]);
+
   // State for group size preferences
   const [groupSizeRange, setGroupSizeRange] = useState<[number, number]>([
     3, 6,
@@ -74,8 +63,47 @@ const PreferencesSetup = () => {
     traits?: string;
   }>({});
 
-  // State for submission
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // Set up tRPC mutation
+  const savePreferencesMutation =
+    trpc.users.saveUserAndUserProfilePreferences.useMutation();
+
+  // If user is not authenticated, redirect to login
+  useEffect(() => {
+    if (!session) {
+      Alert.alert(
+        "Authentication Required",
+        "You must be logged in to complete your profile.",
+        [
+          {
+            text: "OK",
+            onPress: () => router.replace("/(auth)/LandingPage"),
+          },
+        ]
+      );
+    }
+  }, [session]);
+
+  // Determine if data is still loading
+  const isLoading = interestsQuery.isLoading || traitsQuery.isLoading;
+
+  // Handle data fetch errors
+  useEffect(() => {
+    if (interestsQuery.error || traitsQuery.error) {
+      Alert.alert(
+        "Error",
+        "Failed to load interests and traits. Please try again.",
+        [
+          {
+            text: "Retry",
+            onPress: () => {
+              interestsQuery.refetch();
+              traitsQuery.refetch();
+            },
+          },
+        ]
+      );
+    }
+  }, [interestsQuery.error, traitsQuery.error]);
 
   const validateForm = (): boolean => {
     const newErrors: {
@@ -102,20 +130,36 @@ const PreferencesSetup = () => {
       return;
     }
 
-    // Prevent multiple submissions
-    if (isSubmitting) return;
-    setIsSubmitting(true);
+    // Make sure user is authenticated
+    if (!session || !user) {
+      Alert.alert(
+        "Authentication Required",
+        "You must be logged in to save your preferences.",
+        [
+          {
+            text: "Go to Login",
+            onPress: () => router.replace("/(auth)/LandingPage"),
+          },
+        ]
+      );
+      return;
+    }
 
     try {
-      // TODO: Implement API call to save preferences
+      // Convert miles to kilometers for backend storage
+      const maxTravelKm = milesToKm(travelDistance);
 
-      // For MVP, just log the preferences and navigate to Home
-      console.log("Preferences saved:", {
-        groupSizeRange,
-        selectedInterests,
-        selectedTraits,
-        maxTravelDistance: travelDistance,
-        ageRange,
+      // Call the tRPC mutation to save preferences
+      await savePreferencesMutation.mutateAsync({
+        interests: selectedInterests,
+        traits: selectedTraits,
+        customInterests: customInterests,
+        customTraits: customTraits,
+        preferredGroupSizeMin: groupSizeRange[0],
+        preferredGroupSizeMax: groupSizeRange[1],
+        preferredAgeMin: ageRange[0],
+        preferredAgeMax: ageRange[1],
+        maxTravelDist: maxTravelKm, // Store in km in the database
       });
 
       // Navigate to main app
@@ -126,8 +170,6 @@ const PreferencesSetup = () => {
         "Error",
         error.message || "Failed to save preferences. Please try again."
       );
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -135,6 +177,41 @@ const PreferencesSetup = () => {
   const milesToKm = (miles: number): number => {
     return Math.round(miles * 1.60934);
   };
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <SafeAreaView className="flex-1 bg-background">
+        <View className="flex-1 justify-center items-center">
+          <Text className="text-gray-600 text-lg mb-4">
+            Loading preferences data...
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Show error state
+  if (interestsQuery.error || traitsQuery.error) {
+    return (
+      <SafeAreaView className="flex-1 bg-background">
+        <View className="flex-1 justify-center items-center p-5">
+          <Text className="text-red-500 text-lg mb-4">
+            Error loading preferences data.
+          </Text>
+          <GrouplyButton
+            label="Retry"
+            onPress={() => {
+              interestsQuery.refetch();
+              traitsQuery.refetch();
+            }}
+            variant="primary"
+            style={{ width: 120 }}
+          />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-background">
@@ -152,23 +229,39 @@ const PreferencesSetup = () => {
         {/* Interests Selection */}
         <OptionsSelector
           title="What are some of your interests?"
-          options={MOCK_INTERESTS}
+          options={
+            interestsQuery.data?.map((interest) => ({
+              id: interest.id,
+              label: interest.label,
+            })) || []
+          }
           selectedOptions={selectedInterests}
           onSelectionChange={setSelectedInterests}
           minRequired={3}
           allowOther={true}
           error={errors.interests}
+          onCustomOptionAdded={(customOption) => {
+            setCustomInterests((prev) => [...prev, customOption]);
+          }}
         />
 
         {/* Traits Selection */}
         <OptionsSelector
           title="What kind of person are you?"
-          options={MOCK_TRAITS}
+          options={
+            traitsQuery.data?.map((trait) => ({
+              id: trait.id,
+              label: trait.label,
+            })) || []
+          }
           selectedOptions={selectedTraits}
           onSelectionChange={setSelectedTraits}
           minRequired={3}
           allowOther={true}
           error={errors.traits}
+          onCustomOptionAdded={(customOption) => {
+            setCustomTraits((prev) => [...prev, customOption]);
+          }}
         />
 
         {/* Group Size Range */}
@@ -209,17 +302,21 @@ const PreferencesSetup = () => {
         {/* Save and Continue Button */}
         <View className="mb-8 mt-6">
           <GrouplyButton
-            label={isSubmitting ? "Saving Preferences..." : "Save & Continue"}
+            label={
+              savePreferencesMutation.isPending
+                ? "Saving Preferences..."
+                : "Save & Continue"
+            }
             variant="primary"
             size="large"
             fullWidth
             onPress={handleSaveAndContinue}
             disabled={
-              isSubmitting ||
+              savePreferencesMutation.isPending ||
               selectedInterests.length < 3 ||
               selectedTraits.length < 3
             }
-            isLoading={isSubmitting}
+            isLoading={savePreferencesMutation.isPending}
           />
         </View>
       </ScrollView>
