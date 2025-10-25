@@ -1,8 +1,31 @@
+import { useAuth } from "@/lib/auth";
 import { colors } from "@/lib/theme";
+import { trpc } from "@/lib/trpc";
 import { Ionicons } from "@expo/vector-icons";
-import { Tabs } from "expo-router";
+import { Redirect, Tabs } from "expo-router";
+import { ActivityIndicator, View } from "react-native";
 
 export default function AppLayout() {
+  const { session } = useAuth();
+  const { data: profile, isLoading } = trpc.users.getMyProfile.useQuery();
+
+  // If no session, redirect to auth
+  if (!session) {
+    return <Redirect href="/(auth)/LandingPage" />;
+  }
+
+  // Show loading state while fetching profile
+  if (isLoading) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  const isAdmin = profile?.role === "ADMIN";
+  console.log("User profile in layout:", { profile, isAdmin });
+
   return (
     <Tabs
       screenOptions={{

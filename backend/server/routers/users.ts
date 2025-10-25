@@ -334,7 +334,12 @@ export const usersRouter = router({
   getMyProfile: protectedProcedure.query(async ({ ctx }) => {
     return ctx.prisma.user.findUnique({
       where: { id: ctx.user.id },
-      include: {
+      select: {
+        id: true,
+        email: true,
+        displayName: true,
+        avatarUrl: true,
+        role: true,
         location: true,
         interests: {
           include: {
