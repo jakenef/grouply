@@ -1,14 +1,10 @@
 import { EventCard } from "@/components/EventCard";
-import GrouplyButton from "@/components/GrouplyButton";
-import { useAuth } from "@/lib/auth";
 import { Link } from "expo-router";
 import React from "react";
 import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Home = () => {
-  const { signOut } = useAuth();
-
   // Example event data
   const exampleEvent = {
     id: "1",
@@ -27,7 +23,6 @@ const Home = () => {
         <Link href={"/(auth)/LandingPage"} className="text-primary mb-4">
           Go back to landing
         </Link>
-        <GrouplyButton label="logout" onPress={signOut} />
         {/* Example Event Card */}
         <View className="mt-6">
           <Text className="text-lg font-semibold mb-3">Event Suggestions</Text>

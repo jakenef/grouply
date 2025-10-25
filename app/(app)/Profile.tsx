@@ -1,3 +1,5 @@
+import GrouplyButton from "@/components/GrouplyButton";
+import { useAuth } from "@/lib/auth";
 import { trpc } from "@/lib/trpc";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -7,12 +9,15 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const Profile = () => {
   const { data: profile } = trpc.users.getMyProfile.useQuery();
+  const { signOut } = useAuth();
+
   const router = useRouter();
   const isAdmin = profile?.role === "ADMIN";
 
   return (
     <SafeAreaView className="flex-1 bg-background">
       <View className="flex-1 p-6">
+        <Text>Profile</Text>
         {isAdmin && (
           <TouchableOpacity
             onPress={() => router.push("/(app)/Dev")}
@@ -22,7 +27,7 @@ const Profile = () => {
             <Text className="text-white font-semibold ml-2">Dev Tools</Text>
           </TouchableOpacity>
         )}
-        <Text>Profile</Text>
+        <GrouplyButton label="logout" onPress={signOut} />
       </View>
     </SafeAreaView>
   );
