@@ -4,6 +4,7 @@ import { Alert, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import GrouplyButton from "@/components/GrouplyButton";
+import MultipleChoiceSelector from "@/components/MultipleChoiceSelector";
 import OptionsSelector from "@/components/OptionsSelector";
 import RangeSlider from "@/components/RangeSlider";
 import SliderSingle from "@/components/SliderSingle";
@@ -47,6 +48,76 @@ const PreferencesSetup = () => {
 
   // State for interests
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+
+  // State for personality preferences
+  const [eventEnergy, setEventEnergy] = useState("");
+  const [groupRole, setGroupRole] = useState("");
+  const [preferredAtmosphere, setPreferredAtmosphere] = useState("");
+  const [downtimePreference, setDowntimePreference] = useState("");
+  const [peopleVibe, setPeopleVibe] = useState("");
+
+  // Personality questions data
+  const personalityQuestions = {
+    eventEnergy: {
+      question: "What kind of energy do you like at events?",
+      options: [
+        {
+          value: "high",
+          label: "High energy — music, games, lots of interaction",
+        },
+        {
+          value: "laid-back",
+          label: "Laid back — chill conversations, relaxed setting",
+        },
+        {
+          value: "thoughtful",
+          label: "Thoughtful — deeper talks, learning something new",
+        },
+        { value: "active", label: "Active — moving, playing, exploring" },
+        { value: "balanced", label: "Balanced — a mix of calm and excitement" },
+      ],
+    },
+    groupRole: {
+      question: "How do you usually show up in a group?",
+      options: [
+        { value: "energizer", label: "The one hyping everyone up" },
+        { value: "observer", label: "The chill observer" },
+        { value: "organizer", label: "The planner or organizer" },
+        { value: "deep-talker", label: "The deep talker" },
+        { value: "entertainer", label: "The one who keeps it funny and light" },
+      ],
+    },
+    preferredAtmosphere: {
+      question: "What atmosphere makes you feel most alive?",
+      options: [
+        { value: "energetic", label: "Loud and full of energy" },
+        { value: "cozy", label: "Relaxed and cozy" },
+        { value: "outdoors", label: "Outdoors and free" },
+        { value: "artsy", label: "Artsy and inspiring" },
+        { value: "focused", label: "Focused and purposeful" },
+      ],
+    },
+    downtimePreference: {
+      question: "How do you like to spend your downtime?",
+      options: [
+        { value: "active", label: "Being active or outside" },
+        { value: "exploring", label: "Trying new food or places" },
+        { value: "creating", label: "Creating or learning something" },
+        { value: "social", label: "Hanging with close friends" },
+        { value: "solo", label: "Recharging solo" },
+      ],
+    },
+    peopleVibe: {
+      question: "What kind of people do you vibe with most?",
+      options: [
+        { value: "curious", label: "Curious and open-minded" },
+        { value: "chill", label: "Chill and down-to-earth" },
+        { value: "driven", label: "Driven and goal-oriented" },
+        { value: "playful", label: "Playful and spontaneous" },
+        { value: "empathetic", label: "Empathetic and genuine" },
+      ],
+    },
+  };
 
   // State for traits
   const [selectedTraits, setSelectedTraits] = useState<string[]>([]);
@@ -228,7 +299,7 @@ const PreferencesSetup = () => {
 
         {/* Interests Selection */}
         <OptionsSelector
-          title="What are some of your interests?"
+          title="What kind of things do you enjoy doing?"
           options={
             interestsQuery.data?.map((interest) => ({
               id: interest.id,
@@ -247,7 +318,7 @@ const PreferencesSetup = () => {
 
         {/* Traits Selection */}
         <OptionsSelector
-          title="What kind of person are you?"
+          title="What's your vibe?"
           options={
             traitsQuery.data?.map((trait) => ({
               id: trait.id,
@@ -289,7 +360,7 @@ const PreferencesSetup = () => {
 
         {/* Age Range */}
         <RangeSlider
-          label="What's your preferred age range for events?"
+          label="What is your preferred age range of other attendees?"
           minValue={18}
           maxValue={25}
           minLimit={18}
@@ -298,6 +369,39 @@ const PreferencesSetup = () => {
           onValuesChange={(values) => setAgeRange(values)}
           formatLabel={(value) => (value === 60 ? "60" : String(value))}
         />
+
+        {/* Personality Questions */}
+        <View className="mt-6">
+          <MultipleChoiceSelector
+            {...personalityQuestions.eventEnergy}
+            selectedValue={eventEnergy}
+            onSelect={setEventEnergy}
+          />
+
+          <MultipleChoiceSelector
+            {...personalityQuestions.groupRole}
+            selectedValue={groupRole}
+            onSelect={setGroupRole}
+          />
+
+          <MultipleChoiceSelector
+            {...personalityQuestions.preferredAtmosphere}
+            selectedValue={preferredAtmosphere}
+            onSelect={setPreferredAtmosphere}
+          />
+
+          <MultipleChoiceSelector
+            {...personalityQuestions.downtimePreference}
+            selectedValue={downtimePreference}
+            onSelect={setDowntimePreference}
+          />
+
+          <MultipleChoiceSelector
+            {...personalityQuestions.peopleVibe}
+            selectedValue={peopleVibe}
+            onSelect={setPeopleVibe}
+          />
+        </View>
 
         {/* Save and Continue Button */}
         <View className="mb-8 mt-6">

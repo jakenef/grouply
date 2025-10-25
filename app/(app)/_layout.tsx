@@ -12,10 +12,13 @@ export default function AppLayout() {
         tabBarStyle: {
           backgroundColor: colors.background.DEFAULT,
           borderTopColor: colors.border,
-          paddingBottom: 20,
+          paddingBottom: 0,
           paddingTop: 4,
-          height: 60,
-          marginBottom: 20,
+          height: 85,
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
         },
         tabBarLabelStyle: {
           fontSize: 12,
@@ -65,6 +68,18 @@ export default function AppLayout() {
           tabBarIcon: ({ focused, color }) => (
             <Ionicons
               name={focused ? "chatbubble" : "chatbubble-outline"}
+              size={24}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="Profile"
+        options={{
+          tabBarIcon: ({ focused, color }) => (
+            <Ionicons
+              name={focused ? "person" : "person-outline"}
               size={24}
               color={color}
             />
