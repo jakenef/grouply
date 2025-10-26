@@ -21,7 +21,7 @@ export const createContext = async ({ req }: CreateExpressContextOptions) => {
 
   let user = null;
   let supabaseUser = null;
-  
+
   if (token) {
     try {
       // Verify the Supabase JWT token
@@ -33,7 +33,7 @@ export const createContext = async ({ req }: CreateExpressContextOptions) => {
       if (authUser && !error) {
         // Store the Supabase user info
         supabaseUser = authUser;
-        
+
         // Look up the user in your Prisma database
         user = await prisma.user.findUnique({
           where: { authUserId: authUser.id },
@@ -78,12 +78,28 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
       hasSupabaseUser: !!ctx.supabaseUser,
       tokenPrefix: ctx.token ? ctx.token.substring(0, 10) + "..." : "none",
     });
-    
+
     throw new TRPCError({
       code: "UNAUTHORIZED",
-      message: ctx.token 
-        ? "Valid authentication token required. The provided token may be expired or invalid." 
+      message: ctx.token
+        ? "Valid authentication token required. The provided token may be expired or invalid."
         : "No authentication token provided. You must be logged in to access this endpoint.",
+    });
+  }
+  return next({
+    ctx: {
+      ...ctx,
+      user: ctx.user,
+    },
+  });
+});
+
+// Admin procedure requires a valid user with ADMIN role
+export const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
+  if (ctx.user.role !== "ADMIN") {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "This endpoint requires admin privileges",
     });
   }
   return next({
