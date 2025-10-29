@@ -1,21 +1,9 @@
 import { adminProcedure } from "@/backend/server/trpc";
+import { Location } from "@/types/Location";
 import { TRPCError } from "@trpc/server";
 
-type LocationPrecision = "city" | "point";
-
-type TestLocation = {
-  id: string;
-  formatted: string;
-  city: string | null;
-  region: string | null;
-  countryCode: string | null;
-  lat: number;
-  lng: number;
-  precision: LocationPrecision;
-};
-
 // Test locations with varying detail levels
-const testLocations: TestLocation[] = [
+const testLocations: Location[] = [
   // Provo area locations
   {
     id: "TRB_loc_byu",
@@ -66,7 +54,7 @@ const testLocations: TestLocation[] = [
     countryCode: "GB",
     lat: 51.5074,
     lng: -0.1278,
-    precision: "city" as const,
+    precision: "city",
     region: null,
   },
   {

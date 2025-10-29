@@ -1,0 +1,8 @@
+import { router } from "@/backend/server/trpc";
+import { TRB_createActivities } from "./TRB_createActivities";
+import { TRB_deleteActivites } from "./TRB_deleteActivities";
+
+export const troubleshootingActivityRouter = router({
+  TRB_createActivities,
+  TRB_deleteActivites,
+});

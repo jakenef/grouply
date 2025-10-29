@@ -2,6 +2,7 @@ import { router } from "../trpc";
 import { interestsRouter } from "./interests";
 import { locationsRouter } from "./locations";
 import { traitsRouter } from "./traits";
+import { troubleshootingRouter } from "./troubleshooting";
 import { usersRouter } from "./users/index";
 
 export const appRouter = router({
@@ -9,6 +10,7 @@ export const appRouter = router({
   traits: traitsRouter,
   interests: interestsRouter,
   locations: locationsRouter,
+  troubleshooting: troubleshootingRouter,
 });
 
 export type AppRouter = typeof appRouter;
