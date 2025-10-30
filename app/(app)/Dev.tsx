@@ -20,6 +20,11 @@ const Dev = () => {
   const { mutateAsync: deleteActivities } =
     trpc.troubleshooting.troubleshootingActivityRouter.TRB_deleteActivites.useMutation();
 
+  const { mutateAsync: createEvents } =
+    trpc.troubleshooting.troubleshootingEventRouter.TRB_createEvents.useMutation();
+  const { mutateAsync: deleteEvents } =
+    trpc.troubleshooting.troubleshootingEventRouter.TRB_deleteTestEvents.useMutation();
+
   return (
     <SafeAreaView className="flex-1">
       <ScrollView className="flex-1 bg-gray-50">
@@ -71,6 +76,24 @@ const Dev = () => {
             description="Deletes all activities in db"
             onRun={async () => {
               await deleteActivities();
+            }}
+          />
+
+          <TroubleshootItem
+            title="Clear Test Events"
+            description="Removes all test events from the database"
+            onRun={async () => {
+              await deleteEvents();
+            }}
+          />
+
+          <TroubleshootItem
+            title="Generate Test Events"
+            description="Creates a specified number of test events in the database"
+            requiresInput
+            inputPlaceholder="Number of events to create"
+            onRun={async (value) => {
+              await createEvents({ numEvents: value });
             }}
           />
         </View>
