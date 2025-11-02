@@ -31,6 +31,13 @@ enum Gender {
   Other
 }
 
+enum ChatMessageRole {
+  user
+  assistant
+  system
+  tool
+}
+
 // =======================
 // Models
 // =======================
@@ -160,9 +167,9 @@ model UserInterest {
 
 // ---------- Activities (supply taxonomy) ----------
 model Activity {
-  id         String  @id @default(uuid())
-  slug       String  @unique // canonical id: "pickup-basketball"
-  label      String
+  id    String @id @default(uuid())
+  slug  String @unique // canonical id: "pickup-basketball"
+  label String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -319,13 +326,19 @@ model ChatMember {
 }
 
 model ChatMessage {
-  id        String    @id @default(uuid())
+  id        String          @id @default(uuid())
+  role      ChatMessageRole @default(user)
   channelId String
   authorId  String
   body      String
-  createdAt DateTime  @default(now())
+  createdAt DateTime        @default(now())
   editedAt  DateTime?
   deletedAt DateTime?
+
+  // Optional: tool call/result for LLM integrations
+  toolName   String?
+  toolArgs   Json?
+  toolResult Json?
 
   channel ChatChannel @relation(fields: [channelId], references: [id])
   author  User        @relation(fields: [authorId], references: [id])

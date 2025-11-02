@@ -34,8 +34,8 @@ const PreferencesSetup = () => {
   const { user, session } = useAuth();
 
   // Fetch interests and traits from the backend (approved only)
-  const interestsQuery = trpc.users.getAllApprovedInterests.useQuery();
-  const traitsQuery = trpc.users.getAllApprovedTraits.useQuery();
+  const interestsQuery = trpc.interests.getAllApprovedInterests.useQuery();
+  const traitsQuery = trpc.traits.getAllApprovedTraits.useQuery();
 
   // Track custom options for sending to backend
   const [customInterests, setCustomInterests] = useState<CustomOption[]>([]);
