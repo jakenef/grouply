@@ -1,6 +1,7 @@
 import EventSuggestions from "@/components/EventSuggestions";
 import HomeChatSection, { ChatMessage } from "@/components/HomeChatSection";
 import { colors } from "@/lib/theme";
+import { trpc } from "@/lib/trpc";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { Pressable, View } from "react-native";
@@ -14,8 +15,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const Home = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isChatExpanded, setIsChatExpanded] = useState(false);
+  const sendMessageMutation = trpc.ai.userSendAIMessage.useMutation();
 
-  const handleSendMessage = (text: string) => {
+  const handleSendMessage = async (text: string) => {
     const newMessage: ChatMessage = {
       id: Date.now().toString(),
       role: "user",
@@ -25,15 +27,24 @@ const Home = () => {
     setMessages((prev) => [...prev, newMessage]);
     setIsChatExpanded(true);
 
+    const response = await sendMessageMutation.mutateAsync({ text });
+    const assistantMessage: ChatMessage = {
+      id: (Date.now() + 1).toString(),
+      role: "assistant",
+      text: response.response,
+    };
+
+    setMessages((prev) => [...prev, assistantMessage]);
+
     // Simulate assistant response (replace with actual API call later)
-    setTimeout(() => {
-      const assistantMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        text: "I'm here to help you find the perfect activity! (This is a placeholder response)",
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
-    }, 1000);
+    // setTimeout(() => {
+    //   const assistantMessage: ChatMessage = {
+    //     id: (Date.now() + 1).toString(),
+    //     role: "assistant",
+    //     text: "I'm here to help you find the perfect activity! (This is a placeholder response)",
+    //   };
+    //   setMessages((prev) => [...prev, assistantMessage]);
+    // }, 1000);
   };
 
   const handleBack = () => {

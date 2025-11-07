@@ -1,5 +1,6 @@
 import z from "zod";
 import { prisma } from "../../prisma";
+import { generateAIResponse } from "../../services/generateAIResponse";
 import { protectedProcedure } from "../../trpc";
 
 export const userSendAIMessage = protectedProcedure
@@ -9,10 +10,15 @@ export const userSendAIMessage = protectedProcedure
       text: z.string().trim().min(1),
     })
   )
+  .output(
+    z.object({
+      response: z.string(),
+    })
+  )
   .mutation(async ({ ctx, input }) => {
     let channel = undefined;
     if (input.channelId) {
-      channel = await prisma.chatChannel.findUnique({
+      channel = await prisma.chatChannel.findFirst({
         where: {
           id: input.channelId,
           members: {
@@ -30,5 +36,16 @@ export const userSendAIMessage = protectedProcedure
       });
     }
 
-    const newMessage = await prisma.chatMessage;
+    const newMessage = await prisma.chatMessage.create({
+      data: {
+        body: input.text,
+        channelId: channel.id,
+        role: "user",
+        authorId: ctx.user.id,
+      },
+    });
+
+    const response = await generateAIResponse({ channelId: channel.id });
+
+    return { response: response };
   });

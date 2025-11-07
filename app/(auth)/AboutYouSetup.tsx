@@ -226,6 +226,7 @@ const AboutYouSetup = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
+      <Pressable onPress={() => router.push("/(app)/Home")} />
       <TouchableWithoutFeedback onPress={handleOutsideTouch}>
         <ScrollView
           className="flex-1 px-8"

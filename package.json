@@ -46,6 +46,7 @@
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "nativewind": "^4.2.0",
+    "openai": "^6.8.1",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-native": "0.81.4",
