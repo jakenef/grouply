@@ -1,3 +1,4 @@
+import { ChatMessage, ChatMessageRole } from "@/types/Chat";
 import React, { useEffect, useRef, useState } from "react";
 import {
   FlatList,
@@ -9,12 +10,6 @@ import {
 } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import GrouplyButton from "./GrouplyButton";
-
-export type ChatMessage = {
-  id: string;
-  role: "user" | "assistant";
-  text: string;
-};
 
 type HomeChatSectionProps = {
   messages: ChatMessage[];
@@ -90,12 +85,12 @@ export default function HomeChatSection({
                 <Animated.View
                   entering={FadeInDown.delay(Math.min(index, 4) * 40)}
                   className={`mb-2 py-2.5 px-3 rounded-2xl max-w-[80%] ${
-                    item.role === "user"
+                    item.role === ChatMessageRole.user
                       ? "self-end bg-accent"
                       : "self-start bg-background-darker"
                   }`}
                 >
-                  <Text className="text-base text-foreground">{item.text}</Text>
+                  <Text className="text-base text-foreground">{item.body}</Text>
                 </Animated.View>
               )}
             />

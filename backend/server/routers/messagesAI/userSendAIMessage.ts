@@ -1,3 +1,4 @@
+import { ChatMessageRole } from "@/backend/generated/prisma/client";
 import z from "zod";
 import { prisma } from "../../prisma";
 import { generateAIResponse } from "../../services/generateAIResponse";
@@ -12,7 +13,17 @@ export const userSendAIMessage = protectedProcedure
   )
   .output(
     z.object({
-      response: z.string(),
+      id: z.string(),
+      role: z.enum(ChatMessageRole),
+      channelId: z.string(),
+      authorId: z.string(),
+      body: z.string(),
+      createdAt: z.date(),
+      editedAt: z.date().nullable(),
+      deletedAt: z.date().nullable(),
+      toolName: z.string().nullable(),
+      toolArgs: z.any().nullable(),
+      toolResult: z.any().nullable(),
     })
   )
   .mutation(async ({ ctx, input }) => {
@@ -47,5 +58,14 @@ export const userSendAIMessage = protectedProcedure
 
     const response = await generateAIResponse({ channelId: channel.id });
 
-    return { response: response };
+    const chatMessageResponse = await prisma.chatMessage.create({
+      data: {
+        body: response.body,
+        authorId: response.authorId,
+        role: response.role as any,
+        channelId: channel.id,
+      },
+    });
+
+    return chatMessageResponse;
   });

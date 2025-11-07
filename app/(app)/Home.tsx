@@ -1,7 +1,9 @@
 import EventSuggestions from "@/components/EventSuggestions";
-import HomeChatSection, { ChatMessage } from "@/components/HomeChatSection";
+import HomeChatSection from "@/components/HomeChatSection";
+import { useAuth } from "@/lib/auth";
 import { colors } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";
+import { ChatMessage, ChatMessageRole } from "@/types/Chat";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { Pressable, View } from "react-native";
@@ -15,13 +17,16 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const Home = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isChatExpanded, setIsChatExpanded] = useState(false);
+  const { user } = useAuth();
   const sendMessageMutation = trpc.ai.userSendAIMessage.useMutation();
 
   const handleSendMessage = async (text: string) => {
     const newMessage: ChatMessage = {
       id: Date.now().toString(),
-      role: "user",
-      text,
+      role: ChatMessageRole.user,
+      body: text,
+      authorId: user!.id,
+      channelId: null,
     };
 
     setMessages((prev) => [...prev, newMessage]);
@@ -29,22 +34,16 @@ const Home = () => {
 
     const response = await sendMessageMutation.mutateAsync({ text });
     const assistantMessage: ChatMessage = {
-      id: (Date.now() + 1).toString(),
-      role: "assistant",
-      text: response.response,
+      id: response.id,
+      role: response.role as any,
+      body: response.body,
+      channelId: response.channelId,
+      authorId: response.authorId,
+      toolName: response.toolName,
+      createdAt: response.createdAt, // Accurate timestamp
     };
 
     setMessages((prev) => [...prev, assistantMessage]);
-
-    // Simulate assistant response (replace with actual API call later)
-    // setTimeout(() => {
-    //   const assistantMessage: ChatMessage = {
-    //     id: (Date.now() + 1).toString(),
-    //     role: "assistant",
-    //     text: "I'm here to help you find the perfect activity! (This is a placeholder response)",
-    //   };
-    //   setMessages((prev) => [...prev, assistantMessage]);
-    // }, 1000);
   };
 
   const handleBack = () => {
