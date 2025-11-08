@@ -18,6 +18,42 @@ export async function generateAIResponse(params: {
   console.log("contextMessages length: ", contextMessages.length);
   console.log(contextMessages);
 
+  // need a getSuggestedEvents(activityDesc, groupSize, startTime, endTime)
+  // need a getActivity(name, desc) (not a tool)
+  // need a generateEvent(activityDesc, groupSize, time) (not a tool)
+  const tools = [
+    {
+      type: "function",
+      name: "getSuggestedEvents",
+      description: "Get a list of events that the user might want to attend",
+      parameters: {
+        type: "object",
+        properties: {
+          activityDesc: {
+            type: "string",
+            description:
+              "a short string describing the activity the user wants",
+          },
+          groupSize: {
+            type: "number",
+            description: "the number of people the user wants at the event",
+          },
+          startTime: {
+            type: "Date",
+            description:
+              "the start of the window of time the user is available for this event",
+          },
+          endTime: {
+            type: "Date",
+            description:
+              "the end of the window of time the user is available for this event",
+          },
+          required: ["activityDesc", "groupSize", "startTime", "endTime"],
+        },
+      },
+    },
+  ];
+
   // 2) Call AI, decide if needs Tools
   const client = new OpenAI();
   const initialAIResponse = await client.responses.create({
@@ -26,6 +62,12 @@ export async function generateAIResponse(params: {
       role: m.role as any,
       content: m.body,
     })),
+    instructions: `You are the Grouply app event concierge. You are in charge of helping people find their people. The user is answering the question: What do you want to do? Always try to find these things out from the user as the conversation goes:
+    1. What activity the user would like to do
+    2. When the user would like to do it
+    3. How many people they would prefer at the event
+    Once you are sure you have recieved all of the users input to these three things, say DING DING DING at the beginning of every response afterwards. But ONLY after you are sure.
+    `,
   });
 
   // 3) Handle tooling
