@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import React from "react";
 import { Image, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import GrouplyButton from "../../components/GrouplyButton";
+import GrouplyButton from "../../components/shared/GrouplyButton";
 
 const LandingPage = () => {
   return (

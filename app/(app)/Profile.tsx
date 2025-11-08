@@ -1,4 +1,4 @@
-import GrouplyButton from "@/components/GrouplyButton";
+import GrouplyButton from "@/components/shared/GrouplyButton";
 import { useAuth } from "@/lib/auth";
 import { trpc } from "@/lib/trpc";
 import { Ionicons } from "@expo/vector-icons";

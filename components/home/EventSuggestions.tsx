@@ -1,7 +1,7 @@
 import { Event } from "@/types/Event";
 import React from "react";
 import { Text, View } from "react-native";
-import { EventCard } from "./EventCard";
+import { EventCard } from "../shared/EventCard";
 
 const exampleEvent: Event = {
   currentParticipants: 4,

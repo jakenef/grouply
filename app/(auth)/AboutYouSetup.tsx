@@ -1,8 +1,8 @@
 import CoarseLocationPicker, {
   LocationData,
-} from "@/components/CoarseLocationPicker";
-import FormField from "@/components/FormField";
-import ProfileImagePicker from "@/components/ProfileImagePicker";
+} from "@/components/shared/CoarseLocationPicker";
+import FormField from "@/components/shared/FormField";
+import ProfileImagePicker from "@/components/shared/ProfileImagePicker";
 import { useAuth } from "@/lib/auth";
 import uploadImageUri from "@/lib/storage";
 import { colors } from "@/lib/theme";
@@ -22,7 +22,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import GrouplyButton from "../../components/GrouplyButton";
+import GrouplyButton from "../../components/shared/GrouplyButton";
 
 type Gender = "Male" | "Female" | "Other" | null;
 

@@ -1,12 +1,12 @@
-import EventSuggestions from "@/components/EventSuggestions";
-import HomeChatSection from "@/components/HomeChatSection";
+import EventSuggestions from "@/components/home/EventSuggestions";
+import HomeChatSection from "@/components/home/HomeChatSection";
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";
 import { ChatMessage, ChatMessageRole } from "@/types/Chat";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
-import { Pressable, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import Animated, {
   FadeIn,
   FadeOut,
@@ -60,6 +60,11 @@ const Home = () => {
   return (
     <SafeAreaView className="flex-1 bg-background">
       <View className="flex-1">
+        {!isChatExpanded && (
+          <Text className="color-primary text-4xl font-bold py-3 px-5">
+            Grouply
+          </Text>
+        )}
         {/* Back button - only shown when chat is expanded */}
         {isChatExpanded && (
           <Animated.View
@@ -105,7 +110,7 @@ const Home = () => {
                   borderRadius: 16,
                   borderWidth: 1,
                   borderColor: colors.border,
-                  minHeight: 140,
+                  minHeight: 130,
                 }
           }
         >

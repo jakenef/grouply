@@ -3,8 +3,8 @@ import { colors } from "@/lib/theme";
 import React, { useState } from "react";
 import { Alert, Pressable, Text, View } from "react-native";
 import { OtpInput } from "react-native-otp-entry";
-import FormField from "./FormField";
-import GrouplyButton from "./GrouplyButton";
+import FormField from "../shared/FormField";
+import GrouplyButton from "../shared/GrouplyButton";
 
 interface ConfirmEmailProps {
   onSendOTP: (email: string) => Promise<{ data?: any; error?: any }>;

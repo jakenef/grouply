@@ -3,7 +3,7 @@ import { router } from "expo-router";
 import React from "react";
 import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import ConfirmEmail from "../../components/ConfirmEmail";
+import ConfirmEmail from "../../components/onboarding/ConfirmEmail";
 
 const Login = () => {
   const { sendLoginOTP, verifyOTP } = useAuth();

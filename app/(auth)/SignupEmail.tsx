@@ -1,9 +1,9 @@
+import ConfirmEmail from "@/components/onboarding/ConfirmEmail";
 import { useAuth } from "@/lib/auth";
 import { router } from "expo-router";
 import React from "react";
 import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import ConfirmEmail from "../../components/ConfirmEmail";
 
 const Login = () => {
   const { sendSignUpOTP, verifyOTP } = useAuth();

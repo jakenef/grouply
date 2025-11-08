@@ -2,7 +2,7 @@ import { ChatMessage, ChatMessageRole } from "@/types/Chat";
 import React, { useEffect, useRef, useState } from "react";
 import { FlatList, Text, TextInput, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
-import GrouplyButton from "./GrouplyButton";
+import GrouplyButton from "../shared/GrouplyButton";
 
 type HomeChatSectionProps = {
   messages: ChatMessage[];
@@ -92,7 +92,7 @@ export default function HomeChatSection({
       </View>
 
       {/* Input bar - always visible */}
-      <View className="border-border px-3 py-2" style={{ flexShrink: 0 }}>
+      <View className="border-border px-3 py-2">
         <View className="flex-row items-end gap-2">
           <TextInput
             ref={inputRef}
