@@ -32,6 +32,7 @@ export const userSendAIMessage = protectedProcedure
       channel = await prisma.chatChannel.findFirst({
         where: {
           id: input.channelId,
+          kind: "ai",
           members: {
             some: {
               userId: ctx.user.id,

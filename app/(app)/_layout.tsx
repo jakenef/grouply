@@ -38,10 +38,6 @@ export default function AppLayout() {
           paddingBottom: 0,
           paddingTop: 4,
           height: 85,
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
         },
         tabBarLabelStyle: {
           fontSize: 12,

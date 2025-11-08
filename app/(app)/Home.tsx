@@ -5,7 +5,7 @@ import { colors } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";
 import { ChatMessage, ChatMessageRole } from "@/types/Chat";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Pressable, View } from "react-native";
 import Animated, {
   FadeIn,
@@ -17,8 +17,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const Home = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isChatExpanded, setIsChatExpanded] = useState(false);
+  const [channelId, setChannelId] = useState("");
   const { user } = useAuth();
   const sendMessageMutation = trpc.ai.userSendAIMessage.useMutation();
+
+  useEffect(() => {
+    setChannelId("");
+  }, [isChatExpanded]);
 
   const handleSendMessage = async (text: string) => {
     const newMessage: ChatMessage = {
@@ -26,13 +31,14 @@ const Home = () => {
       role: ChatMessageRole.user,
       body: text,
       authorId: user!.id,
-      channelId: null,
+      channelId: channelId,
     };
 
     setMessages((prev) => [...prev, newMessage]);
     setIsChatExpanded(true);
 
-    const response = await sendMessageMutation.mutateAsync({ text });
+    const response = await sendMessageMutation.mutateAsync({ channelId, text });
+    setChannelId(response.channelId);
     const assistantMessage: ChatMessage = {
       id: response.id,
       role: response.role as any,
@@ -40,7 +46,7 @@ const Home = () => {
       channelId: response.channelId,
       authorId: response.authorId,
       toolName: response.toolName,
-      createdAt: response.createdAt, // Accurate timestamp
+      createdAt: response.createdAt,
     };
 
     setMessages((prev) => [...prev, assistantMessage]);
@@ -99,7 +105,7 @@ const Home = () => {
                   borderRadius: 16,
                   borderWidth: 1,
                   borderColor: colors.border,
-                  overflow: "hidden",
+                  minHeight: 140,
                 }
           }
         >
@@ -107,6 +113,7 @@ const Home = () => {
             messages={messages}
             onSend={handleSendMessage}
             isExpanded={isChatExpanded}
+            isLoading={false}
           />
         </Animated.View>
 

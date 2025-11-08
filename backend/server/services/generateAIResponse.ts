@@ -16,6 +16,7 @@ export async function generateAIResponse(params: {
   });
 
   console.log("contextMessages length: ", contextMessages.length);
+  console.log(contextMessages);
 
   // 2) Call AI, decide if needs Tools
   const client = new OpenAI();
@@ -28,6 +29,7 @@ export async function generateAIResponse(params: {
   });
 
   // 3) Handle tooling
+
   // 4) Format AI response for return
   console.log("ai response:", initialAIResponse);
 
