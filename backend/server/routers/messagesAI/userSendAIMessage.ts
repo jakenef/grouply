@@ -26,6 +26,8 @@ export const userSendAIMessage = protectedProcedure
       toolResult: z.any().nullable(),
     })
   )
+
+  //TODO: figure out how to clean old ai convos
   .mutation(async ({ ctx, input }) => {
     let channel = undefined;
     if (input.channelId) {
