@@ -1,7 +1,7 @@
 import { ChatMessageRole } from "@/backend/generated/prisma/client";
 import z from "zod";
 import { prisma } from "../../prisma";
-import { generateAIResponse } from "../../services/generateAIResponse";
+import { generateAIResponse } from "../../services/ai/generateAIResponse";
 import { protectedProcedure } from "../../trpc";
 
 export const userSendAIMessage = protectedProcedure

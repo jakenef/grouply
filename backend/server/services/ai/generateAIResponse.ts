@@ -1,6 +1,6 @@
 import { ChatMessageRole } from "@/backend/generated/prisma/client";
 import OpenAI from "openai";
-import { prisma } from "../prisma";
+import { prisma } from "../../prisma";
 
 export async function generateAIResponse(params: {
   channelId: string;
