@@ -235,9 +235,9 @@ model EventProfileSnapshot {
   hostDisplayName String?
 
   // matchable signals (keep flexible)
-  interestSlugs String[] // e.g., top N of host's interests at creation
-  traitScores   Json? // { "introversion": 0.7, "risk-tolerance": 0.3, ... }
-  embedding     Json? // optional: future vector (store as JSON for MVP)
+  interestIds String[] // e.g., top N of host's interests at creation
+  traitScores Json? // { "introversion": 0.7, "risk-tolerance": 0.3, ... }
+  embedding   Json? // optional: future vector (store as JSON for MVP)
 
   // handy constraints copied for ranking/explanations
   lowerAgeLimit Int?

@@ -7,3 +7,9 @@ export interface Event {
   maxParticipants: number;
   currentParticipants: number;
 }
+
+export interface EventWithSnapshotData {
+  id: string;
+  interests: string[];
+  traits: Record<string, number>;
+}

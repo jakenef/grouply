@@ -1,15 +1,24 @@
 import { prisma } from "@/backend/server/prisma";
+import { UserWithTraitsAndInterests } from "@/types/User";
 
-export async function getValidEventsFromUser(userId: string) {
-  const user = await prisma.user.findUnique({ where: { id: userId } });
-  const userProfile = await prisma.userProfile.findUnique({
-    where: { userId },
-  });
-
+export async function getValidEventsFromUser(user: UserWithTraitsAndInterests) {
   const now = new Date();
   const userAge =
-    now.getFullYear() -
-    (userProfile?.birthday?.getFullYear() ?? now.getFullYear());
+    now.getFullYear() - (user.birthday?.getFullYear() ?? now.getFullYear());
+
+  if (!user.location) return [];
+
+  const { lat, lng } = user.location;
+  const radiusKm = user.maxTravelKm ?? 50;
+
+  // Bounding box deltas (for location filtering)
+  const latDelta = radiusKm / 111;
+  const lngDelta = radiusKm / (111 * Math.cos((lat * Math.PI) / 180));
+
+  const minLat = lat - latDelta;
+  const maxLat = lat + latDelta;
+  const minLng = lng - lngDelta;
+  const maxLng = lng + lngDelta;
 
   const validEvents = await prisma.event.findMany({
     where: {
@@ -24,6 +33,15 @@ export async function getValidEventsFromUser(userId: string) {
           OR: [{ upperAgeLimit: null }, { upperAgeLimit: { gte: userAge } }],
         },
       ],
+      location: {
+        lat: { gte: minLat, lte: maxLat },
+        lng: { gte: minLng, lte: maxLng },
+      },
+      isFull: false,
+      isCancelled: false,
+    },
+    include: {
+      snapshot: true,
     },
   });
 
