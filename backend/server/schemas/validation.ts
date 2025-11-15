@@ -16,6 +16,91 @@ export const locationDataSchema = z.object({
 // Gender enum validation
 export const genderEnum = z.enum(["Male", "Female", "Other"]);
 
+// Event location schema (simplified for frontend)
+export const eventLocationSchema = z.object({
+  id: z.string(),
+  formatted: z.string().nullable(),
+  city: z.string().nullable(),
+  region: z.string().nullable(),
+  countryCode: z.string().nullable(),
+  lat: z.number().nullable(),
+  lng: z.number().nullable(),
+});
+
+// Event organizer schema (basic info)
+export const eventOrganizerSchema = z.object({
+  id: z.string(),
+  displayName: z.string(),
+  avatarUrl: z.string().nullable(),
+});
+
+// Activity schema
+export const activitySchema = z.object({
+  id: z.string(),
+  slug: z.string(),
+  label: z.string(),
+});
+
+// Event snapshot schema (for matching data)
+export const eventSnapshotSchema = z.object({
+  hostUserId: z.string(),
+  hostDisplayName: z.string().nullable(),
+  interestIds: z.array(z.string()),
+  traitScores: z.record(z.string(), z.number()).nullable(),
+});
+
+// Complete Event DTO for frontend
+export const eventSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  desc: z.string().nullable(),
+  startsAt: z.date(),
+  endsAt: z.date(),
+  isCancelled: z.boolean(),
+  upperAgeLimit: z.number().nullable(),
+  lowerAgeLimit: z.number().nullable(),
+  eventUrl: z.string(),
+  imageUrls: z.array(z.string()),
+
+  // Organizer info
+  organizer: eventOrganizerSchema,
+
+  // Activity
+  activity: activitySchema,
+
+  // Location
+  location: eventLocationSchema,
+
+  // Capacity
+  maxAttendees: z.number().nullable(),
+  currentAttendees: z.number(),
+  isFull: z.boolean(),
+
+  // Snapshot (for matching/recommendation context)
+  snapshot: eventSnapshotSchema.nullable(),
+
+  // Metadata
+  createdAt: z.date(),
+});
+
+// Scored event for recommendation endpoints
+export const scoredEventSchema = z.object({
+  event: eventSchema,
+  score: z.number(),
+  matchReasons: z
+    .object({
+      interestOverlap: z.number().optional(),
+      traitSimilarity: z.number().optional(),
+    })
+    .optional(),
+});
+
 // Export types derived from schemas
 export type LocationData = z.infer<typeof locationDataSchema>;
 export type Gender = z.infer<typeof genderEnum>;
+export type EventLocation = z.infer<typeof eventLocationSchema>;
+export type EventOrganizer = z.infer<typeof eventOrganizerSchema>;
+export type Activity = z.infer<typeof activitySchema>;
+export type EventSnapshot = z.infer<typeof eventSnapshotSchema>;
+export type Event = z.infer<typeof eventSchema>;
+export type ScoredEvent = z.infer<typeof scoredEventSchema>;
