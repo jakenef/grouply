@@ -42,6 +42,10 @@ export async function getValidEventsFromUser(user: UserWithTraitsAndInterests) {
     },
     include: {
       snapshot: true,
+      organizer: true,
+      activity: true,
+      location: true,
+      regs: true,
     },
   });
 

@@ -65,7 +65,7 @@ export async function getSuggestedEventsFromUser(userId: string) {
     };
     const score = getMatchScore(eventWithSnapshotData, user);
 
-    return { event: eventWithSnapshotData, score }; // return object with both
+    return { event, score };
   });
 
   // Now sort and slice

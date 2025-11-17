@@ -87,12 +87,6 @@ export const eventSchema = z.object({
 export const scoredEventSchema = z.object({
   event: eventSchema,
   score: z.number(),
-  matchReasons: z
-    .object({
-      interestOverlap: z.number().optional(),
-      traitSimilarity: z.number().optional(),
-    })
-    .optional(),
 });
 
 // Export types derived from schemas
