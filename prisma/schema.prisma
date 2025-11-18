@@ -170,6 +170,8 @@ model Activity {
   id    String @id @default(uuid())
   slug  String @unique // canonical id: "pickup-basketball"
   label String
+  description String?
+  embedding Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
