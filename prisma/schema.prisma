@@ -171,7 +171,7 @@ model Activity {
   slug  String @unique // canonical id: "pickup-basketball"
   label String
   description String?
-  embedding Json?
+  embedding Unsupported("vector(1536)")?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

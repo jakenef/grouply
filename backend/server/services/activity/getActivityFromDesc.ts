@@ -1,4 +1,6 @@
+import { Prisma } from "@/backend/generated/prisma";
 import OpenAI from "openai";
+import { prisma } from "../../prisma";
 
 // takes in a desc and a name maybe and uses text embedding vector math to find related activities
 export async function getActivityFromDesc(desc: string) {
@@ -10,8 +12,41 @@ export async function getActivityFromDesc(desc: string) {
     encoding_format: "float",
   });
 
+  const minSimilarity = 0.8;
+  const k = 1;
+
   const embedding = response.data[0].embedding;
 
   // compare against database, find best match using cosine similarity
-  // return activity ID if high enough, null if not
+
+  const queryVector = `[${embedding.join(",")}]`;
+
+  const where: Prisma.Sql[] = [
+    Prisma.sql`embedding IS NOT NULL`,
+    Prisma.sql`(embedding <=> ${queryVector}::vector) < (1 - ${minSimilarity})`,
+  ];
+
+  const whereClause = Prisma.sql`${Prisma.join(where, " AND ")}`;
+
+  const results = await prisma.$queryRaw<
+    { id: string; name: string; desc: string; similarity: number }[]
+  >(
+    Prisma.sql`
+      SELECT
+        id,
+        name,
+        desc,
+        1 - (embedding <=> ${queryVector}::vector) AS similarity
+      FROM "public"."Activity"
+      WHERE ${whereClause}
+      ORDER BY embedding <=> ${queryVector}::vector
+      LIMIT ${k};
+    `
+  );
+
+  if (results) {
+    return results;
+  } else {
+    return null;
+  }
 }
