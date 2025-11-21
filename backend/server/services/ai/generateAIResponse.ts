@@ -18,7 +18,7 @@ export async function generateAIResponse(params: {
   console.log("contextMessages length: ", contextMessages.length);
   console.log(contextMessages);
 
-  // need a getSuggestedEvents(activityDesc, groupSize, startTime, endTime) (tool)
+  // need a getSuggestedEvents(activityDesc, groupSize, startTime, endTime, userid) (tool) or should it be refreshClientSuggestedEvents(...)?
   // websearch tool
   // need a getActivity(name, desc) (service)
   // need a generateEvent(activityDesc, groupSize, time) (service, uses convo id)
@@ -32,8 +32,7 @@ export async function generateAIResponse(params: {
         properties: {
           activityDesc: {
             type: "string",
-            description:
-              "a short string describing the activity the user wants",
+            description: "a string describing the activity the user wants",
           },
           groupSize: {
             type: "number",
@@ -84,5 +83,6 @@ export async function generateAIResponse(params: {
     role: ChatMessageRole.assistant,
   };
 
+  // probably need to include events in response
   return aiChatMessageResponse;
 }

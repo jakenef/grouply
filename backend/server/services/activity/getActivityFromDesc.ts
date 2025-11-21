@@ -2,7 +2,6 @@ import { Prisma } from "@/backend/generated/prisma";
 import OpenAI from "openai";
 import { prisma } from "../../prisma";
 
-// takes in a desc and a name maybe and uses text embedding vector math to find related activities
 /**
  * Finds the most similar activity from the database based on a text description.
  *
@@ -16,7 +15,7 @@ import { prisma } from "../../prisma";
  *          or null if no suitable match exists
  *
  * @remarks
- * - Uses a minimum similarity threshold of 0.3
+ * - Uses a minimum similarity threshold of 0.45
  * - Returns only the single best match (k=1)
  * - Requires activities in the database to have valid embedding vectors
  * - Similarity score ranges from 0 to 1, where 1 is identical
@@ -38,7 +37,7 @@ export async function getActivityFromDesc(desc: string) {
     encoding_format: "float",
   });
 
-  const minSimilarity = 0.3;
+  const minSimilarity = 0.45;
   const k = 1;
 
   const embedding = response.data[0].embedding;
@@ -64,7 +63,7 @@ export async function getActivityFromDesc(desc: string) {
   );
 
   const best = results[0];
-  //console.log(best);
+  console.log("input: ", desc, "closest activity: ", best);
   if (best && best.similarity > minSimilarity) {
     return best;
   }

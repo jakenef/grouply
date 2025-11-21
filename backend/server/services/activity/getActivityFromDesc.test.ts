@@ -3,12 +3,14 @@ import { prisma } from "../../prisma";
 import { getActivityFromDesc } from "./getActivityFromDesc";
 
 describe("getActivityFromDesc integration tests", () => {
-  let hikingTimpActivityDesc = "hiking mount timp through the night";
+  let hikingTimpActivityDesc =
+    "An adventurous overnight hike up Mount Timpanogos, following steep trails through forests and rocky ridges to reach a breathtaking summit view at sunrise. Ideal for nature lovers seeking a challenging mountain experience with friends under the stars.";
   let hikingTimpActivityId: string;
   let frenchMovieActivityDesc =
-    "watching french movies in black and white with the captions";
+    "A cozy movie night focused on watching classic French films, often in black and white, with English subtitles. Perfect for people who love international cinema, quiet evenings, and cultural experiences centered around storytelling and aesthetics.";
   let frenchMovieActivityId: string;
-  let canyonTrailRunDesc = "running the canyon trail along a paved pathway";
+  let canyonTrailRunDesc =
+    "A refreshing run along the scenic canyon trail, following a smooth, paved path that winds through trees and streams. Great for runners who enjoy morning exercise, nature views, and fresh canyon air without technical terrain.";
   let canyonTrailActivityId: string;
   const openai = new OpenAI();
 
@@ -99,7 +101,16 @@ describe("getActivityFromDesc integration tests", () => {
   });
 
   it("can pick hiking correctly between wildly different activities and slightly different (hiking timp vs french movie night vs running canyon trail)", async () => {
-    const userDesc = "hiking in nature";
+    const userDesc =
+      "hiking through mountain trails at night to reach a scenic sunrise view at the summit";
+    const foundActivity = await getActivityFromDesc(userDesc);
+
+    expect(foundActivity).not.toBeNull();
+    expect(foundActivity!.id).toBe(hikingTimpActivityId);
+  });
+
+  it("can pick hiking correctly given a short desc", async () => {
+    const userDesc = "hiking timp";
     const foundActivity = await getActivityFromDesc(userDesc);
 
     expect(foundActivity).not.toBeNull();
@@ -107,7 +118,8 @@ describe("getActivityFromDesc integration tests", () => {
   });
 
   it("can pick trail running correctly between wildly different activities and slightly different (hiking timp vs french movie night vs running canyon trail)", async () => {
-    const userDesc = "running outside";
+    const userDesc =
+      "running along a paved canyon trail surrounded by trees and streams";
     const foundActivity = await getActivityFromDesc(userDesc);
 
     expect(foundActivity).not.toBeNull();
@@ -115,7 +127,15 @@ describe("getActivityFromDesc integration tests", () => {
   });
 
   it("can tell when an activity doesn't exist", async () => {
-    const userDesc = "tightrope walking while juggling";
+    const userDesc =
+      "balancing on a tightrope or juggling while walking across it. Something extreme or unusual.";
+    const foundActivity = await getActivityFromDesc(userDesc);
+
+    expect(foundActivity).toBeNull();
+  });
+
+  it("can tell when an activity isn't close enough", async () => {
+    const userDesc = "watch stupid comedy movies with people";
     const foundActivity = await getActivityFromDesc(userDesc);
 
     expect(foundActivity).toBeNull();

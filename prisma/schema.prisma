@@ -206,6 +206,7 @@ model Event {
 
   // Attendees
   maxAttendees Int?
+  minAttendees Int?
   isFull       Boolean             @default(false)
   regs         EventRegistration[]
   savedByUsers SavedEvent[]
