@@ -57,7 +57,10 @@ export const userSendAIMessage = protectedProcedure
       },
     });
 
-    const response = await generateAIResponse({ channelId: channel.id });
+    const response = await generateAIResponse({
+      channelId: channel.id,
+      userId: ctx.user.id,
+    });
 
     const chatMessageResponse = await prisma.chatMessage.create({
       data: {

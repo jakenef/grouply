@@ -1,13 +1,21 @@
 import { getActivityFromDesc } from "../../activity/getActivityFromDesc";
 import { getSuggestedEventsFromUser } from "../getSuggestedEventsFromUser/getSuggestedEventsFromUser";
 
-export async function getSuggestedEventsFromActivityDesc(
-  activityDescription: string,
-  groupSize: number,
-  startTime: Date,
-  endTime: Date,
-  userId: string
-) {
+export async function getSuggestedEventsFromActivityDesc({
+  activityDescription,
+  groupSize,
+  startTimeString,
+  endTimeString,
+  userId,
+}: {
+  activityDescription: string;
+  groupSize: number;
+  startTimeString: string;
+  endTimeString: string;
+  userId: string;
+}) {
+  const startTime = startTimeString ? new Date(startTimeString) : undefined;
+  const endTime = endTimeString ? new Date(endTimeString) : undefined;
   const events = await getSuggestedEventsFromUser(userId);
   const activity = await getActivityFromDesc(activityDescription);
 
@@ -31,12 +39,12 @@ export async function getSuggestedEventsFromActivityDesc(
 
   const fitsTimeWindow = (
     eventWithScore: EventWithScore,
-    windowStart: Date,
-    windowEnd: Date
+    windowStart: Date | undefined,
+    windowEnd: Date | undefined
   ) => {
     return (
-      eventWithScore.event.startsAt >= windowStart &&
-      eventWithScore.event.startsAt <= windowEnd
+      eventWithScore.event.startsAt >= (windowStart ?? 0) &&
+      eventWithScore.event.startsAt <= (windowEnd ?? Number.POSITIVE_INFINITY)
     );
   };
 
