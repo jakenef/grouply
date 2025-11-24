@@ -1,42 +1,51 @@
-import React from 'react';
-import { View, Text, Image, TouchableOpacity } from 'react-native';
-import { Event } from '../types/Event';
-import { format } from 'date-fns';
+import { format } from "date-fns";
+import React from "react";
+import { Image, Text, TouchableOpacity, View } from "react-native";
 
 interface EventCardProps {
-  event: Event;
+  event: any; // Using any for now since the API structure differs from Event type
   onJoin?: () => void;
 }
 
 export const EventCard: React.FC<EventCardProps> = ({ event, onJoin }) => {
+  // Handle both the API structure (event.event) and direct event structure
+  const eventData = event.event || event;
+  const dateTime = eventData.startsAt || eventData.dateTime;
+  const title = eventData.name || eventData.title;
+  const location = eventData.location?.formatted || eventData.location;
+  const imageUrl = eventData.imageUrls?.[0] || eventData.thumbnailUrl;
+  const currentParticipants =
+    eventData.currentAttendees || eventData.currentParticipants || 0;
+  const maxParticipants =
+    eventData.maxAttendees || eventData.maxParticipants || 0;
+
   return (
     <View className="flex-row bg-white rounded-xl p-4 shadow-sm mb-4">
       {/* Thumbnail */}
-      <Image
-        source={{ uri: event.thumbnailUrl }}
-        className="w-24 h-24 rounded-lg mr-4"
-      />
-      
+      <Image source={{ uri: imageUrl }} className="w-24 h-24 rounded-lg mr-4" />
+
       {/* Content */}
       <View className="flex-1">
         {/* Title */}
-        <Text className="text-lg font-semibold mb-1">{event.title}</Text>
-        
+        <Text className="text-lg font-semibold mb-1">{title}</Text>
+
         {/* Location */}
-        <Text className="text-gray-600 mb-1">{event.location}</Text>
-        
+        <Text className="text-gray-600 mb-1">{location}</Text>
+
         {/* Date & Time */}
         <Text className="text-gray-600 mb-2">
-          {format(event.dateTime, 'MMM d, yyyy • h:mm a')}
+          {dateTime
+            ? format(new Date(dateTime), "MMM d, yyyy • h:mm a")
+            : "Date TBD"}
         </Text>
-        
+
         {/* Bottom Row */}
         <View className="flex-row items-center justify-between">
           {/* Participants */}
           <Text className="text-gray-700">
-            {event.currentParticipants}/{event.maxParticipants} people
+            {currentParticipants}/{maxParticipants} people
           </Text>
-          
+
           {/* Join Button */}
           <TouchableOpacity
             onPress={onJoin}

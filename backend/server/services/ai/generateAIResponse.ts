@@ -8,6 +8,8 @@ export async function generateAIResponse(params: {
   userId: string;
   numContextMessages?: number;
 }) {
+  // TODO: clean this upp
+  // TODO: or create new event suggestion
   // 1) Fetch last N messages for context
   const contextMessages = await prisma.chatMessage.findMany({
     where: {
@@ -17,14 +19,12 @@ export async function generateAIResponse(params: {
     take: params.numContextMessages ?? 20,
   });
 
-  console.log("contextMessages length: ", contextMessages.length);
-  console.log(contextMessages);
-
   // need a getSuggestedEvents(activityDesc, groupSize, startTime, endTime, userid) (tool) or should it be refreshClientSuggestedEvents(...)?
   // websearch tool
   // need a getActivity(name, desc) (service)
   // need a generateEvent(activityDesc, groupSize, time) (service, uses convo id)
-  const tools = [
+  const tools: any[] = [
+    { type: "web_search" },
     {
       type: "function" as const,
       name: "refreshClientSuggestedEvents",
@@ -132,11 +132,6 @@ export async function generateAIResponse(params: {
       }
     }
 
-    console.log(
-      "~~~ Input array before second call: ",
-      JSON.stringify(input, null, 2)
-    );
-
     // Make another API call with the function outputs
     // The input must not be empty
     if (input.length === 0) {
@@ -164,7 +159,7 @@ export async function generateAIResponse(params: {
     }
   }
   // 4) Format AI response for return
-  console.log("--- ai response: ", aiResponse);
+  console.log("--- ai response: ", aiResponse.output_text);
   console.info(" $ Current Events On Client $: ", latestRefresh);
 
   const aiChatMessageResponse = {

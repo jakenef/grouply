@@ -37,7 +37,6 @@ const EventSuggestions = () => {
         renderItem={({ item }) => <EventCard event={item} />}
         ListEmptyComponent={<Text>No events found.</Text>}
       ></FlatList>
-      <EventCard event={exampleEvent} />
     </View>
   );
 };
