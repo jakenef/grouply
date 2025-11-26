@@ -1,6 +1,7 @@
 import { ChatMessageRole } from "@/backend/generated/prisma/client";
 import z from "zod";
 import { prisma } from "../../prisma";
+import { scoredEventSchema } from "../../schemas";
 import { generateAIResponse } from "../../services/ai/generateAIResponse";
 import { protectedProcedure } from "../../trpc";
 
@@ -24,6 +25,7 @@ export const userSendAIMessage = protectedProcedure
       toolName: z.string().nullable(),
       toolArgs: z.any().nullable(),
       toolResult: z.any().nullable(),
+      refreshedEvents: z.array(scoredEventSchema).optional(),
     })
   )
   .mutation(async ({ ctx, input }) => {
@@ -57,19 +59,40 @@ export const userSendAIMessage = protectedProcedure
       },
     });
 
-    const response = await generateAIResponse({
+    const { aiChatMessageResponse, latestRefresh } = await generateAIResponse({
       channelId: channel.id,
       userId: ctx.user.id,
     });
 
     const chatMessageResponse = await prisma.chatMessage.create({
       data: {
-        body: response.body,
-        authorId: response.authorId,
-        role: response.role as any,
+        body: aiChatMessageResponse.body,
+        authorId: aiChatMessageResponse.authorId,
+        role: aiChatMessageResponse.role as any,
         channelId: channel.id,
       },
     });
 
-    return chatMessageResponse;
+    console.log("!!!~~~~ here's what return looks like: \n", {
+      ...chatMessageResponse,
+      refreshedEvents: latestRefresh,
+    });
+    console.log("refreshedEvents:", JSON.stringify(latestRefresh, null, 2));
+
+    const fixedRefresh = latestRefresh?.map(({ event, score }) => ({
+      event: {
+        ...event,
+        startsAt: new Date(event.startsAt),
+        endsAt: new Date(event.endsAt),
+        createdAt: new Date(event.createdAt),
+        currentAttendees: event.regs ? event.regs.length : 0,
+      },
+      score,
+    }));
+    console.log(
+      "fixed Refreshed Events: ",
+      JSON.stringify(fixedRefresh, null, 2)
+    );
+
+    return { ...chatMessageResponse, refreshedEvents: fixedRefresh ?? [] };
   });

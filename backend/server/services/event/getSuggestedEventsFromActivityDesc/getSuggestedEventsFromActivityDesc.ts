@@ -1,6 +1,29 @@
 import { getActivityFromDesc } from "../../activity/getActivityFromDesc";
 import { getSuggestedEventsFromUser } from "../getSuggestedEventsFromUser/getSuggestedEventsFromUser";
 
+type EventWithScore = Awaited<
+  ReturnType<typeof getSuggestedEventsFromUser>
+>[number];
+
+/**
+ * Retrieves a list of suggested events based on the provided activity description, group size, time window, and user ID.
+ *
+ * This function performs the following steps:
+ * 1. Parses the start and end time strings into Date objects.
+ * 2. Fetches suggested events for the user.
+ * 3. Determines the activity from the given description.
+ * 4. Filters events to match the activity, fit within the specified time window, and accommodate the group size.
+ * 5. Sorts the filtered events by their score in descending order.
+ *
+ * @param params - An object containing the following properties:
+ * @param params.activityDescription - The description of the activity to match events against.
+ * @param params.groupSize - The number of attendees for the event.
+ * @param params.startTimeString - The start time of the desired event window (ISO string).
+ * @param params.endTimeString - The end time of the desired event window (ISO string).
+ * @param params.userId - The ID of the user for whom to suggest events.
+ *
+ * @returns A promise that resolves to an array of filtered and sorted event suggestions.
+ */
 export async function getSuggestedEventsFromActivityDesc({
   activityDescription,
   groupSize,
@@ -9,9 +32,9 @@ export async function getSuggestedEventsFromActivityDesc({
   userId,
 }: {
   activityDescription: string;
-  groupSize: number;
-  startTimeString: string;
-  endTimeString: string;
+  groupSize: number | null;
+  startTimeString: string | null;
+  endTimeString: string | null;
   userId: string;
 }) {
   const startTime = startTimeString ? new Date(startTimeString) : undefined;
@@ -20,15 +43,29 @@ export async function getSuggestedEventsFromActivityDesc({
   const activity = await getActivityFromDesc(activityDescription);
 
   type Activity = Awaited<ReturnType<typeof getActivityFromDesc>>;
-  type EventWithScore = Awaited<
-    ReturnType<typeof getSuggestedEventsFromUser>
-  >[number];
 
-  // filter down events by activity, then by start/endtime and groupsize
-  const matchesActivity = (
-    eventWithScore: EventWithScore,
-    activity: Activity
-  ) => {
+  // Filtering logic extracted to helper
+  return filterAndSortEvents(
+    events,
+    activity,
+    groupSize ?? undefined,
+    startTime,
+    endTime
+  );
+}
+
+/**
+ * Filters and sorts events by activity, time window, and group size.
+ * Returns events sorted by score descending.
+ */
+export function filterAndSortEvents(
+  events: any[],
+  activity: any,
+  groupSize?: number,
+  startTime?: Date,
+  endTime?: Date
+) {
+  const matchesActivity = (eventWithScore: any, activity: any) => {
     if (!activity || !eventWithScore.event.activity) {
       return false;
     } else if (activity.id != eventWithScore.event.activityId) {
@@ -38,7 +75,7 @@ export async function getSuggestedEventsFromActivityDesc({
   };
 
   const fitsTimeWindow = (
-    eventWithScore: EventWithScore,
+    eventWithScore: any,
     windowStart: Date | undefined,
     windowEnd: Date | undefined
   ) => {
@@ -48,7 +85,8 @@ export async function getSuggestedEventsFromActivityDesc({
     );
   };
 
-  const fitsGroupSize = (eventWithScore: EventWithScore, groupSize: number) => {
+  const fitsGroupSize = (eventWithScore: any, groupSize?: number) => {
+    if (!groupSize) return true;
     const min = eventWithScore.event.minAttendees ?? 1;
     const max = eventWithScore.event.maxAttendees ?? Number.POSITIVE_INFINITY;
     return groupSize >= min && groupSize <= max;

@@ -2,10 +2,12 @@ import { ChatMessage, ChatMessageRole } from "@/types/Chat";
 import React, { useEffect, useRef, useState } from "react";
 import { FlatList, Text, TextInput, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
+import { EventCard } from "../shared/EventCard";
 import GrouplyButton from "../shared/GrouplyButton";
 
 type HomeChatSectionProps = {
   messages: ChatMessage[];
+  eventSuggestions: any[];
   onSend: (text: string) => void;
   placeholder?: string;
   isExpanded?: boolean;
@@ -14,6 +16,7 @@ type HomeChatSectionProps = {
 
 export default function HomeChatSection({
   messages,
+  eventSuggestions,
   onSend,
   placeholder = "e.g. find a hiking group this weekend...",
   isExpanded = false,
@@ -90,6 +93,16 @@ export default function HomeChatSection({
           />
         )}
       </View>
+      {/* Event Suggestions Scroller */}
+      {eventSuggestions && (
+        <View className="px-3 py-2">
+          <FlatList
+            data={eventSuggestions}
+            renderItem={({ item }) => <EventCard event={item} />}
+            horizontal={true}
+          ></FlatList>
+        </View>
+      )}
 
       {/* Input bar - always visible */}
       <View className="border-border px-3 py-2">
