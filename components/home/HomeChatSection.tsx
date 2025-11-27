@@ -2,6 +2,7 @@ import { ChatMessage, ChatMessageRole } from "@/types/Chat";
 import React, { useEffect, useRef, useState } from "react";
 import { FlatList, Text, TextInput, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
+import CreateEventCard from "../shared/CreateEventCard";
 import { EventCard } from "../shared/EventCard";
 import GrouplyButton from "../shared/GrouplyButton";
 
@@ -12,6 +13,7 @@ type HomeChatSectionProps = {
   placeholder?: string;
   isExpanded?: boolean;
   isLoading?: boolean;
+  channelId?: string;
 };
 
 export default function HomeChatSection({
@@ -94,12 +96,22 @@ export default function HomeChatSection({
         )}
       </View>
       {/* Event Suggestions Scroller */}
-      {eventSuggestions && (
+      {eventSuggestions && messages.length !== 0 && (
         <View className="px-3 py-2">
           <FlatList
             data={eventSuggestions}
-            renderItem={({ item }) => <EventCard event={item} />}
+            renderItem={({ item }) => (
+              <View className="px-2">
+                <EventCard event={item} />
+              </View>
+            )}
             horizontal={true}
+            ListFooterComponent={
+              <CreateEventCard
+                onClick={() => null}
+                buttonText="Create Event Automatically With AI"
+              />
+            }
           ></FlatList>
         </View>
       )}

@@ -20,7 +20,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onJoin }) => {
     eventData.maxAttendees || eventData.maxParticipants || 0;
 
   return (
-    <View className="flex-row bg-white rounded-xl p-4 shadow-sm mb-4">
+    <View className="flex-row bg-white rounded-xl p-4 shadow-sm mb-4 border-border border-solid border-2">
       {/* Thumbnail */}
       <Image source={{ uri: imageUrl }} className="w-24 h-24 rounded-lg mr-4" />
 
