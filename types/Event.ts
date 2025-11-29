@@ -1,6 +1,7 @@
 export interface Event {
   id: string;
   title: string;
+  description: string;
   location: string;
   dateTime: Date;
   thumbnailUrl: string;

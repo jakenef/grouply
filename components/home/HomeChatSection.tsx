@@ -1,4 +1,5 @@
 import { ChatMessage, ChatMessageRole } from "@/types/Chat";
+import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { FlatList, Text, TextInput, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
@@ -102,7 +103,15 @@ export default function HomeChatSection({
             data={eventSuggestions}
             renderItem={({ item }) => (
               <View className="px-2">
-                <EventCard event={item} />
+                <EventCard
+                  event={item}
+                  onJoin={() =>
+                    router.push({
+                      pathname: `/(events)/Events/[id]`,
+                      params: { id: item.event.id },
+                    })
+                  }
+                />
               </View>
             )}
             horizontal={true}

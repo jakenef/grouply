@@ -13,7 +13,8 @@ export default function RootLayout() {
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <SafeAreaProvider>
+          {/* TODO: why this safeAreaProvider?? */}
+          <SafeAreaProvider className="flex-1 bg-background">
             <Stack
               screenOptions={{
                 headerShown: false,
