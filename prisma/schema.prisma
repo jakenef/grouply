@@ -205,7 +205,7 @@ model Event {
   location   Location @relation(fields: [locationId], references: [id])
 
   // Attendees
-  maxAttendees Int?
+  maxAttendees Int @default(5)
   minAttendees Int?
   isFull       Boolean             @default(false)
   regs         EventRegistration[]

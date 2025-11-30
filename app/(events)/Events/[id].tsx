@@ -31,7 +31,7 @@ export default function EventDetailsView() {
 
   return (
     <View className="flex-1">
-      <EventDetails name={event.name} description={event.description} />
+      <EventDetails event={event} />
     </View>
   );
 }
