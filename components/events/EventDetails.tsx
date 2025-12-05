@@ -1,4 +1,5 @@
 import { colors } from "@/lib/theme";
+import { useCurrentUser } from "@/lib/useCurrentUserHook";
 import { Ionicons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import { router } from "expo-router";
@@ -27,6 +28,7 @@ interface EventDetailsProps {
 }
 
 export default function EventDetails(props: EventDetailsProps) {
+  const { user } = useCurrentUser();
   const formattedStart = format(
     props.event.startTime,
     "eeee, MMMM d, yyyy • h:mm a - "
@@ -34,6 +36,8 @@ export default function EventDetails(props: EventDetailsProps) {
   const formattedEndTime = format(props.event.endTime, "h:mm a");
   const fractionAttendees =
     props.event.numRegistered / props.event.maxAttendees;
+  //TODO: make edit button for event host and join event / backout switch based on attendance status
+  const isUserAttending = user && user.id in props.event.attendeeIds;
   return (
     <View className="flex-1 bg-background">
       {/* Header */}
@@ -107,15 +111,19 @@ export default function EventDetails(props: EventDetailsProps) {
           </View>
 
           {/* Buttons: if current user is registered for this event, show back out button instead */}
-          <GrouplyButton
-            label="Join Event"
-            iconName="checkmark-circle"
-            iconPosition="left"
-          />
-          <GrouplyButton
-            label="Back Out"
-            style={{ backgroundColor: colors.muted.DEFAULT }}
-          />
+          {isUserAttending ? (
+            <GrouplyButton
+              label="Back Out"
+              style={{ backgroundColor: colors.muted.DEFAULT }}
+            />
+          ) : (
+            <GrouplyButton
+              label="Join Event"
+              iconName="checkmark-circle"
+              iconPosition="left"
+            />
+          )}
+
           <View className="flex-row items-center justify-between py-3 gap-3">
             <Pressable className="flex-1 border border-gray-200 rounded-xl p-3">
               <View className="flex-row items-center">

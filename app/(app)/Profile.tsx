@@ -1,17 +1,17 @@
 import GrouplyButton from "@/components/shared/GrouplyButton";
 import { useAuth } from "@/lib/auth";
-import { trpc } from "@/lib/trpc";
+import { useCurrentUser } from "@/lib/useCurrentUserHook";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 
 const Profile = () => {
-  const { data: profile } = trpc.users.getMyProfile.useQuery();
+  const { user } = useCurrentUser();
   const { signOut } = useAuth();
 
   const router = useRouter();
-  const isAdmin = profile?.role === "ADMIN";
+  const isAdmin = user?.role === "ADMIN";
 
   return (
     <View className="flex-1 p-6">

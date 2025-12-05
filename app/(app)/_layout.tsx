@@ -1,13 +1,13 @@
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/lib/theme";
-import { trpc } from "@/lib/trpc";
+import { useCurrentUser } from "@/lib/useCurrentUserHook";
 import { Ionicons } from "@expo/vector-icons";
 import { Redirect, Tabs } from "expo-router";
 import { ActivityIndicator, View } from "react-native";
 
 export default function AppLayout() {
   const { session } = useAuth();
-  const { data: profile, isLoading } = trpc.users.getMyProfile.useQuery();
+  const { user: profile, isLoading } = useCurrentUser();
 
   // If no session, redirect to auth
   if (!session) {
