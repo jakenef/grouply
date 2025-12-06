@@ -51,6 +51,8 @@ export const TRB_createEvents = adminProcedure
           faker.number.int({ min: 1, max: 6 }) * 60 * 60 * 1000
       );
 
+      const minAttendees = faker.number.int({ min: 2, max: 10 });
+
       // Create the event
       const event = await ctx.prisma.event.create({
         data: {
@@ -68,6 +70,8 @@ export const TRB_createEvents = adminProcedure
             })),
           },
           eventUrl: "fakeURL",
+          minAttendees,
+          maxAttendees: faker.number.int({ min: minAttendees + 1, max: 12 }),
         },
       });
 
