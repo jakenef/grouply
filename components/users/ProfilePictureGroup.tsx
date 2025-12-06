@@ -42,6 +42,9 @@ export default function ProfilePictureGroup({
   const namesList = userList.map((user) => user.firstName);
   const namesListText = generateNamesText(namesList);
 
+  const profilePictureStyles =
+    "rounded-full overflow-hidden w-12 h-12 border-2 border-white";
+
   if (isLoading) {
     return (
       <View>
@@ -69,8 +72,8 @@ export default function ProfilePictureGroup({
                   key={userId}
                   className={
                     idx === 0
-                      ? "rounded-full overflow-hidden w-10 h-10 border-2 border-white"
-                      : "rounded-full overflow-hidden w-10 h-10 border-2 border-white -ml-2"
+                      ? profilePictureStyles
+                      : `${profilePictureStyles} -ml-2`
                   }
                 >
                   {avatarUrl ? (
@@ -88,7 +91,9 @@ export default function ProfilePictureGroup({
               ))}
 
               {extraPicturesCount > 0 && (
-                <View className="rounded-full overflow-hidden w-10 h-10 border-2 border-white -ml-2 bg-gray-200 items-center justify-center">
+                <View
+                  className={`${profilePictureStyles} -ml-2 bg-gray-200 items-center justify-center`}
+                >
                   <Text className="text-xs text-gray-500">
                     +{extraPicturesCount}
                   </Text>
@@ -96,7 +101,7 @@ export default function ProfilePictureGroup({
               )}
             </View>
             {showNames && (
-              <View className="flex-row items-center">
+              <View className="flex-row items-center pt-2">
                 <Text>{namesListText}</Text>
               </View>
             )}

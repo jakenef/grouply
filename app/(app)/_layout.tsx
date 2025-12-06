@@ -24,7 +24,6 @@ export default function AppLayout() {
   }
 
   const isAdmin = profile?.role === "ADMIN";
-  console.log("User profile in layout:", { profile, isAdmin });
 
   return (
     <Tabs

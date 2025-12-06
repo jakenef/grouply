@@ -1,9 +1,10 @@
 import { colors } from "@/lib/theme";
+import { trpc } from "@/lib/trpc";
 import { useCurrentUser } from "@/lib/useCurrentUserHook";
 import { Ionicons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import { router } from "expo-router";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Image, Pressable, ScrollView, Text, View } from "react-native";
 import GrouplyButton from "../shared/GrouplyButton";
 import ImageCarousel from "../shared/ImageCarousel";
 import ProfilePictureGroup from "../users/ProfilePictureGroup";
@@ -15,12 +16,13 @@ interface EventDetailsObject {
   minAge: number;
   maxAge: number;
   name: string;
-  locationId: string;
+  locationString: string;
   startTime: string;
   endTime: string;
   numRegistered: number;
   attendeeIds: string[];
   imageUrls: string[];
+  hostId: string;
 }
 
 interface EventDetailsProps {
@@ -37,7 +39,10 @@ export default function EventDetails(props: EventDetailsProps) {
   const fractionAttendees =
     props.event.numRegistered / props.event.maxAttendees;
   //TODO: make edit button for event host and join event / backout switch based on attendance status
-  const isUserAttending = user && user.id in props.event.attendeeIds;
+  const isUserAttending = !!user && props.event.attendeeIds.includes(user.id);
+  const { data: host } = trpc.users.getPublicProfileById.useQuery({
+    id: props.event.hostId,
+  });
   return (
     <View className="flex-1 bg-background">
       {/* Header */}
@@ -54,6 +59,23 @@ export default function EventDetails(props: EventDetailsProps) {
       <ScrollView className="flex-1">
         <View className="p-4 pt-1">
           <Text className="text-3xl font-bold">{props.event.name}</Text>
+          <View className="flex-row items-center pt-3">
+            <View style={{ width: 30, height: 30, marginRight: 5 }}>
+              {host?.avatarUrl && (
+                <Image
+                  source={{ uri: host.avatarUrl }}
+                  height={30}
+                  width={30}
+                  className="rounded-full"
+                />
+              )}
+            </View>
+            <Text className="text-muted">
+              Hosted by{" "}
+              <Text className="font-semibold">{host?.displayName}</Text>
+            </Text>
+          </View>
+
           <View className="flex-row items-center pt-2 pb-1">
             <Ionicons
               name="calendar"
@@ -72,7 +94,9 @@ export default function EventDetails(props: EventDetailsProps) {
               size={15}
               className="pr-2"
             />
-            <Text className="text-lg text-muted">Santa Monica</Text>
+            <Text className="text-lg text-muted">
+              {props.event.locationString}
+            </Text>
           </View>
 
           {/* Pictures */}
@@ -83,6 +107,7 @@ export default function EventDetails(props: EventDetailsProps) {
           <Text className="text-lg text-muted py-5">
             {props.event.description}
           </Text>
+
           <View className="bg-gray-100 rounded-md p-3 flex-row items-center">
             <Ionicons name="people" size={25} color={colors.primary} />
             <View className="flex-col items-start pl-3">
@@ -98,7 +123,8 @@ export default function EventDetails(props: EventDetailsProps) {
               </View>
             </View>
           </View>
-          <View className="flex-row items-center">
+
+          <View className="flex-row items-center pb-3">
             <Ionicons
               name="calendar-number"
               color={colors.primary}
@@ -114,18 +140,19 @@ export default function EventDetails(props: EventDetailsProps) {
           {isUserAttending ? (
             <GrouplyButton
               label="Back Out"
-              style={{ backgroundColor: colors.muted.DEFAULT }}
+              style={{ backgroundColor: colors.muted.DEFAULT, minHeight: 50 }}
             />
           ) : (
             <GrouplyButton
               label="Join Event"
               iconName="checkmark-circle"
               iconPosition="left"
+              style={{ minHeight: 50 }}
             />
           )}
 
-          <View className="flex-row items-center justify-between py-3 gap-3">
-            <Pressable className="flex-1 border border-gray-200 rounded-xl p-3">
+          <View className="flex-row items-center justify-between pt-3 pb-4 gap-3">
+            <Pressable className="flex-1 flex-row items-center border border-gray-200 rounded-xl p-3">
               <View className="flex-row items-center">
                 <Ionicons
                   name="calendar-outline"
@@ -148,7 +175,7 @@ export default function EventDetails(props: EventDetailsProps) {
           </View>
 
           {/* Attendees */}
-          <View className="flex-row justify-between">
+          <View className="flex-row justify-between pb-2">
             <Text className="text-xl font-bold">Attendees</Text>
             {props.event.attendeeIds && (
               <Pressable>

@@ -16,20 +16,21 @@ export const getEventDetailsFromId = protectedProcedure
         description: z.string(),
         startTime: z.date(),
         endTime: z.date(),
-        locationId: z.string(),
+        locationString: z.string(),
         numRegistered: z.number(),
         maxAttendees: z.number(),
         minAge: z.number(),
         maxAge: z.number(),
         attendeeIds: z.array(z.string()),
         imageUrls: z.array(z.string()),
+        hostId: z.string(),
       })
       .optional()
   )
   .query(async ({ ctx, input }) => {
     const event = await prisma.event.findUnique({
       where: { id: input.id },
-      include: { regs: true },
+      include: { regs: true, location: true },
     });
 
     if (event) {
@@ -41,13 +42,14 @@ export const getEventDetailsFromId = protectedProcedure
         description: event.desc ?? "",
         startTime: event.startsAt,
         endTime: event.endsAt,
-        locationId: event.locationId,
+        locationString: event.location.formatted ?? "",
         numRegistered: numRegs,
         maxAttendees: event.maxAttendees ?? 0,
         minAge: event.lowerAgeLimit ?? 0,
         maxAge: event.upperAgeLimit ?? 0,
         attendeeIds: attendeeIds,
         imageUrls: event.imageUrls,
+        hostId: event.organizerId,
       };
     } else {
       return undefined;

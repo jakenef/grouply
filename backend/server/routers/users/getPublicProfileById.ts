@@ -1,17 +1,16 @@
 import { z } from "zod";
 import { publicProcedure } from "../../trpc";
 
-export const getPublicProfiles = publicProcedure
+export const getPublicProfileById = publicProcedure
   .input(
     z.object({
-      limit: z.number().min(1).max(50).default(20),
-      locationId: z.string().optional(),
+      id: z.string(),
     })
   )
   .query(async ({ ctx, input }) => {
-    return ctx.prisma.user.findMany({
+    return ctx.prisma.user.findUnique({
       where: {
-        locationId: input.locationId,
+        id: input.id,
       },
       select: {
         id: true,
@@ -25,6 +24,5 @@ export const getPublicProfiles = publicProcedure
           },
         },
       },
-      take: input.limit,
     });
   });
