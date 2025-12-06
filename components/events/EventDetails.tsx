@@ -72,7 +72,9 @@ export default function EventDetails(props: EventDetailsProps) {
             </View>
             <Text className="text-muted">
               Hosted by{" "}
-              <Text className="font-semibold">{host?.displayName}</Text>
+              <Text className="font-semibold">
+                {host?.givenName} {host?.familyName}
+              </Text>
             </Text>
           </View>
 

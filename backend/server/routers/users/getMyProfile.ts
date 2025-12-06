@@ -13,7 +13,7 @@ export const getMyProfile = protectedProcedure
       select: {
         id: true,
         email: true,
-        displayName: true,
+        givenName: true,
         avatarUrl: true,
         role: true,
         location: true,

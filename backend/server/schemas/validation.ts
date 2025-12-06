@@ -30,7 +30,7 @@ export const eventLocationSchema = z.object({
 // Event organizer schema (basic info)
 export const eventOrganizerSchema = z.object({
   id: z.string(),
-  displayName: z.string(),
+  givenName: z.string(),
   avatarUrl: z.string().nullable(),
 });
 
@@ -44,7 +44,7 @@ export const activitySchema = z.object({
 // Event snapshot schema (for matching data)
 export const eventSnapshotSchema = z.object({
   hostUserId: z.string(),
-  hostDisplayName: z.string().nullable(),
+  hostGivenName: z.string().nullable(),
   interestIds: z.array(z.string()),
   traitScores: z.record(z.string(), z.number()).nullable(),
 });

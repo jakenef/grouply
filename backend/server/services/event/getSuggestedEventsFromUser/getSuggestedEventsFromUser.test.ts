@@ -43,7 +43,7 @@ describe("getSuggestedEventsFromUser integration", () => {
       data: {
         authUserId: "auth-test-user",
         email: "test@example.com",
-        displayName: "Test User",
+        givenName: "Test User",
         locationId: testLocationId,
         profile: {
           create: {
@@ -70,6 +70,7 @@ describe("getSuggestedEventsFromUser integration", () => {
         endsAt: new Date("2025-12-01T16:00:00Z"),
         eventUrl: "https://example.com/hiking",
         imageUrls: ["https://example.com/image.jpg"],
+        minAttendees: 2,
         organizerId: testUserId,
         activityId: testActivityId,
         locationId: testLocationId,
@@ -102,6 +103,7 @@ describe("getSuggestedEventsFromUser integration", () => {
         locationId: testLocationId,
         lowerAgeLimit: 18,
         upperAgeLimit: 50,
+        minAttendees: 2,
         maxAttendees: 20,
         snapshot: {
           create: {

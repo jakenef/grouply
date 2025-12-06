@@ -4,7 +4,7 @@ import { protectedProcedure } from "../../trpc";
 export const updateMyProfile = protectedProcedure
   .input(
     z.object({
-      displayName: z.string().min(2).max(50).optional(),
+      givenName: z.string().min(2).max(50).optional(),
       avatarUrl: z.string().url().optional(),
       locationId: z.string().optional(),
     })

@@ -41,7 +41,7 @@ export const TRB_createUserProfiles = adminProcedure
             data: {
               authUserId: testUserId,
               email: faker.internet.email({ firstName, lastName }),
-              displayName: `${firstName} ${lastName}`,
+              givenName: `${firstName}`,
               locationId: randomLocation.id,
               avatarUrl: faker.image.avatar(),
               role: "USER",

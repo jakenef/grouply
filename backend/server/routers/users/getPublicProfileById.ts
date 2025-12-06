@@ -14,7 +14,8 @@ export const getPublicProfileById = publicProcedure
       },
       select: {
         id: true,
-        displayName: true,
+        givenName: true,
+        familyName: true,
         avatarUrl: true,
         joinedAt: true,
         location: {

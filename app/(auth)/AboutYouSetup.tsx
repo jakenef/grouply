@@ -179,7 +179,7 @@ const AboutYouSetup = () => {
 
       // Call the mutation with the form data (include avatarUrl if present)
       await createUserMutation.mutateAsync({
-        displayName,
+        givenName: displayName,
         birthday: date, // Send the actual Date object, not the formatted string
         gender: gender as "Male" | "Female" | "Other", // Type assertion since we validated gender is not null
         location: location as LocationData, // Type assertion since we validated location is not null

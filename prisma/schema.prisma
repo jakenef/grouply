@@ -45,17 +45,18 @@ enum ChatMessageRole {
 // ---------- Core ----------
 model User {
   id          String   @id @default(uuid())
-  authUserId  String   @unique // from your auth provider
+  authUserId  String   @unique
   role        UserRole @default(USER)
   email       String   @unique
-  displayName String
+  givenName String // first name
+  familyName String? // last name
   avatarUrl   String?
   joinedAt    DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  // Coarse location (optional)
-  locationId String?
-  location   Location? @relation(fields: [locationId], references: [id])
+  // Coarse location
+  locationId String
+  location   Location @relation(fields: [locationId], references: [id])
 
   // 1:1 profile with matchable attributes
   profile UserProfile?
@@ -205,8 +206,8 @@ model Event {
   location   Location @relation(fields: [locationId], references: [id])
 
   // Attendees
-  maxAttendees Int @default(2)
-  minAttendees Int?
+  maxAttendees Int
+  minAttendees Int
   isFull       Boolean             @default(false)
   regs         EventRegistration[]
   savedByUsers SavedEvent[]

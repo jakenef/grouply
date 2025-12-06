@@ -23,7 +23,7 @@ export const getSuggestedEventsFromUser = protectedProcedure
           imageUrls: scoredEvent.event.imageUrls,
           organizer: {
             id: scoredEvent.event.organizer.id,
-            displayName: scoredEvent.event.organizer.displayName,
+            givenName: scoredEvent.event.organizer.givenName,
             avatarUrl: scoredEvent.event.organizer.avatarUrl,
           },
           activity: {
@@ -46,7 +46,7 @@ export const getSuggestedEventsFromUser = protectedProcedure
           snapshot: scoredEvent.event.snapshot
             ? {
                 hostUserId: scoredEvent.event.snapshot.hostUserId,
-                hostDisplayName: scoredEvent.event.snapshot.hostDisplayName,
+                hostGivenName: scoredEvent.event.snapshot.hostGivenName,
                 interestIds: scoredEvent.event.snapshot.interestIds,
                 traitScores: scoredEvent.event.snapshot.traitScores as Record<
                   string,

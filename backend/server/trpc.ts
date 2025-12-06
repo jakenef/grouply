@@ -40,7 +40,7 @@ export const createContext = async ({ req }: CreateExpressContextOptions) => {
           select: {
             id: true,
             email: true,
-            displayName: true,
+            givenName: true,
             role: true,
             authUserId: true,
           },

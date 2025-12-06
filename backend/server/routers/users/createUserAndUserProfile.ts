@@ -6,7 +6,7 @@ import { authProcedure } from "../../trpc";
 export const createUserAndUserProfile = authProcedure
   .input(
     z.object({
-      displayName: z.string().trim().min(1),
+      givenName: z.string().trim().min(1),
       birthday: z.coerce.date(),
       gender: genderEnum,
       location: locationDataSchema,
@@ -33,7 +33,7 @@ export const createUserAndUserProfile = authProcedure
       });
     }
 
-    let locationId: string | undefined = undefined;
+    let locationId: string;
     if (input.location) {
       const existingLocation = await ctx.prisma.location.findUnique({
         where: { id: input.location.placeId },
@@ -64,7 +64,7 @@ export const createUserAndUserProfile = authProcedure
           data: {
             authUserId: ctx.supabaseUser.id,
             email: ctx.supabaseUser.email || "",
-            displayName: input.displayName,
+            givenName: input.givenName,
             locationId: locationId,
             avatarUrl: input.avatarUrl,
           },

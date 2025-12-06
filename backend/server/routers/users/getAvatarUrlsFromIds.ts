@@ -25,6 +25,6 @@ export const getAvatarUrlsFromIds = protectedProcedure
     return users.map((user) => ({
       userId: user.id,
       avatarUrl: user.avatarUrl,
-      firstName: user.displayName,
+      firstName: user.givenName,
     }));
   });
