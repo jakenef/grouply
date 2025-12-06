@@ -7,6 +7,7 @@ export const createUserAndUserProfile = authProcedure
   .input(
     z.object({
       givenName: z.string().trim().min(1),
+      familyName: z.string().trim().min(1),
       birthday: z.coerce.date(),
       gender: genderEnum,
       location: locationDataSchema,
@@ -65,6 +66,7 @@ export const createUserAndUserProfile = authProcedure
             authUserId: ctx.supabaseUser.id,
             email: ctx.supabaseUser.email || "",
             givenName: input.givenName,
+            familyName: input.familyName,
             locationId: locationId,
             avatarUrl: input.avatarUrl,
           },

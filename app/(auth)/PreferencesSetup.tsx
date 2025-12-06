@@ -285,7 +285,7 @@ const PreferencesSetup = () => {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <View className="flex-1 bg-background">
       <ScrollView className="flex-1 px-8" showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View className="items-center mt-8 mb-8">
@@ -424,7 +424,7 @@ const PreferencesSetup = () => {
           />
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

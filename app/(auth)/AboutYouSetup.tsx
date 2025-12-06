@@ -21,14 +21,14 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import GrouplyButton from "../../components/shared/GrouplyButton";
 
 type Gender = "Male" | "Female" | "Other" | null;
 
 const AboutYouSetup = () => {
   const { user, session } = useAuth(); // Get authentication context
-  const [displayName, setDisplayName] = useState("");
+  const [givenName, setGivenName] = useState("");
+  const [familyName, setFamilyName] = useState("");
   const [bio, setBio] = useState("");
   const [birthday, setBirthday] = useState("");
   const [gender, setGender] = useState<Gender>(null);
@@ -102,14 +102,19 @@ const AboutYouSetup = () => {
 
   const validateForm = () => {
     const newErrors: {
-      displayName?: string;
+      givenName?: string;
+      familyName?: string;
       birthday?: string;
       gender?: string;
       location?: string;
     } = {};
 
-    if (!displayName.trim()) {
-      newErrors.displayName = "Display name is required";
+    if (!givenName.trim()) {
+      newErrors.givenName = "First name is required";
+    }
+
+    if (!familyName.trim()) {
+      newErrors.familyName = "Last name is required";
     }
 
     if (!birthday) {
@@ -179,7 +184,8 @@ const AboutYouSetup = () => {
 
       // Call the mutation with the form data (include avatarUrl if present)
       await createUserMutation.mutateAsync({
-        givenName: displayName,
+        givenName: givenName,
+        familyName: familyName,
         birthday: date, // Send the actual Date object, not the formatted string
         gender: gender as "Male" | "Female" | "Other", // Type assertion since we validated gender is not null
         location: location as LocationData, // Type assertion since we validated location is not null
@@ -225,7 +231,7 @@ const AboutYouSetup = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <View className="flex-1 bg-background">
       <Pressable onPress={() => router.push("/(app)/Home")} />
       <TouchableWithoutFeedback onPress={handleOutsideTouch}>
         <ScrollView
@@ -245,12 +251,21 @@ const AboutYouSetup = () => {
             <ProfileImagePicker value={avatarUri} onChange={setAvatarUri} />
           </View>
 
-          {/* Display Name */}
+          {/* Given Name */}
           <FormField
-            label="Display Name"
-            value={displayName}
-            onChangeText={setDisplayName}
-            placeholder="What should people call you?"
+            label="First Name"
+            value={givenName}
+            onChangeText={setGivenName}
+            placeholder="John"
+            error={errors.displayName}
+          />
+
+          {/* Family Name */}
+          <FormField
+            label="Last Name"
+            value={familyName}
+            onChangeText={setFamilyName}
+            placeholder="Doe"
             error={errors.displayName}
           />
 
@@ -360,18 +375,14 @@ const AboutYouSetup = () => {
               fullWidth
               onPress={handleSaveAndContinue}
               disabled={
-                !displayName ||
-                !birthday ||
-                !gender ||
-                !location ||
-                isSubmitting
+                !givenName || !birthday || !gender || !location || isSubmitting
               }
               isLoading={isSubmitting}
             />
           </View>
         </ScrollView>
       </TouchableWithoutFeedback>
-    </SafeAreaView>
+    </View>
   );
 };
 
