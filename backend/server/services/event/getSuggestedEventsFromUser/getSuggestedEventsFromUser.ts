@@ -28,7 +28,11 @@ export async function getSuggestedEventsFromUser(userId: string) {
     where: { id: userId },
     include: {
       interests: true,
-      traitScores: true,
+      traitScores: {
+        include: {
+          trait: true,
+        },
+      },
       location: true,
     },
   });
@@ -39,8 +43,8 @@ export async function getSuggestedEventsFromUser(userId: string) {
   const userInterests: string[] =
     userFromDb?.interests.map((interest) => interest.interestId) ?? [];
   const userTraits: Record<string, number> =
-    userFromDb?.traitScores.reduce((acc, trait) => {
-      acc[trait.traitId] = trait.score;
+    userFromDb?.traitScores.reduce((acc, traitScore) => {
+      acc[traitScore.trait.slug] = traitScore.score;
       return acc;
     }, {} as Record<string, number>) ?? {};
 

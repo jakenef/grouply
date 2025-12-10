@@ -12,7 +12,20 @@ export const TRB_createEvents = adminProcedure
   )
   .mutation(async ({ ctx, input }) => {
     // Fetch existing users, locations, and activities
-    const users = await ctx.prisma.user.findMany();
+    const users = await ctx.prisma.user.findMany({
+      include: {
+        traitScores: {
+          include: {
+            trait: true,
+          },
+        },
+        interests: {
+          include: {
+            interest: true,
+          },
+        },
+      },
+    });
     const locations = await ctx.prisma.location.findMany();
     const activities = await ctx.prisma.activity.findMany();
 
@@ -52,8 +65,25 @@ export const TRB_createEvents = adminProcedure
       );
 
       const minAttendees = faker.number.int({ min: 2, max: 10 });
+      const minAgePref = faker.number.int({ min: 18, max: 45 });
+      const maxAgePref = faker.number.int({ min: minAgePref + 1, max: 60 });
+      const numPics = faker.number.int({ min: 1, max: 4 });
+      const pictureUrls = [];
 
-      // Create the event
+      for (let j = 0; j < numPics; j++) {
+        pictureUrls.push(faker.image.url());
+      }
+
+      // Prepare snapshot data from organizer's profile
+      const interestIds = organizer.interests.map((ui) => ui.interestId);
+
+      // Build traitScores object using trait slugs as keys
+      const traitScores: Record<string, number> = {};
+      for (const ts of organizer.traitScores) {
+        traitScores[ts.trait.slug] = ts.score;
+      }
+
+      // Create the event with snapshot
       const event = await ctx.prisma.event.create({
         data: {
           id: "TRB_" + uuidv4(),
@@ -64,6 +94,9 @@ export const TRB_createEvents = adminProcedure
           organizerId: organizer.id,
           locationId: location.id,
           activityId: activity.id,
+          lowerAgeLimit: minAgePref,
+          upperAgeLimit: maxAgePref,
+          imageUrls: pictureUrls,
           regs: {
             create: attendees.map((u) => ({
               user: { connect: { id: u.id } },
@@ -72,6 +105,16 @@ export const TRB_createEvents = adminProcedure
           eventUrl: "fakeURL",
           minAttendees,
           maxAttendees: faker.number.int({ min: minAttendees + 1, max: 12 }),
+          snapshot: {
+            create: {
+              hostUserId: organizer.id,
+              hostGivenName: organizer.givenName,
+              interestIds: interestIds,
+              traitScores: traitScores,
+              lowerAgeLimit: minAgePref,
+              upperAgeLimit: maxAgePref,
+            },
+          },
         },
       });
 

@@ -97,7 +97,7 @@ export default function HomeChatSection({
         )}
       </View>
       {/* Event Suggestions Scroller */}
-      {eventSuggestions && messages.length !== 0 && (
+      {eventSuggestions.length > 0 && messages.length !== 0 && (
         <View className="px-3 py-2">
           <FlatList
             data={eventSuggestions}

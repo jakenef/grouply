@@ -235,8 +235,8 @@ model EventProfileSnapshot {
   event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   // who we captured from (duplicate for audit even if organizer changes)
-  hostUserId      String
-  hostDisplayName String?
+  hostUserId    String
+  hostGivenName String?
 
   // matchable signals (keep flexible)
   interestIds String[] // e.g., top N of host's interests at creation

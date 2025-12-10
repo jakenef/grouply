@@ -1,7 +1,6 @@
 import { trpc } from "@/lib/trpc";
 import React from "react";
 import { ScrollView, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import TroubleshootItem from "../../components/shared/TroubleshootItem";
 
 const Dev = () => {
@@ -25,9 +24,19 @@ const Dev = () => {
   const { mutateAsync: deleteEvents } =
     trpc.troubleshooting.troubleshootingEventRouter.TRB_deleteTestEvents.useMutation();
 
+  const { mutateAsync: createTraits } =
+    trpc.troubleshooting.troubleshootingTraitsRouter.TRB_createTraits.useMutation();
+  const { mutateAsync: deleteTraits } =
+    trpc.troubleshooting.troubleshootingTraitsRouter.TRB_deleteTraits.useMutation();
+
+  const { mutateAsync: createInterests } =
+    trpc.troubleshooting.interestsRouter.TRB_createInterests.useMutation();
+  const { mutateAsync: deleteInterests } =
+    trpc.troubleshooting.interestsRouter.TRB_deleteInterests.useMutation();
+
   return (
-    <SafeAreaView className="flex-1">
-      <ScrollView className="flex-1 bg-gray-50">
+    <View className="flex-1 bg-background">
+      <ScrollView className="flex-1 bg-background">
         <View className="p-4">
           <TroubleshootItem
             title="Clear Test Users"
@@ -80,6 +89,38 @@ const Dev = () => {
           />
 
           <TroubleshootItem
+            title="Generate Traits"
+            description="Creates a fixed set of traits"
+            onRun={async () => {
+              await createTraits({ numTraits: 10, useStarters: true });
+            }}
+          />
+
+          <TroubleshootItem
+            title="Delete Traits"
+            description="Deletes all TRB traits in db"
+            onRun={async () => {
+              await deleteTraits();
+            }}
+          />
+
+          <TroubleshootItem
+            title="Generate Interests"
+            description="Creates a fixed set of interests"
+            onRun={async () => {
+              await createInterests({ numInterests: 10, useStarters: true });
+            }}
+          />
+
+          <TroubleshootItem
+            title="Delete Interests"
+            description="Deletes all TRB interests in db"
+            onRun={async () => {
+              await deleteInterests();
+            }}
+          />
+
+          <TroubleshootItem
             title="Clear Test Events"
             description="Removes all test events from the database"
             onRun={async () => {
@@ -98,7 +139,7 @@ const Dev = () => {
           />
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
