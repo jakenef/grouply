@@ -4,7 +4,7 @@ import { useCurrentUser } from "@/lib/useCurrentUserHook";
 import { Ionicons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import { router } from "expo-router";
-import { Image, Pressable, ScrollView, Text, View } from "react-native";
+import { Image, ScrollView, Text, View } from "react-native";
 import GrouplyButton from "../shared/GrouplyButton";
 import ImageCarousel from "../shared/ImageCarousel";
 import ProfilePictureGroup from "../users/ProfilePictureGroup";
@@ -52,7 +52,7 @@ export default function EventDetails(props: EventDetailsProps) {
           size={30}
           onPress={() => router.back()}
         />
-        <Ionicons name="share-outline" size={30} />
+        {/* <Ionicons name="share-outline" size={30} /> */}
       </View>
 
       {/* Content */}
@@ -102,7 +102,9 @@ export default function EventDetails(props: EventDetailsProps) {
           </View>
 
           {/* Pictures */}
-          <ImageCarousel imageUrls={props.event.imageUrls} />
+          <View className="py-3">
+            <ImageCarousel imageUrls={props.event.imageUrls} />
+          </View>
 
           {/* More details */}
           <Text className="text-xl font-bold pt-3">About this event</Text>
@@ -153,7 +155,7 @@ export default function EventDetails(props: EventDetailsProps) {
             />
           )}
 
-          <View className="flex-row items-center justify-between pt-3 pb-4 gap-3">
+          {/* <View className="flex-row items-center justify-between pt-3 pb-4 gap-3">
             <Pressable className="flex-1 flex-row items-center border border-gray-200 rounded-xl p-3">
               <View className="flex-row items-center">
                 <Ionicons
@@ -174,16 +176,16 @@ export default function EventDetails(props: EventDetailsProps) {
                 <Text>Message Host</Text>
               </View>
             </Pressable>
-          </View>
+          </View> */}
 
           {/* Attendees */}
-          <View className="flex-row justify-between pb-2">
+          <View className="flex-row justify-between py-2">
             <Text className="text-xl font-bold">Attendees</Text>
-            {props.event.attendeeIds && (
+            {/* {props.event.attendeeIds && (
               <Pressable>
                 <Text className="text-lg text-info">See all</Text>
               </Pressable>
-            )}
+            )} */}
           </View>
           <ProfilePictureGroup userIds={props.event.attendeeIds} />
         </View>

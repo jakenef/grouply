@@ -36,32 +36,38 @@ export default function ImageCarousel({
     );
   }
 
-  const imageHeight = aspectRatio === "square" ? SCREEN_WIDTH - 32 : 256;
+  const imageHeight = aspectRatio === "square" ? SCREEN_WIDTH : 256;
 
   return (
-    <ScrollView
-      horizontal
-      pagingEnabled
-      showsHorizontalScrollIndicator={false}
-      onScroll={handleScroll}
-      scrollEventThrottle={16}
-    >
-      {imageUrls.map((url, index) => (
-        <View key={index} style={{ width: SCREEN_WIDTH }}>
-          <View className="mx-4 rounded-xl overflow-hidden">
-            <Image
-              source={{ uri: url }}
-              style={{ width: SCREEN_WIDTH - 32, height: imageHeight }}
-              resizeMode="cover"
-            />
-            <View className="absolute top-2 right-2 bg-black/50 px-2 py-1 rounded">
-              <Text className="text-white text-sm font-medium">
-                {currentIndex + 1}/{imageUrls.length}
-              </Text>
+    <View style={{ marginLeft: -16, marginRight: -16, overflow: "hidden" }}>
+      <ScrollView
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        style={{ width: SCREEN_WIDTH }}
+      >
+        {imageUrls.map((url, index) => (
+          <View
+            key={index}
+            style={{ width: SCREEN_WIDTH, paddingHorizontal: 16 }}
+          >
+            <View className="rounded-xl overflow-hidden">
+              <Image
+                source={{ uri: url }}
+                style={{ width: SCREEN_WIDTH - 32, height: imageHeight }}
+                resizeMode="cover"
+              />
+              <View className="absolute top-2 right-2 bg-black/50 px-2 py-1 rounded">
+                <Text className="text-white text-sm font-medium">
+                  {index + 1}/{imageUrls.length}
+                </Text>
+              </View>
             </View>
           </View>
-        </View>
-      ))}
-    </ScrollView>
+        ))}
+      </ScrollView>
+    </View>
   );
 }

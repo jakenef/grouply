@@ -20,17 +20,25 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onJoin }) => {
     eventData.maxAttendees || eventData.maxParticipants || 0;
 
   return (
-    <View className="flex-row bg-white rounded-xl p-4 shadow-sm mb-4 border-border border-solid border-2">
+    <View className="flex-row bg-white rounded-xl overflow-hidden shadow-sm mb-4 border-border border-solid border-2 h-36">
       {/* Thumbnail */}
-      <Image source={{ uri: imageUrl }} className="w-24 h-24 rounded-lg mr-4" />
+      <Image
+        source={{ uri: imageUrl }}
+        style={{ width: 96, height: "100%" }}
+        resizeMode="cover"
+      />
 
       {/* Content */}
-      <View className="flex-1">
+      <View className="flex-1 p-4 pt-2">
         {/* Title */}
-        <Text className="text-lg font-semibold mb-1">{title}</Text>
+        <Text className="text-lg font-semibold mb-1" numberOfLines={1}>
+          {title}
+        </Text>
 
         {/* Location */}
-        <Text className="text-gray-600 mb-1">{location}</Text>
+        <Text className="text-gray-600 mb-1" numberOfLines={1}>
+          {location}
+        </Text>
 
         {/* Date & Time */}
         <Text className="text-gray-600 mb-2">

@@ -44,15 +44,15 @@ enum ChatMessageRole {
 
 // ---------- Core ----------
 model User {
-  id          String   @id @default(uuid())
-  authUserId  String   @unique
-  role        UserRole @default(USER)
-  email       String   @unique
-  givenName String // first name
+  id         String   @id @default(uuid())
+  authUserId String   @unique
+  role       UserRole @default(USER)
+  email      String   @unique
+  givenName  String // first name
   familyName String? // last name
-  avatarUrl   String?
-  joinedAt    DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  avatarUrl  String?
+  joinedAt   DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   // Coarse location
   locationId String
@@ -168,11 +168,11 @@ model UserInterest {
 
 // ---------- Activities (supply taxonomy) ----------
 model Activity {
-  id    String @id @default(uuid())
-  slug  String @unique // canonical id: "pickup-basketball"
-  label String
+  id          String                       @id @default(uuid())
+  slug        String                       @unique // canonical id: "pickup-basketball"
+  label       String
   description String?
-  embedding Unsupported("vector(1536)")?
+  embedding   Unsupported("vector(1536)")?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -45,13 +45,10 @@ export const TRB_createEvents = adminProcedure
 
     for (let i = 0; i < input.numEvents; i++) {
       // Pick random organizer, attendees, location, and activity
+      const minAttendees = faker.number.int({ min: 2, max: 10 });
+      const maxAttendees = faker.number.int({ min: minAttendees + 1, max: 12 });
       const organizer = faker.helpers.arrayElement(users);
-      const attendees = faker.helpers
-        .shuffle(users)
-        .slice(
-          0,
-          faker.number.int({ min: 1, max: Math.min(10, users.length) })
-        );
+      const attendees = faker.helpers.shuffle(users).slice(0, maxAttendees);
       const location = faker.helpers.arrayElement(locations);
       const activity = faker.helpers.arrayElement(activities);
 
@@ -64,7 +61,6 @@ export const TRB_createEvents = adminProcedure
           faker.number.int({ min: 1, max: 6 }) * 60 * 60 * 1000
       );
 
-      const minAttendees = faker.number.int({ min: 2, max: 10 });
       const minAgePref = faker.number.int({ min: 18, max: 45 });
       const maxAgePref = faker.number.int({ min: minAgePref + 1, max: 60 });
       const numPics = faker.number.int({ min: 1, max: 4 });
@@ -104,7 +100,8 @@ export const TRB_createEvents = adminProcedure
           },
           eventUrl: "fakeURL",
           minAttendees,
-          maxAttendees: faker.number.int({ min: minAttendees + 1, max: 12 }),
+          maxAttendees,
+          isFull: attendees.length == maxAttendees,
           snapshot: {
             create: {
               hostUserId: organizer.id,
