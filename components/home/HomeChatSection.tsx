@@ -24,6 +24,7 @@ export default function HomeChatSection({
   placeholder = "e.g. find a hiking group this weekend...",
   isExpanded = false,
   isLoading = false,
+  channelId,
 }: HomeChatSectionProps) {
   const [text, setText] = useState("");
   const listRef = useRef<FlatList<ChatMessage>>(null);
@@ -117,7 +118,12 @@ export default function HomeChatSection({
             horizontal={true}
             ListFooterComponent={
               <CreateEventCard
-                onClick={() => null}
+                onClick={() =>
+                  router.push({
+                    pathname: "/(events)/Events/Edit",
+                    params: { channelId },
+                  })
+                }
                 buttonText="Create Event Automatically With AI"
               />
             }

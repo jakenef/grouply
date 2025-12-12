@@ -20,8 +20,8 @@ export async function generateEventFieldsFromContext(params: {
   const TextEventDetailsSchema = z.object({
     eventName: z.string(),
     eventDescription: z.string(),
-    startTime: z.date(),
-    endTime: z.date(),
+    startTime: z.string(),
+    endTime: z.string(),
     maxAttendees: z.number(),
   });
 
@@ -39,8 +39,12 @@ export async function generateEventFieldsFromContext(params: {
   const eventFields = {
     name: aiResponse.output_parsed?.eventName ?? "",
     description: aiResponse.output_parsed?.eventDescription ?? "",
-    startTime: aiResponse.output_parsed?.startTime ?? new Date(),
-    endTime: aiResponse.output_parsed?.endTime ?? new Date(),
+    startTime: aiResponse.output_parsed?.startTime
+      ? new Date(aiResponse.output_parsed.startTime)
+      : new Date(),
+    endTime: aiResponse.output_parsed?.endTime
+      ? new Date(aiResponse.output_parsed.endTime)
+      : new Date(),
     maxAttendees: aiResponse.output_parsed?.maxAttendees ?? 5,
   };
 

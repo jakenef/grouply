@@ -123,7 +123,14 @@ const EventSuggestions = () => {
         )}
         ListEmptyComponent={<Text>No events found.</Text>}
         ListFooterComponent={
-          <CreateEventCard buttonText="Create Event" onClick={() => null} />
+          <CreateEventCard
+            buttonText="Create Event"
+            onClick={() =>
+              router.push({
+                pathname: "/Events/Edit",
+              })
+            }
+          />
         }
       ></FlatList>
     </View>
