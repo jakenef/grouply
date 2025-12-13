@@ -19,6 +19,7 @@ export const generateEventFromChannel = protectedProcedure
       maxAttendees: z.number(),
       minAge: z.number(),
       maxAge: z.number(),
+      activityId: z.string().nullable(),
     })
   )
   .query(async ({ ctx, input }) => {

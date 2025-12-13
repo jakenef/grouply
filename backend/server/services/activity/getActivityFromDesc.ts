@@ -30,6 +30,9 @@ import { prisma } from "../../prisma";
  */
 export async function getActivityFromDesc(desc: string) {
   // generate semantic embedding for desc
+  if (desc.trim().length == 0) {
+    return null;
+  }
   const openai = new OpenAI();
   const response = await openai.embeddings.create({
     model: "text-embedding-3-small",

@@ -101,7 +101,7 @@ export const TRB_createEvents = adminProcedure
           eventUrl: "fakeURL",
           minAttendees,
           maxAttendees,
-          isFull: attendees.length == maxAttendees,
+          isFull: attendees.length >= maxAttendees,
           snapshot: {
             create: {
               hostUserId: organizer.id,

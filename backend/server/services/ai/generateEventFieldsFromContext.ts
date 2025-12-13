@@ -2,6 +2,7 @@ import { ChatMessage } from "@/backend/generated/prisma";
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import z from "zod";
+import { getActivityFromDesc } from "../activity/getActivityFromDesc";
 
 export async function generateEventFieldsFromContext(params: {
   messages: ChatMessage[];
@@ -11,6 +12,7 @@ export async function generateEventFieldsFromContext(params: {
   startTime: Date;
   endTime: Date;
   maxAttendees: number;
+  activityId: string | null;
 }> {
   let input: any[] = params.messages.map((m) => ({
     role: m.role as any,
@@ -36,6 +38,10 @@ export async function generateEventFieldsFromContext(params: {
     },
   });
 
+  const activitySuggestion = await getActivityFromDesc(
+    aiResponse.output_parsed?.eventDescription ?? ""
+  );
+
   const eventFields = {
     name: aiResponse.output_parsed?.eventName ?? "",
     description: aiResponse.output_parsed?.eventDescription ?? "",
@@ -46,6 +52,7 @@ export async function generateEventFieldsFromContext(params: {
       ? new Date(aiResponse.output_parsed.endTime)
       : new Date(),
     maxAttendees: aiResponse.output_parsed?.maxAttendees ?? 5,
+    activityId: activitySuggestion?.id ?? null,
   };
 
   return eventFields;

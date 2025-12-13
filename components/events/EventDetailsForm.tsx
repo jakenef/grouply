@@ -14,6 +14,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { ActivityPicker } from "../shared/ActivityPicker";
 
 interface EventDetailsFormProps {
   event?: EventDetails;
@@ -27,6 +28,7 @@ interface EventDetails {
   maxAttendees: number;
   startTime: Date;
   endTime: Date;
+  activityId: string | null;
 }
 
 export const EventDetailsForm = (props: EventDetailsFormProps) => {
@@ -34,6 +36,10 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
   const [description, setDescription] = useState(
     props.event?.description || ""
   );
+  const [activityId, setActivityId] = useState<string | null>(
+    props.event?.activityId || null
+  );
+
   const [location, setLocation] = useState<LocationData | null>(null);
   const [startTime, setStartTime] = useState(
     props.event?.startTime || new Date()
@@ -50,6 +56,7 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
     console.log("Save event:", {
       name,
       description,
+      activityId,
       location,
       startTime,
       endTime,
@@ -89,6 +96,8 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
             multiline
             numberOfLines={4}
           />
+
+          <ActivityPicker onChange={setActivityId} value={activityId} />
 
           <CoarseLocationPicker
             label="Location"

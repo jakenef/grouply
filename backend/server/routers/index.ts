@@ -1,4 +1,5 @@
 import { router } from "../trpc";
+import { activitiesRouter } from "./activities";
 import { eventsRouter } from "./events";
 import { interestsRouter } from "./interests";
 import { locationsRouter } from "./locations";
@@ -15,6 +16,7 @@ export const appRouter = router({
   troubleshooting: troubleshootingRouter,
   ai: messagesAIRouter,
   events: eventsRouter,
+  activities: activitiesRouter,
 });
 
 export type AppRouter = typeof appRouter;
