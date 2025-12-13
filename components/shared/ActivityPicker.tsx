@@ -43,11 +43,14 @@ export const ActivityPicker = ({
     );
 
   // Fetch activities based on search term
-  const { data: activities = [], isLoading: isSearchingActivities, error: searchError } =
-    trpc.activities.search.useQuery(
-      { query: searchTerm },
-      { enabled: searchTerm.length > 1 }
-    );
+  const {
+    data: activities = [],
+    isLoading: isSearchingActivities,
+    error: searchError,
+  } = trpc.activities.search.useQuery(
+    { query: searchTerm },
+    { enabled: searchTerm.length > 1 }
+  );
 
   console.log("ActivityPicker state:", {
     searchTerm,
