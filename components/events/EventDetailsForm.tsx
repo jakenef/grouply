@@ -15,10 +15,13 @@ import {
   View,
 } from "react-native";
 import { ActivityPicker } from "../shared/ActivityPicker";
+import UploadMultiplePictures from "../shared/UploadMultiplePictures";
 
 interface EventDetailsFormProps {
   event?: EventDetails;
 }
+
+// TODO: make location and img urls passed in as well, need to handle editing existing events
 
 interface EventDetails {
   name: string;
@@ -50,6 +53,8 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
   );
   const [minAge, setMinAge] = useState(props.event?.minAge?.toString() || "");
   const [maxAge, setMaxAge] = useState(props.event?.maxAge?.toString() || "");
+
+  // const [imgUrls, setImgUrls] = useState(props.event?)
 
   const handleSave = () => {
     // TODO: Hook up to backend
@@ -88,6 +93,8 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
             placeholder="e.g. Board Game Night"
           />
 
+          <UploadMultiplePictures onChange={(something) => null} value={[""]} />
+
           <FormField
             label="Description"
             value={description}
@@ -95,6 +102,7 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
             placeholder="Tell people about your event..."
             multiline
             numberOfLines={4}
+            containerClassName="my-6"
           />
 
           <ActivityPicker onChange={setActivityId} value={activityId} />

@@ -22,6 +22,7 @@ interface EventDetailsObject {
   numRegistered: number;
   attendeeIds: string[];
   imageUrls: string[];
+  coverImageUrl: string;
   hostId: string;
 }
 
