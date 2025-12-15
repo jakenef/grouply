@@ -103,7 +103,10 @@ export default function EventDetails(props: EventDetailsProps) {
 
           {/* Pictures */}
           <View className="py-3">
-            <ImageCarousel imageUrls={props.event.imageUrls} />
+            <ImageCarousel
+              imageUrls={props.event.imageUrls}
+              coverImageUrl={props.event.coverImageUrl}
+            />
           </View>
 
           {/* More details */}

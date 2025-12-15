@@ -192,6 +192,8 @@ model Event {
   lowerAgeLimit Int?
   eventUrl      String
   imageUrls     String[]
+  coverImageUrl String
+
 
   // Organizer
   organizerId String

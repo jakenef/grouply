@@ -21,6 +21,7 @@ export const getSuggestedEventsFromUser = protectedProcedure
           lowerAgeLimit: scoredEvent.event.lowerAgeLimit,
           eventUrl: scoredEvent.event.eventUrl,
           imageUrls: scoredEvent.event.imageUrls,
+          coverImageUrl: scoredEvent.event.coverImageUrl,
           organizer: {
             id: scoredEvent.event.organizer.id,
             givenName: scoredEvent.event.organizer.givenName,

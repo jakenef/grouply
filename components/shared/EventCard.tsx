@@ -13,7 +13,10 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onJoin }) => {
   const dateTime = eventData.startsAt || eventData.dateTime;
   const title = eventData.name || eventData.title;
   const location = eventData.location?.formatted || eventData.location;
-  const imageUrl = eventData.imageUrls?.[0] || eventData.thumbnailUrl;
+  const imageUrl =
+    eventData.coverImageUrl ||
+    eventData.imageUrls?.[0] ||
+    eventData.thumbnailUrl;
   const currentParticipants =
     eventData.currentAttendees || eventData.currentParticipants || 0;
   const maxParticipants =

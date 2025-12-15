@@ -13,13 +13,19 @@ const SCREEN_WIDTH = Dimensions.get("window").width;
 
 interface ImageCarouselProps {
   imageUrls: string[];
+  coverImageUrl?: string;
   aspectRatio?: "square" | "wide";
 }
 
 export default function ImageCarousel({
   imageUrls,
+  coverImageUrl,
   aspectRatio = "wide",
 }: ImageCarouselProps) {
+  // Ensure coverImageUrl is first in the array
+  const orderedImages = coverImageUrl
+    ? [coverImageUrl, ...imageUrls.filter((url) => url !== coverImageUrl)]
+    : imageUrls;
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -28,7 +34,7 @@ export default function ImageCarousel({
     setCurrentIndex(index);
   };
 
-  if (!imageUrls || imageUrls.length === 0) {
+  if (!orderedImages || orderedImages.length === 0) {
     return (
       <View className="w-full h-64 bg-gray-200 rounded-xl items-center justify-center">
         <Text className="text-gray-500">No images available</Text>
@@ -48,7 +54,7 @@ export default function ImageCarousel({
         scrollEventThrottle={16}
         style={{ width: SCREEN_WIDTH }}
       >
-        {imageUrls.map((url, index) => (
+        {orderedImages.map((url, index) => (
           <View
             key={index}
             style={{ width: SCREEN_WIDTH, paddingHorizontal: 16 }}
@@ -61,7 +67,7 @@ export default function ImageCarousel({
               />
               <View className="absolute top-2 right-2 bg-black/50 px-2 py-1 rounded">
                 <Text className="text-white text-sm font-medium">
-                  {index + 1}/{imageUrls.length}
+                  {index + 1}/{orderedImages.length}
                 </Text>
               </View>
             </View>

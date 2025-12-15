@@ -23,6 +23,8 @@ const Dev = () => {
     trpc.troubleshooting.troubleshootingEventRouter.TRB_createEvents.useMutation();
   const { mutateAsync: deleteEvents } =
     trpc.troubleshooting.troubleshootingEventRouter.TRB_deleteTestEvents.useMutation();
+  const { mutateAsync: fixCoverImageUrls } =
+    trpc.troubleshooting.troubleshootingEventRouter.TRB_fixCoverImageUrls.useMutation();
 
   const { mutateAsync: createTraits } =
     trpc.troubleshooting.troubleshootingTraitsRouter.TRB_createTraits.useMutation();
@@ -135,6 +137,14 @@ const Dev = () => {
             inputPlaceholder="Number of events to create"
             onRun={async (value) => {
               await createEvents({ numEvents: value });
+            }}
+          />
+
+          <TroubleshootItem
+            title="Fix Cover Image URLs"
+            description="Sets coverImageUrl to the first image in imageUrls for all events with empty coverImageUrl"
+            onRun={async () => {
+              await fixCoverImageUrls();
             }}
           />
         </View>

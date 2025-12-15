@@ -23,6 +23,7 @@ export const getEventDetailsFromId = protectedProcedure
         maxAge: z.number(),
         attendeeIds: z.array(z.string()),
         imageUrls: z.array(z.string()),
+        coverImageUrl: z.string(),
         hostId: z.string(),
       })
       .optional()
@@ -49,6 +50,7 @@ export const getEventDetailsFromId = protectedProcedure
         maxAge: event.upperAgeLimit ?? 0,
         attendeeIds: attendeeIds,
         imageUrls: event.imageUrls,
+        coverImageUrl: event.coverImageUrl,
         hostId: event.organizerId,
       };
     } else {
