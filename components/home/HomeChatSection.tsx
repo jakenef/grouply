@@ -9,7 +9,7 @@ import GrouplyButton from "../shared/GrouplyButton";
 
 type HomeChatSectionProps = {
   messages: ChatMessage[];
-  eventSuggestions: any[];
+  eventSuggestions: any[] | undefined;
   onSend: (text: string) => void;
   placeholder?: string;
   isExpanded?: boolean;
@@ -98,7 +98,7 @@ export default function HomeChatSection({
         )}
       </View>
       {/* Event Suggestions Scroller */}
-      {eventSuggestions.length > 0 && messages.length !== 0 && (
+      {eventSuggestions !== undefined && messages.length !== 0 && (
         <View className="px-3 py-2">
           <FlatList
             data={eventSuggestions}

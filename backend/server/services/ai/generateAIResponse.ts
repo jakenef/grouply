@@ -97,8 +97,6 @@ export async function generateAIResponse(params: {
 
     if (functionCalls.length === 0) break;
 
-    console.log("~~~ Function calls detected: ", functionCalls);
-
     // Add the assistant's response (which includes the function calls) to the input
     // The Responses API needs to see the full conversation flow
     for (const outputItem of aiResponse.output ?? []) {
@@ -119,10 +117,6 @@ export async function generateAIResponse(params: {
           }
         );
         latestRefresh = updatedSuggestedEvents;
-        console.log(
-          "~~~ Refreshed updatedSuggestedEvents ~~~ with: ",
-          updatedSuggestedEvents
-        );
 
         // Add the function output to input array
         input.push({
@@ -154,8 +148,6 @@ export async function generateAIResponse(params: {
     }
   }
   // 4) Format AI response for return
-  console.log("--- ai response: ", aiResponse.output_text);
-  console.info(" $ Current Events On Client $: ", latestRefresh);
 
   const aiChatMessageResponse = {
     authorId: "ai-assistant",
@@ -165,6 +157,5 @@ export async function generateAIResponse(params: {
     tools: aiResponse.tools,
   };
 
-  // probably need to include events in response
   return { aiChatMessageResponse, latestRefresh };
 }

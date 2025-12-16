@@ -109,9 +109,8 @@ export const userSendAIMessage = protectedProcedure
       score,
     }));
 
-    if (fixedRefresh) {
-      console.log("refreshed with: ", fixedRefresh);
-    }
-
-    return { ...chatMessageResponse, refreshedEvents: fixedRefresh ?? [] };
+    return {
+      ...chatMessageResponse,
+      refreshedEvents: fixedRefresh,
+    };
   });

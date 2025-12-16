@@ -15,7 +15,7 @@ import Animated, {
 
 const Home = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [eventSuggestions, setEventSuggestions] = useState<any[]>([]);
+  const [eventSuggestions, setEventSuggestions] = useState<any[] | undefined>(undefined);
   const [isChatExpanded, setIsChatExpanded] = useState(false);
   const [channelId, setChannelId] = useState("");
   const { user } = useAuth();
@@ -48,7 +48,7 @@ const Home = () => {
       toolName: response.toolName,
       createdAt: response.createdAt,
     };
-    setEventSuggestions(response.refreshedEvents ?? []);
+    setEventSuggestions(response.refreshedEvents);
     setMessages((prev) => [...prev, assistantMessage]);
   };
 
