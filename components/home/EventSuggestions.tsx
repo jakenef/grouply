@@ -130,6 +130,8 @@ const EventSuggestions = () => {
                 pathname: "/Events/Edit",
               })
             }
+            fullWidth={true}
+            subtitleText="Connect with like-minded people and meet others"
           />
         }
       ></FlatList>
