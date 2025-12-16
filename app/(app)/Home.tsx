@@ -15,7 +15,9 @@ import Animated, {
 
 const Home = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [eventSuggestions, setEventSuggestions] = useState<any[] | undefined>(undefined);
+  const [eventSuggestions, setEventSuggestions] = useState<any[] | undefined>(
+    undefined
+  );
   const [isChatExpanded, setIsChatExpanded] = useState(false);
   const [channelId, setChannelId] = useState("");
   const { user } = useAuth();
@@ -119,6 +121,7 @@ const Home = () => {
           onSend={handleSendMessage}
           isExpanded={isChatExpanded}
           isLoading={false}
+          channelId={channelId}
         />
       </Animated.View>
 

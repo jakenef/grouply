@@ -119,12 +119,12 @@ export default function HomeChatSection({
             ListFooterComponent={
               <View className="px-2">
                 <CreateEventCard
-                  onClick={() =>
+                  onClick={() => {
                     router.push({
                       pathname: "/(events)/Events/Edit",
                       params: { channelId },
-                    })
-                  }
+                    });
+                  }}
                   buttonText="Create Event Automatically With AI"
                 />
               </View>
