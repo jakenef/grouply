@@ -1,10 +1,11 @@
-import {
-  CoarseLocationPicker,
-  LocationData,
-} from "@/components/shared/CoarseLocationPicker";
 import { DateTimePicker } from "@/components/shared/DateTimePicker";
 import { FormField } from "@/components/shared/FormField";
 import GrouplyButton from "@/components/shared/GrouplyButton";
+import {
+  LocationData,
+  LocationPicker,
+} from "@/components/shared/LocationPicker";
+import { trpc } from "@/lib/trpc";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -32,6 +33,8 @@ interface EventDetails {
   startTime: Date;
   endTime: Date;
   activityId: string | null;
+  imgUrls?: string[];
+  locationId?: string;
 }
 
 export const EventDetailsForm = (props: EventDetailsFormProps) => {
@@ -44,6 +47,20 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
   );
 
   const [location, setLocation] = useState<LocationData | null>(null);
+
+  // Fetch location data if locationId is provided
+  const { data: locationData } = trpc.locations.getLocationById.useQuery(
+    { id: props.event?.locationId! },
+    { enabled: !!props.event?.locationId }
+  );
+
+  // Set location when locationData is fetched
+  React.useEffect(() => {
+    if (locationData) {
+      setLocation(locationData);
+    }
+  }, [locationData]);
+
   const [startTime, setStartTime] = useState(
     props.event?.startTime || new Date()
   );
@@ -54,7 +71,7 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
   const [minAge, setMinAge] = useState(props.event?.minAge?.toString() || "");
   const [maxAge, setMaxAge] = useState(props.event?.maxAge?.toString() || "");
 
-  // const [imgUrls, setImgUrls] = useState(props.event?)
+  const [imgUrls, setImgUrls] = useState(props.event?.imgUrls);
 
   const handleSave = () => {
     // TODO: Hook up to backend
@@ -93,7 +110,7 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
             placeholder="e.g. Board Game Night"
           />
 
-          <UploadMultiplePictures onChange={(something) => null} value={[""]} />
+          <UploadMultiplePictures onChange={setImgUrls} value={imgUrls ?? []} />
 
           <FormField
             label="Description"
@@ -107,7 +124,8 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
 
           <ActivityPicker onChange={setActivityId} value={activityId} />
 
-          <CoarseLocationPicker
+          <LocationPicker
+            mode="venue"
             label="Location"
             value={location}
             onChange={setLocation}

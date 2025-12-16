@@ -59,10 +59,14 @@ export class GooglePlacesApi {
     this.apiKey = env.GOOGLE_PLACES_API_KEY;
   }
 
-  async getPlaceAutocomplete(query: string): Promise<PlacePrediction[]> {
+  async getPlaceAutocomplete(
+    query: string,
+    types?: string
+  ): Promise<PlacePrediction[]> {
+    const typesParam = types ? `&types=${types}` : "";
     const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(
       query
-    )}&types=(cities)&key=${this.apiKey}`;
+    )}${typesParam}&key=${this.apiKey}`;
 
     const response = await fetchWithErrorHandling<PlaceAutocompleteResponse>(
       url
@@ -120,7 +124,10 @@ export class GooglePlacesApi {
   /**
    * Extract location data from place details
    */
-  extractLocationData(placeDetails: PlaceDetails | null) {
+  extractLocationData(
+    placeDetails: PlaceDetails | null,
+    isVenue: boolean = false
+  ) {
     // If no place details provided, return empty/default data
     if (!placeDetails) {
       return {
@@ -131,11 +138,12 @@ export class GooglePlacesApi {
         lat: null,
         lng: null,
         formatted: "",
+        name: null,
       };
     }
 
     const addressComponents = placeDetails.address_components;
-    let city, region, country, countryCode;
+    let city, region, country, countryCode, streetNumber, route;
 
     for (const component of addressComponents) {
       if (component.types.includes("locality")) {
@@ -145,7 +153,30 @@ export class GooglePlacesApi {
       } else if (component.types.includes("country")) {
         country = component.long_name;
         countryCode = component.short_name;
+      } else if (component.types.includes("street_number")) {
+        streetNumber = component.long_name;
+      } else if (component.types.includes("route")) {
+        route = component.long_name;
       }
+    }
+
+    // For venues/establishments, use the place name and full address
+    // For cities, just use the city/region/country format
+    let formatted: string;
+    if (isVenue) {
+      const addressParts = [];
+      if (streetNumber && route) {
+        addressParts.push(`${streetNumber} ${route}`);
+      } else if (route) {
+        addressParts.push(route);
+      }
+      if (city) addressParts.push(city);
+      if (region) addressParts.push(region);
+      formatted = addressParts.join(", ");
+    } else {
+      formatted = `${city || ""}, ${region || ""}, ${country || ""}`
+        .replace(/^, |, ,/g, "")
+        .replace(/, $/g, "");
     }
 
     return {
@@ -155,9 +186,8 @@ export class GooglePlacesApi {
       countryCode,
       lat: placeDetails.geometry.location.lat,
       lng: placeDetails.geometry.location.lng,
-      formatted: `${city || ""}, ${region || ""}, ${country || ""}`
-        .replace(/^, |, ,/g, "")
-        .replace(/, $/g, ""),
+      formatted,
+      name: isVenue ? placeDetails.name : null,
     };
   }
 }

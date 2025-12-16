@@ -4,16 +4,33 @@ import { useLocalSearchParams } from "expo-router";
 import { Text, View } from "react-native";
 
 export default function EventDetailsEdit() {
-  const { channelId } = useLocalSearchParams<{ channelId?: string }>();
+  const { channelId, existingEventId } = useLocalSearchParams<{
+    channelId?: string;
+    existingEventId?: string;
+  }>();
 
+  // Fetch existing event if existingEventId is provided
   const {
-    data: eventFields,
-    isLoading,
-    error,
+    data: existingEvent,
+    isLoading: isLoadingExisting,
+    error: existingError,
+  } = trpc.events.getEventDetailsFromId.useQuery(
+    { id: existingEventId! },
+    { enabled: !!existingEventId && existingEventId.length > 0 }
+  );
+
+  // Generate event from channel if existingEventId is not provided
+  const {
+    data: generatedEventFields,
+    isLoading: isLoadingGenerated,
+    error: generatedError,
   } = trpc.events.generateEventFromChannel.useQuery(
     { channelId: channelId! },
-    { enabled: !!channelId && channelId.length > 0 }
+    { enabled: !existingEventId && !!channelId && channelId.length > 0 }
   );
+
+  const isLoading = isLoadingExisting || isLoadingGenerated;
+  const error = existingError || generatedError;
 
   if (isLoading) {
     return (
@@ -29,6 +46,9 @@ export default function EventDetailsEdit() {
       </View>
     );
   }
+
+  // Use existing event if available, otherwise use generated fields
+  const eventFields = existingEvent || generatedEventFields;
 
   const convertedEventFields = eventFields
     ? {

@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import z from "zod";
 import { prisma } from "../../prisma";
+import { getActivityFromDesc } from "../../services/activity/getActivityFromDesc";
 import { generateEventFieldsFromContext } from "../../services/ai/generateEventFieldsFromContext";
 import { protectedProcedure } from "../../trpc";
 
@@ -52,5 +53,12 @@ export const generateEventFromChannel = protectedProcedure
 
     const eventDetails = await generateEventFieldsFromContext({ messages });
 
-    return { ...eventDetails, maxAge, minAge };
+    const activity = await getActivityFromDesc(eventDetails.description);
+
+    return {
+      ...eventDetails,
+      maxAge,
+      minAge,
+      activityId: activity?.id ?? null,
+    };
   });

@@ -7,11 +7,12 @@ export const getPlaceDetails = publicProcedure
   .input(
     z.object({
       placeId: z.string(),
+      precision: z.enum(["city", "venue"]).optional().default("city"),
     })
   )
   .query(async ({ input }) => {
     try {
-      const { placeId } = input;
+      const { placeId, precision } = input;
       const placeDetails = await googlePlacesApi.getPlaceDetails(placeId);
 
       // If no place details found, return appropriate response
@@ -25,7 +26,10 @@ export const getPlaceDetails = publicProcedure
       return {
         placeId,
         name: placeDetails.name,
-        ...googlePlacesApi.extractLocationData(placeDetails),
+        ...googlePlacesApi.extractLocationData(
+          placeDetails,
+          precision === "venue"
+        ),
       };
     } catch (error) {
       // If it's already a TRPC error, re-throw it

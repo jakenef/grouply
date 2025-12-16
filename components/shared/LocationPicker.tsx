@@ -36,10 +36,36 @@ export interface LocationData {
   lat: number | null;
   lng: number | null;
   formatted: string;
-  name?: string;
+  name?: string | null;
 }
 
-interface CoarseLocationPickerProps {
+// Helper to normalize location data - handles both LocationData and Prisma Location types
+function normalizeLocationData(
+  location: LocationData | null | undefined
+): LocationData | null {
+  if (!location) return null;
+
+  // If location has 'id' instead of 'placeId' (from Prisma), map it
+  const normalized = location as any;
+  return {
+    placeId: normalized.placeId || normalized.id,
+    city: location.city,
+    region: location.region,
+    country: location.country,
+    countryCode: location.countryCode,
+    lat: location.lat,
+    lng: location.lng,
+    formatted: location.formatted || "",
+    name: location.name,
+  };
+}
+
+interface LocationPickerProps {
+  /**
+   * Search mode - 'city' for broad locations, 'venue' for specific places
+   */
+  mode?: "city" | "venue";
+
   /**
    * Label text to display above the input
    */
@@ -92,20 +118,29 @@ interface CoarseLocationPickerProps {
 }
 
 /**
- * A component for selecting a coarse location (city/region)
+ * A unified component for selecting locations - supports both city-level and venue-level searches
  */
-export const CoarseLocationPicker: React.FC<CoarseLocationPickerProps> = ({
+export const LocationPicker: React.FC<LocationPickerProps> = ({
+  mode = "city",
   label = "Location",
   error,
   helperText,
   labelStyle,
   labelClassName = "text-base font-semibold text-foreground mb-2",
   containerClassName = "mb-6",
-  placeholder = "Search for a city",
+  placeholder,
   value,
   onChange,
   onError,
 }) => {
+  // Normalize the incoming value to handle both LocationData and Prisma Location types
+  const normalizedValue = normalizeLocationData(value);
+
+  // Set default placeholder based on mode
+  const effectivePlaceholder =
+    placeholder ||
+    (mode === "city" ? "Search for a city" : "Search for a venue");
+
   // Enable LayoutAnimation for Android
   if (Platform.OS === "android") {
     if (UIManager.setLayoutAnimationEnabledExperimental) {
@@ -145,6 +180,7 @@ export const CoarseLocationPicker: React.FC<CoarseLocationPickerProps> = ({
         // Using the direct client to query the endpoint
         const results = await utils.client.locations.searchLocations.query({
           query,
+          precision: mode,
         });
         setLocationResults(results || []);
       } catch (error) {
@@ -217,6 +253,7 @@ export const CoarseLocationPicker: React.FC<CoarseLocationPickerProps> = ({
       setIsSearching(true);
       const locationData = await utils.client.locations.getPlaceDetails.query({
         placeId: item.placeId,
+        precision: mode,
       });
       onChange(locationData);
       setExpanded(false); // Collapse the component after selection
@@ -329,10 +366,14 @@ export const CoarseLocationPicker: React.FC<CoarseLocationPickerProps> = ({
         >
           <Text
             className={`text-base ${
-              value?.formatted ? "text-foreground" : "text-muted"
+              normalizedValue?.formatted ? "text-foreground" : "text-muted"
             }`}
           >
-            {value?.formatted || placeholder}
+            {normalizedValue
+              ? mode === "venue" && normalizedValue.name
+                ? normalizedValue.name
+                : normalizedValue.formatted
+              : effectivePlaceholder}
           </Text>
           <Ionicons
             name={expanded ? "chevron-up" : "chevron-down"}
@@ -365,7 +406,7 @@ export const CoarseLocationPicker: React.FC<CoarseLocationPickerProps> = ({
                 <TextInput
                   ref={searchInputRef}
                   className="flex-1"
-                  placeholder="Search for a city"
+                  placeholder={effectivePlaceholder}
                   value={searchQuery}
                   onChangeText={handleSearch}
                   autoCapitalize="none"
@@ -398,36 +439,38 @@ export const CoarseLocationPicker: React.FC<CoarseLocationPickerProps> = ({
                 )}
               </View>
 
-              {/* Current location button */}
-              <TouchableOpacity
-                onPress={handleUseCurrentLocation}
-                disabled={isGettingLocation}
-                className={`flex-row items-center mt-3 p-3 rounded-xl ${
-                  isGettingLocation ? "opacity-50" : ""
-                }`}
-                style={{ backgroundColor: colors.accent }}
-              >
-                {isGettingLocation ? (
-                  <ActivityIndicator
-                    size="small"
-                    color={colors.primary}
-                    style={{ marginRight: 10 }}
-                  />
-                ) : (
-                  <Ionicons
-                    name="locate"
-                    size={20}
-                    color={colors.primary}
-                    style={{ marginRight: 10 }}
-                  />
-                )}
-                <Text
-                  className="text-base font-medium"
-                  style={{ color: colors.primary }}
+              {/* Current location button - only show for city mode */}
+              {mode === "city" && (
+                <TouchableOpacity
+                  onPress={handleUseCurrentLocation}
+                  disabled={isGettingLocation}
+                  className={`flex-row items-center mt-3 p-3 rounded-xl ${
+                    isGettingLocation ? "opacity-50" : ""
+                  }`}
+                  style={{ backgroundColor: colors.accent }}
                 >
-                  Use my current location
-                </Text>
-              </TouchableOpacity>
+                  {isGettingLocation ? (
+                    <ActivityIndicator
+                      size="small"
+                      color={colors.primary}
+                      style={{ marginRight: 10 }}
+                    />
+                  ) : (
+                    <Ionicons
+                      name="locate"
+                      size={20}
+                      color={colors.primary}
+                      style={{ marginRight: 10 }}
+                    />
+                  )}
+                  <Text
+                    className="text-base font-medium"
+                    style={{ color: colors.primary }}
+                  >
+                    Use my current location
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
 
             {/* Divider */}
@@ -486,4 +529,4 @@ export const CoarseLocationPicker: React.FC<CoarseLocationPickerProps> = ({
   );
 };
 
-export default CoarseLocationPicker;
+export default LocationPicker;

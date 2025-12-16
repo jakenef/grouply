@@ -52,16 +52,6 @@ export const ActivityPicker = ({
     { enabled: searchTerm.length > 1 }
   );
 
-  console.log("ActivityPicker state:", {
-    searchTerm,
-    searchTermLength: searchTerm.length,
-    isSearching,
-    isSearchingActivities,
-    activitiesCount: activities.length,
-    activities,
-    searchError: searchError?.message,
-  });
-
   const handleSelectActivity = (activity: Activity) => {
     onChange(activity.id);
     setSearchTerm("");

@@ -64,6 +64,31 @@ export const userSendAIMessage = protectedProcedure
       userId: ctx.user.id,
     });
 
+    // Ensure AI assistant location exists
+    const aiLocation = await prisma.location.upsert({
+      where: { id: "ai-location" },
+      update: {},
+      create: {
+        id: "ai-location",
+        city: "AI City",
+        countryCode: "AI",
+        precision: "city",
+      },
+    });
+
+    // Ensure AI assistant user exists
+    await prisma.user.upsert({
+      where: { id: "ai-assistant" },
+      update: {},
+      create: {
+        id: "ai-assistant",
+        authUserId: "ai-assistant",
+        email: "ai-assistant@grouply.app",
+        givenName: "AI Assistant",
+        locationId: aiLocation.id,
+      },
+    });
+
     const chatMessageResponse = await prisma.chatMessage.create({
       data: {
         body: aiChatMessageResponse.body,
@@ -72,12 +97,6 @@ export const userSendAIMessage = protectedProcedure
         channelId: channel.id,
       },
     });
-
-    console.log("!!!~~~~ here's what return looks like: \n", {
-      ...chatMessageResponse,
-      refreshedEvents: latestRefresh,
-    });
-    console.log("refreshedEvents:", JSON.stringify(latestRefresh, null, 2));
 
     const fixedRefresh = latestRefresh?.map(({ event, score }) => ({
       event: {
@@ -89,10 +108,6 @@ export const userSendAIMessage = protectedProcedure
       },
       score,
     }));
-    console.log(
-      "fixed Refreshed Events: ",
-      JSON.stringify(fixedRefresh, null, 2)
-    );
 
     return { ...chatMessageResponse, refreshedEvents: fixedRefresh ?? [] };
   });

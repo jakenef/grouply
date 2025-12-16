@@ -10,7 +10,7 @@ export const locationDataSchema = z.object({
   lat: z.number().nullable(),
   lng: z.number().nullable(),
   formatted: z.string(),
-  name: z.string().optional(),
+  name: z.string().nullable().optional(),
 });
 
 // Gender enum validation

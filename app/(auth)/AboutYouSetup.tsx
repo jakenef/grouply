@@ -1,7 +1,7 @@
-import CoarseLocationPicker, {
-  LocationData,
-} from "@/components/shared/CoarseLocationPicker";
 import FormField from "@/components/shared/FormField";
+import LocationPicker, {
+  LocationData,
+} from "@/components/shared/LocationPicker";
 import ProfileImagePicker from "@/components/shared/ProfileImagePicker";
 import { useAuth } from "@/lib/auth";
 import uploadImageUri from "@/lib/storage";
@@ -348,7 +348,8 @@ const AboutYouSetup = () => {
           </View>
 
           {/* Location */}
-          <CoarseLocationPicker
+          <LocationPicker
+            mode="city"
             onChange={handleLocationChange}
             placeholder={location ? location.formatted : undefined}
             error={errors.location}
