@@ -59,6 +59,7 @@ export default function AppLayout() {
       <Tabs.Screen
         name="Browse"
         options={{
+          href: null, // remove this when ready
           tabBarIcon: ({ focused, color }) => (
             <Ionicons
               name={focused ? "search" : "search-outline"}
@@ -83,6 +84,7 @@ export default function AppLayout() {
       <Tabs.Screen
         name="Messages"
         options={{
+          href: null, // remove this when ready
           tabBarIcon: ({ focused, color }) => (
             <Ionicons
               name={focused ? "chatbubble" : "chatbubble-outline"}
