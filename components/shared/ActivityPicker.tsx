@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
   ActivityIndicator,
-  FlatList,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
@@ -121,11 +121,10 @@ export const ActivityPicker = ({
                   <ActivityIndicator color={colors.primary} />
                 </View>
               ) : activities.length > 0 ? (
-                <FlatList
-                  data={activities}
-                  keyExtractor={(item) => item.id}
-                  renderItem={({ item }) => (
+                <ScrollView nestedScrollEnabled={true}>
+                  {activities.map((item) => (
                     <TouchableOpacity
+                      key={item.id}
                       onPress={() => handleSelectActivity(item)}
                       className="px-4 py-3 border-b border-border"
                     >
@@ -141,8 +140,8 @@ export const ActivityPicker = ({
                         </Text>
                       )}
                     </TouchableOpacity>
-                  )}
-                />
+                  ))}
+                </ScrollView>
               ) : (
                 <View className="p-4">
                   <Text className="text-muted text-center">

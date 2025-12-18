@@ -100,7 +100,11 @@ const EventSuggestions = () => {
   }
 
   if (error) {
-    return <Text className="text-danger p-5">Error loading events!</Text>;
+    return (
+      <Text className="text-danger p-5">
+        Error loading events! {error.message}
+      </Text>
+    );
   }
 
   return (

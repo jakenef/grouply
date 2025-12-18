@@ -5,10 +5,12 @@ import {
   LocationData,
   LocationPicker,
 } from "@/components/shared/LocationPicker";
+import uploadImageUri from "@/lib/storage";
 import { trpc } from "@/lib/trpc";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -18,13 +20,60 @@ import {
 import { ActivityPicker } from "../shared/ActivityPicker";
 import UploadMultiplePictures from "../shared/UploadMultiplePictures";
 
+function validateEventForm({
+  name,
+  description,
+  activityId,
+  location,
+  startTime,
+  endTime,
+  maxAttendees,
+  minAge,
+  maxAge,
+  imgUrls,
+}: {
+  name: string;
+  description: string;
+  activityId: string | null;
+  location: LocationData | null;
+  startTime: Date;
+  endTime: Date;
+  maxAttendees: string;
+  minAge: string;
+  maxAge: string;
+  imgUrls?: string[];
+}) {
+  const errors: Record<string, string> = {};
+
+  if (!name.trim()) errors.name = "Event name is required";
+  if (!description.trim()) errors.description = "Description is required";
+  if (!activityId) errors.activityId = "Activity is required";
+  if (!location) errors.location = "Location is required";
+  if (!imgUrls || imgUrls.length === 0)
+    errors.imgUrls = "At least one image is required";
+
+  if (!maxAttendees || isNaN(Number(maxAttendees)) || Number(maxAttendees) <= 0)
+    errors.maxAttendees = "Must be a positive number";
+  if (!minAge || isNaN(Number(minAge)) || Number(minAge) <= 0)
+    errors.minAge = "Must be a positive number";
+  if (!maxAge || isNaN(Number(maxAge)) || Number(maxAge) <= 0)
+    errors.maxAge = "Must be a positive number";
+
+  if (minAge && maxAge && Number(minAge) > Number(maxAge))
+    errors.ageRange = "Min age cannot be greater than max age";
+
+  if (startTime && endTime && startTime >= endTime)
+    errors.timeRange = "Start time must be before end time";
+
+  return errors;
+}
+
 interface EventDetailsFormProps {
   event?: EventDetails;
 }
 
-// TODO: make location and img urls passed in as well, need to handle editing existing events
-
 interface EventDetails {
+  id?: string;
   name: string;
   description: string;
   minAge: number;
@@ -38,6 +87,7 @@ interface EventDetails {
 }
 
 export const EventDetailsForm = (props: EventDetailsFormProps) => {
+  const upsertEventMutation = trpc.events.upsertEvent.useMutation();
   const [name, setName] = useState(props.event?.name || "");
   const [description, setDescription] = useState(
     props.event?.description || ""
@@ -72,10 +122,10 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
   const [maxAge, setMaxAge] = useState(props.event?.maxAge?.toString() || "");
 
   const [imgUrls, setImgUrls] = useState(props.event?.imgUrls);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleSave = () => {
-    // TODO: Hook up to backend
-    console.log("Save event:", {
+  const handleSave = async () => {
+    const validationErrors = validateEventForm({
       name,
       description,
       activityId,
@@ -85,7 +135,62 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
       maxAttendees,
       minAge,
       maxAge,
+      imgUrls,
     });
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      Alert.alert(
+        "Validation Error",
+        "Please fill out all required fields correctly."
+      );
+      return;
+    }
+
+    setErrors({});
+
+    try {
+      // Upload all images
+      const uploadedUrls = await Promise.all(
+        imgUrls!.map((uri) =>
+          uploadImageUri(uri, {
+            bucket: "event-images",
+            maxSizeBytes: 3 * 1024 * 1024,
+          })
+        )
+      );
+
+      // Use first image as cover
+      const coverImageUrl = uploadedUrls[0];
+
+      // Call upsert mutation
+      await upsertEventMutation.mutateAsync({
+        eventId: props.event?.id,
+        name,
+        description,
+        activityId: activityId!,
+        startTime,
+        endTime,
+        locationData: location!,
+        imageUrls: uploadedUrls.map((uploadedObj) => uploadedObj.publicUrl),
+        coverImageUrl: coverImageUrl.publicUrl,
+        maxAttendees: Number(maxAttendees),
+        minAge: Number(minAge),
+        maxAge: Number(maxAge),
+      });
+
+      // Success! Navigate back
+      Alert.alert(
+        "Success",
+        props.event?.id
+          ? "Event updated successfully"
+          : "Event created successfully"
+      );
+      router.back();
+    } catch (error) {
+      console.error("Error saving event:", error);
+      Alert.alert("Error", "Failed to save event. Please try again.");
+    }
   };
 
   const handleCancel = () => {
@@ -108,9 +213,15 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
             value={name}
             onChangeText={setName}
             placeholder="e.g. Board Game Night"
+            error={errors.name}
           />
 
           <UploadMultiplePictures onChange={setImgUrls} value={imgUrls ?? []} />
+          {errors.imgUrls && (
+            <Text className="text-danger text-sm mt-1 mb-4">
+              {errors.imgUrls}
+            </Text>
+          )}
 
           <FormField
             label="Description"
@@ -120,9 +231,15 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
             multiline
             numberOfLines={4}
             containerClassName="my-6"
+            error={errors.description}
           />
 
           <ActivityPicker onChange={setActivityId} value={activityId} />
+          {errors.activityId && (
+            <Text className="text-danger text-sm mt-1 mb-4">
+              {errors.activityId}
+            </Text>
+          )}
 
           <LocationPicker
             mode="venue"
@@ -131,6 +248,11 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
             onChange={setLocation}
             placeholder="Search for a location..."
           />
+          {errors.location && (
+            <Text className="text-danger text-sm mt-1 mb-4">
+              {errors.location}
+            </Text>
+          )}
 
           <DateTimePicker
             label="Start Time"
@@ -143,6 +265,11 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
             value={endTime}
             onChange={setEndTime}
           />
+          {errors.timeRange && (
+            <Text className="text-danger text-sm mt-1 mb-4">
+              {errors.timeRange}
+            </Text>
+          )}
 
           <FormField
             label="Max Attendees"
@@ -150,6 +277,7 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
             onChangeText={setMaxAttendees}
             placeholder="e.g. 10"
             keyboardType="numeric"
+            error={errors.maxAttendees}
           />
 
           <View className="flex-row gap-4 mb-6">
@@ -161,6 +289,7 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
                 placeholder="18"
                 keyboardType="numeric"
                 containerClassName="mb-0"
+                error={errors.minAge}
               />
             </View>
             <View className="flex-1">
@@ -171,9 +300,15 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
                 placeholder="35"
                 keyboardType="numeric"
                 containerClassName="mb-0"
+                error={errors.maxAge}
               />
             </View>
           </View>
+          {errors.ageRange && (
+            <Text className="text-danger text-sm -mt-4 mb-4">
+              {errors.ageRange}
+            </Text>
+          )}
 
           {/* Action Buttons */}
           <View className="flex-row gap-3 mt-4 mb-8">
@@ -187,7 +322,7 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
             </View>
             <View className="flex-1">
               <GrouplyButton
-                label="Save Event"
+                label={props.event?.id ? "Save Event" : "Create and Host Event"}
                 variant="primary"
                 onPress={handleSave}
                 fullWidth

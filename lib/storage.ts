@@ -15,8 +15,7 @@ export interface UploadOptions {
 export async function uploadImageUri(
   uri: string,
   options: UploadOptions = {}
-): Promise<{ publicUrl: string; path: string }>
-{
+): Promise<{ publicUrl: string; path: string }> {
   const bucket = options.bucket || "avatars";
   const userId = options.userId || "unknown";
   const maxSize = options.maxSizeBytes ?? 1.5 * 1024 * 1024; // 1.5MB default
@@ -45,7 +44,7 @@ export async function uploadImageUri(
   }
 
   const filename = options.fileName || `${Date.now()}.${ext}`;
-  const path = `avatars/${userId}/${filename}`;
+  const path = `${options.bucket}/${userId}/${filename}`;
 
   const contentType = resp.headers.get("content-type") || "image/jpeg";
 

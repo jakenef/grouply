@@ -53,6 +53,7 @@ export default function EventDetailsEdit() {
   const convertedEventFields = eventFields
     ? {
         ...eventFields,
+        id: existingEvent?.id, // Only include id if editing existing event
         startTime: new Date(eventFields.startTime),
         endTime: new Date(eventFields.endTime),
       }
