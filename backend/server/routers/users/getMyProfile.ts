@@ -14,14 +14,22 @@ export const getMyProfile = protectedProcedure
         id: true,
         email: true,
         givenName: true,
+        familyName: true,
         avatarUrl: true,
         role: true,
+        joinedAt: true,
         location: true,
         interests: {
           include: {
             interest: true,
           },
         },
+        traitScores: {
+          include: {
+            trait: true,
+          },
+        },
+        profile: true,
       },
     });
   });

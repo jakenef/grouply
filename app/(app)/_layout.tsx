@@ -106,6 +106,7 @@ export default function AppLayout() {
           ),
         }}
       />
+      <Tabs.Screen name="EditProfile" options={{ href: null }} />
       <Tabs.Screen name="Dev" options={{ href: null }} />
     </Tabs>
   );

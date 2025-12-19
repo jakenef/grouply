@@ -33,6 +33,8 @@ interface ProfileImagePickerProps {
    * @default false
    */
   disabled?: boolean;
+
+  displayOnly?: boolean;
 }
 
 /**
@@ -44,9 +46,10 @@ export const ProfileImagePicker: React.FC<ProfileImagePickerProps> = ({
   size = 128,
   placeholder = "Add Photo",
   disabled = false,
+  displayOnly = false,
 }) => {
   const handlePress = async () => {
-    if (disabled) return;
+    if (disabled || displayOnly) return;
 
     if (await requestMediaLibraryPermission()) {
       const result = await ImagePicker.launchImageLibraryAsync({
