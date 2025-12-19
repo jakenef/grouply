@@ -41,6 +41,10 @@ const Profile = () => {
     });
   };
 
+  const kmToMiles = (km: number): number => {
+    return Math.round(km / 1.60934);
+  };
+
   // Extract interests and traits
   const interests =
     user?.interests?.map((i: any) => i.interest?.name).filter(Boolean) || [];
@@ -49,6 +53,11 @@ const Profile = () => {
 
   const age = calculateAge(new Date(user?.profile?.birthday ?? 0));
   const joinedDate = formatJoinedDate(new Date(user?.joinedAt ?? 0));
+
+  const handleLogout = async () => {
+    await signOut();
+    router.replace("/(auth)/LandingPage");
+  };
 
   return (
     <ScrollView className="flex-1 px-4 bg-background">
@@ -95,7 +104,9 @@ const Profile = () => {
         <View className="space-y-3">
           <View className="py-2">
             <Text className="text-muted text-sm">Max Travel Distance</Text>
-            <Text className="text-base">{user?.profile?.maxTravelKm} km</Text>
+            <Text className="text-base">
+              {kmToMiles(user?.profile?.maxTravelKm ?? 0)} mi
+            </Text>
           </View>
           <View className="py-2">
             <Text className="text-muted text-sm">
@@ -174,7 +185,7 @@ const Profile = () => {
       )}
 
       <View className="pb-6">
-        <GrouplyButton label="Logout" onPress={signOut} />
+        <GrouplyButton label="Logout" onPress={handleLogout} />
       </View>
     </ScrollView>
   );

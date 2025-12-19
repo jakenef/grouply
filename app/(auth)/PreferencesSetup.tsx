@@ -309,7 +309,7 @@ const PreferencesSetup = () => {
           selectedOptions={selectedInterests}
           onSelectionChange={setSelectedInterests}
           minRequired={3}
-          allowOther={true}
+          allowOther={false}
           error={errors.interests}
           onCustomOptionAdded={(customOption) => {
             setCustomInterests((prev) => [...prev, customOption]);
@@ -328,7 +328,7 @@ const PreferencesSetup = () => {
           selectedOptions={selectedTraits}
           onSelectionChange={setSelectedTraits}
           minRequired={3}
-          allowOther={true}
+          allowOther={false}
           error={errors.traits}
           onCustomOptionAdded={(customOption) => {
             setCustomTraits((prev) => [...prev, customOption]);

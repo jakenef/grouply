@@ -5,7 +5,7 @@ import { getAvatarUrlsFromIds } from "./getAvatarUrlsFromIds";
 import { getMyProfile } from "./getMyProfile";
 import { getPublicProfileById } from "./getPublicProfileById";
 import { saveUserAndUserProfilePreferences } from "./saveUserAndUserProfilePreferences";
-import { updateMyProfile } from "./updateMyProfile";
+import { updateMyUserAndProfile } from "./updateMyProfile";
 
 export const usersRouter = router({
   checkUserExists,
@@ -13,6 +13,6 @@ export const usersRouter = router({
   saveUserAndUserProfilePreferences,
   getPublicProfileById,
   getMyProfile,
-  updateMyProfile,
+  updateMyUserAndProfile,
   getAvatarUrlsFromIds,
 });

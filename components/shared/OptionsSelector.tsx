@@ -41,6 +41,11 @@ const OptionsSelector = ({
   >([]);
   const otherInputRef = useRef<TextInput>(null);
 
+  // Update displayed options when options prop changes
+  React.useEffect(() => {
+    setDisplayedOptions(options.slice(0, 12));
+  }, [options]);
+
   // Focus the text input whenever "Other" is selected
   React.useEffect(() => {
     if (otherSelected && otherInputRef.current) {
@@ -125,6 +130,9 @@ const OptionsSelector = ({
             onPress={() => handleOptionToggle(option.id)}
           />
         ))}
+        {(!displayedOptions || displayedOptions.length == 0) && (
+          <Text>No options available.</Text>
+        )}
 
         {/* Custom options added by user */}
         {customOptions.map((option) => (

@@ -20,11 +20,21 @@ export const getMyProfile = protectedProcedure
         joinedAt: true,
         location: true,
         interests: {
+          where: {
+            interest: {
+              isApproved: true,
+            },
+          },
           include: {
             interest: true,
           },
         },
         traitScores: {
+          where: {
+            trait: {
+              isApproved: true,
+            },
+          },
           include: {
             trait: true,
           },

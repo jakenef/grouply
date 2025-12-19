@@ -1,4 +1,5 @@
 import { useAuth } from "@/lib/auth";
+import { colors } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";
 import { Redirect } from "expo-router";
 import { ActivityIndicator, Text, View } from "react-native";
@@ -14,7 +15,7 @@ export default function Index() {
   if (isLoading || (session && userExistsQuery.isLoading)) {
     return (
       <View className="flex-1 justify-center items-center">
-        <ActivityIndicator size="large" color="#4f47e5" />
+        <ActivityIndicator size="large" color={colors.primary} />
         <Text className="mt-4 text-gray-600">Loading...</Text>
       </View>
     );
