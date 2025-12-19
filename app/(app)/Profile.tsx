@@ -62,7 +62,7 @@ const Profile = () => {
   return (
     <ScrollView className="flex-1 px-4 bg-background">
       <View className="flex-row justify-between pt-2">
-        <Text className="text-2xl font-semibold">Profile</Text>
+        <Text className="text-4xl font-semibold">Profile</Text>
         <Feather
           name="edit"
           size={25}

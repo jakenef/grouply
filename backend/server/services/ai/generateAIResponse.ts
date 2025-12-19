@@ -10,6 +10,7 @@ export async function generateAIResponse(params: {
 }) {
   // TODO: clean this upp
   // TODO: or create new event suggestion
+  // maybe have options for find by activity first or type of people first? filter / sort optionality
   // 1) Fetch last N messages for context
   const contextMessages = await prisma.chatMessage.findMany({
     where: {

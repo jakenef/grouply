@@ -37,6 +37,12 @@ export default function AppLayout() {
           paddingBottom: 0,
           paddingTop: 4,
           height: 55,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.08,
+          shadowRadius: 6,
+          // Elevation for Android
+          elevation: 10,
         },
         tabBarLabelStyle: {
           fontSize: 12,
