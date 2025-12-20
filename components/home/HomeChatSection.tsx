@@ -68,7 +68,7 @@ export default function HomeChatSection({
         {messages.length === 0 ? (
           // Collapsed/empty state
           <View className="justify-center px-4 py-4">
-            <Text className="text-lg font-semibold mb-1.5 text-foreground">
+            <Text className="text-xl font-semibold mb-1.5">
               What do you want to do?
             </Text>
           </View>

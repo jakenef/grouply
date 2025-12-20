@@ -1,8 +1,8 @@
 import { useAuth } from "@/lib/auth";
-import { colors } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";
 import { Redirect } from "expo-router";
-import { ActivityIndicator, Text, View } from "react-native";
+import * as SplashScreen from "expo-splash-screen";
+import { useEffect } from "react";
 
 export default function Index() {
   const { session, isLoading } = useAuth();
@@ -11,14 +11,18 @@ export default function Index() {
     enabled: !!session,
   });
 
-  // While checking auth status, show loading UI
-  if (isLoading || (session && userExistsQuery.isLoading)) {
-    return (
-      <View className="flex-1 justify-center items-center">
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text className="mt-4 text-gray-600">Loading...</Text>
-      </View>
-    );
+  const isCheckingAuth = isLoading || (session && userExistsQuery.isLoading);
+
+  // Hide splash screen when auth check is complete
+  useEffect(() => {
+    if (!isCheckingAuth) {
+      SplashScreen.hideAsync();
+    }
+  }, [isCheckingAuth]);
+
+  // While checking auth status, keep splash screen visible
+  if (isCheckingAuth) {
+    return null; // Splash screen is showing, don't render anything
   }
 
   // After loading, redirect based on authentication and user status

@@ -1,6 +1,7 @@
 import EventCardRegistered, {
   EventCardRegisteredEvent,
 } from "@/components/events/EventCardRegistered";
+import SkeletonLoadingEvents from "@/components/events/SkeletonLoadingEvents";
 import { colors } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";
 import React, { useState } from "react";
@@ -16,7 +17,14 @@ const Events = () => {
     isRefetching,
   } = trpc.events.getMyRegisteredEvents.useQuery();
 
-  // TODO: sort by recent, and split upcoming / past, and fix ellipses for overflow text
+  const now = Date.now();
+  const pastEvents = events.filter(
+    (event) => new Date(event.startsAt).getTime() <= now
+  );
+  const upcomingEvents = events.filter(
+    (event) => new Date(event.startsAt).getTime() > now
+  );
+  pastEvents.reverse();
 
   return (
     <View className="flex-1 bg-background px-4 pt-2">
@@ -66,24 +74,28 @@ const Events = () => {
           </View>
         </Pressable>
       </View>
-      <FlatList
-        data={events}
-        refreshing={isRefetching}
-        onRefresh={refetch}
-        renderItem={({ item }) => {
-          const event: EventCardRegisteredEvent = {
-            id: item.id,
-            title: item.name,
-            currentParticipants: item.regs.length,
-            isCanceled: item.isCancelled,
-            location: item.location.formatted ?? "TBD",
-            maxParticipants: item.maxAttendees,
-            startTime: new Date(item.startsAt),
-          };
-          return <EventCardRegistered event={event} />;
-        }}
-        ListEmptyComponent={<Text>No events found.</Text>}
-      ></FlatList>
+      {isLoading ? (
+        <SkeletonLoadingEvents />
+      ) : (
+        <FlatList
+          data={showUpcoming ? upcomingEvents : pastEvents}
+          refreshing={isRefetching}
+          onRefresh={refetch}
+          renderItem={({ item }) => {
+            const event: EventCardRegisteredEvent = {
+              id: item.id,
+              title: item.name,
+              currentParticipants: item.regs.length,
+              isCanceled: item.isCancelled,
+              location: item.location.formatted ?? "TBD",
+              maxParticipants: item.maxAttendees,
+              startTime: new Date(item.startsAt),
+            };
+            return <EventCardRegistered event={event} />;
+          }}
+          ListEmptyComponent={<Text>No events found.</Text>}
+        ></FlatList>
+      )}
     </View>
   );
 };

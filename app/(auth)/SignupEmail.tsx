@@ -13,7 +13,7 @@ const Login = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background-darker">
+    <SafeAreaView className="flex-1 bg-background">
       <View className="flex-1 px-8">
         <View className="items-center">
           <Text className="text-5xl font-bold text-primary mt-16">Grouply</Text>

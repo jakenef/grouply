@@ -54,11 +54,6 @@ const Profile = () => {
   const age = calculateAge(new Date(user?.profile?.birthday ?? 0));
   const joinedDate = formatJoinedDate(new Date(user?.joinedAt ?? 0));
 
-  const handleLogout = async () => {
-    await signOut();
-    router.replace("/(auth)/LandingPage");
-  };
-
   return (
     <ScrollView className="flex-1 px-4 bg-background">
       <View className="flex-row justify-between pt-2">
@@ -185,7 +180,7 @@ const Profile = () => {
       )}
 
       <View className="pb-6">
-        <GrouplyButton label="Logout" onPress={handleLogout} />
+        <GrouplyButton label="Logout" onPress={signOut} />
       </View>
     </ScrollView>
   );

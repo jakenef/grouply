@@ -2,7 +2,7 @@ import { protectedProcedure } from "../../trpc";
 
 export const getMyRegisteredEvents = protectedProcedure.query(
   async ({ ctx }) => {
-    const events = ctx.prisma.event.findMany({
+    const events = await ctx.prisma.event.findMany({
       where: {
         regs: {
           some: {
@@ -14,7 +14,9 @@ export const getMyRegisteredEvents = protectedProcedure.query(
         regs: true,
         location: { select: { formatted: true } },
       },
+      orderBy: { startsAt: "asc" },
     });
+
     return events;
   }
 );

@@ -34,9 +34,12 @@ export default function eventCardRegistered(props: EventCardRegisteredProps) {
       <View className="flex-1 p-4 pt-2">
         <View className="flex-row justify-between items-center">
           {/* Title */}
-          <Text className="text-xl font-semibold mb-1" numberOfLines={1}>
-            {props.event.title}
-          </Text>
+          <View className="flex-1 mr-2">
+            <Text className="text-xl font-semibold mb-1" numberOfLines={1}>
+              {props.event.title}
+            </Text>
+          </View>
+
           <EventStatus status={eventStatusProps.status} />
         </View>
 

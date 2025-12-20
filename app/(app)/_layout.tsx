@@ -3,7 +3,6 @@ import { colors } from "@/lib/theme";
 import { useCurrentUser } from "@/lib/useCurrentUserHook";
 import { Ionicons } from "@expo/vector-icons";
 import { Redirect, Tabs } from "expo-router";
-import { ActivityIndicator, View } from "react-native";
 
 export default function AppLayout() {
   const { session } = useAuth();
@@ -14,13 +13,9 @@ export default function AppLayout() {
     return <Redirect href="/(auth)/LandingPage" />;
   }
 
-  // Show loading state while fetching profile
+  // Keep showing nothing while loading (splash is still visible from index.tsx)
   if (isLoading) {
-    return (
-      <View className="flex-1 justify-center items-center">
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
+    return null;
   }
 
   const isAdmin = profile?.role === "ADMIN";
@@ -112,7 +107,6 @@ export default function AppLayout() {
           ),
         }}
       />
-      <Tabs.Screen name="EditProfile" options={{ href: null }} />
       <Tabs.Screen name="Dev" options={{ href: null }} />
     </Tabs>
   );
