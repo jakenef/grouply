@@ -47,10 +47,26 @@ export default function EventDetails(props: EventDetailsProps) {
   const isPast = new Date(props.event.startTime) < new Date();
   const isFull = props.event.attendeeIds.length >= props.event.maxAttendees;
   const isUserHost = user?.id == props.event.hostId;
-  const joinMutation = trpc.events.joinEvent.useMutation();
+  const utils = trpc.useUtils();
+  const joinMutation = trpc.events.joinEvent.useMutation({
+    onSuccess: () => {
+      utils.events.getEventDetailsFromId.invalidate({ id: props.event.id });
+    },
+  });
+  const leaveEventMutation = trpc.events.leaveEvent.useMutation({
+    onSuccess: () => {
+      utils.events.getEventDetailsFromId.invalidate({ id: props.event.id });
+    },
+  });
 
   async function handleJoin() {
     await joinMutation.mutateAsync({
+      eventId: props.event.id,
+    });
+  }
+
+  async function handleBackOut() {
+    await leaveEventMutation.mutateAsync({
       eventId: props.event.id,
     });
   }
@@ -166,10 +182,17 @@ export default function EventDetails(props: EventDetailsProps) {
               label="Sorry, this event is full"
               style={{ backgroundColor: colors.muted.DEFAULT, minHeight: 50 }}
             />
+          ) : isUserHost ? (
+            <GrouplyButton
+              label="You are the host"
+              style={{ backgroundColor: colors.muted.DEFAULT, minHeight: 50 }}
+            />
           ) : isUserAttending ? (
             <GrouplyButton
-              label="Back Out"
+              label={leaveEventMutation.isPending ? "Leaving..." : "Back Out"}
               style={{ backgroundColor: colors.muted.DEFAULT, minHeight: 50 }}
+              onPress={handleBackOut}
+              disabled={leaveEventMutation.isPending}
             />
           ) : (
             <GrouplyButton

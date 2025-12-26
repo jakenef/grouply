@@ -4,6 +4,7 @@ import { getEventDetailsFromId } from "./getEventDetailsFromId";
 import { getMyRegisteredEvents } from "./getMyRegisteredEvents";
 import { getSuggestedEventsFromUser } from "./getSuggestedEventsFromUser";
 import joinEvent from "./joinEvent";
+import leaveEvent from "./leaveEvent";
 import { upsertEvent } from "./upsertEvent";
 
 export const eventsRouter = router({
@@ -13,4 +14,5 @@ export const eventsRouter = router({
   upsertEvent,
   getMyRegisteredEvents,
   joinEvent,
+  leaveEvent,
 });
