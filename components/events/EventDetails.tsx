@@ -4,7 +4,16 @@ import { useCurrentUser } from "@/lib/useCurrentUserHook";
 import { Ionicons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import { router } from "expo-router";
-import { Image, ScrollView, Text, View } from "react-native";
+import { useState } from "react";
+import {
+  Alert,
+  Image,
+  Modal,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import GrouplyButton from "../shared/GrouplyButton";
 import ImageCarousel from "../shared/ImageCarousel";
 import ProfilePictureGroup from "../users/ProfilePictureGroup";
@@ -24,6 +33,7 @@ interface EventDetailsObject {
   imageUrls: string[];
   coverImageUrl: string;
   hostId: string;
+  isCanceled: boolean;
 }
 
 interface EventDetailsProps {
@@ -32,6 +42,8 @@ interface EventDetailsProps {
 
 export default function EventDetails(props: EventDetailsProps) {
   const { user } = useCurrentUser();
+  const [menuVisible, setMenuVisible] = useState(false);
+
   const formattedStart = format(
     props.event.startTime,
     "eee, MMM d, yyyy • h:mm a - "
@@ -58,6 +70,11 @@ export default function EventDetails(props: EventDetailsProps) {
       utils.events.getEventDetailsFromId.invalidate({ id: props.event.id });
     },
   });
+  const cancelEventMutation = trpc.events.cancelEvent.useMutation({
+    onSuccess: () => {
+      utils.events.getEventDetailsFromId.invalidate({ id: props.event.id });
+    },
+  });
 
   async function handleJoin() {
     await joinMutation.mutateAsync({
@@ -71,6 +88,27 @@ export default function EventDetails(props: EventDetailsProps) {
     });
   }
 
+  function handleCancel() {
+    setMenuVisible(false);
+    Alert.alert(
+      "Cancel Event",
+      "Are you sure you want to cancel this event? This action cannot be undone.",
+      [
+        {
+          text: "No, Keep Event",
+          style: "cancel",
+        },
+        {
+          text: "Yes, Cancel Event",
+          style: "destructive",
+          onPress: async () => {
+            await cancelEventMutation.mutateAsync({ eventId: props.event.id });
+          },
+        },
+      ]
+    );
+  }
+
   return (
     <View className="flex-1 bg-background">
       {/* Header */}
@@ -80,8 +118,37 @@ export default function EventDetails(props: EventDetailsProps) {
           size={30}
           onPress={() => router.back()}
         />
+        {isUserHost && !props.event.isCanceled && (
+          <Ionicons
+            name="ellipsis-horizontal"
+            size={30}
+            onPress={() => setMenuVisible(true)}
+          />
+        )}
+
         {/* <Ionicons name="share-outline" size={30} /> */}
       </View>
+      <Modal
+        visible={menuVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setMenuVisible(false)}
+      >
+        <Pressable
+          className="flex-1 bg-black/50"
+          onPress={() => setMenuVisible(false)}
+        >
+          <View className="bg-white rounded-lg m-4 p-4 absolute top-16 right-4">
+            <Pressable className="py-3" onPress={handleCancel}>
+              <Text className="text-red-500">
+                {cancelEventMutation.isPending
+                  ? "Canceling..."
+                  : "Cancel Event"}
+              </Text>
+            </Pressable>
+          </View>
+        </Pressable>
+      </Modal>
 
       {/* Content */}
       <ScrollView className="flex-1">
@@ -177,10 +244,10 @@ export default function EventDetails(props: EventDetailsProps) {
               label="This event has passed"
               style={{ backgroundColor: colors.muted.DEFAULT, minHeight: 50 }}
             />
-          ) : isFull ? (
+          ) : props.event.isCanceled ? (
             <GrouplyButton
-              label="Sorry, this event is full"
-              style={{ backgroundColor: colors.muted.DEFAULT, minHeight: 50 }}
+              label="This event has been canceled"
+              style={{ backgroundColor: colors.danger.DEFAULT, minHeight: 50 }}
             />
           ) : isUserHost ? (
             <GrouplyButton
@@ -193,6 +260,11 @@ export default function EventDetails(props: EventDetailsProps) {
                   params: { existingEventId: props.event.id },
                 })
               }
+            />
+          ) : isFull ? (
+            <GrouplyButton
+              label="Sorry, this event is full"
+              style={{ backgroundColor: colors.muted.DEFAULT, minHeight: 50 }}
             />
           ) : isUserAttending ? (
             <GrouplyButton

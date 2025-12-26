@@ -56,6 +56,7 @@ export default function EventDetailsEdit() {
         id: existingEvent?.id, // Only include id if editing existing event
         startTime: new Date(eventFields.startTime),
         endTime: new Date(eventFields.endTime),
+        isCanceled: existingEvent?.isCanceled ?? false, // Only from existing events
         imgUrls: existingEvent?.coverImageUrl
           ? [
               existingEvent?.coverImageUrl,

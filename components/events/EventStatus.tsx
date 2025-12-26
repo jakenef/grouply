@@ -18,8 +18,10 @@ export default function eventStatus(props: EventStatusProps) {
       </View>
     );
   } else {
-    <View className="bg-danger-accent px-6 py-2 rounded-full">
-      <Text className="text-danger">Canceled</Text>
-    </View>;
+    return (
+      <View className="bg-danger-accent px-6 py-2 rounded-full">
+        <Text className="text-danger">Canceled</Text>
+      </View>
+    );
   }
 }

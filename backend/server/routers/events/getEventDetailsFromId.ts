@@ -27,6 +27,7 @@ export const getEventDetailsFromId = protectedProcedure
         imageUrls: z.array(z.string()),
         coverImageUrl: z.string(),
         hostId: z.string(),
+        isCanceled: z.boolean(),
       })
       .optional()
   )
@@ -56,6 +57,7 @@ export const getEventDetailsFromId = protectedProcedure
         imageUrls: event.imageUrls,
         coverImageUrl: event.coverImageUrl,
         hostId: event.organizerId,
+        isCanceled: event.isCancelled,
       };
     } else {
       return undefined;

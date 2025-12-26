@@ -1,4 +1,5 @@
 import { router } from "../../trpc";
+import cancelEvent from "./cancelEvent";
 import { generateEventFromChannel } from "./generateEventFromChannel";
 import { getEventDetailsFromId } from "./getEventDetailsFromId";
 import { getMyRegisteredEvents } from "./getMyRegisteredEvents";
@@ -15,4 +16,5 @@ export const eventsRouter = router({
   getMyRegisteredEvents,
   joinEvent,
   leaveEvent,
+  cancelEvent,
 });
