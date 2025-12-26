@@ -71,6 +71,8 @@ export const upsertEvent = protectedProcedure
       minAttendees: 2,
       maxAttendees: input.maxAttendees,
       eventUrl: "not_implemented.com",
+      lowerAgeLimit: input.minAge,
+      upperAgeLimit: input.maxAge,
     };
 
     if (input.eventId) {

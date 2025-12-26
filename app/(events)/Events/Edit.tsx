@@ -56,6 +56,14 @@ export default function EventDetailsEdit() {
         id: existingEvent?.id, // Only include id if editing existing event
         startTime: new Date(eventFields.startTime),
         endTime: new Date(eventFields.endTime),
+        imgUrls: existingEvent?.coverImageUrl
+          ? [
+              existingEvent?.coverImageUrl,
+              ...existingEvent?.imageUrls.filter(
+                (url) => url !== existingEvent.coverImageUrl
+              ),
+            ]
+          : existingEvent?.imageUrls,
       }
     : undefined;
 

@@ -87,7 +87,11 @@ interface EventDetails {
 }
 
 export const EventDetailsForm = (props: EventDetailsFormProps) => {
-  const upsertEventMutation = trpc.events.upsertEvent.useMutation();
+  const utils = trpc.useUtils();
+  const upsertEventMutation = trpc.events.upsertEvent.useMutation({
+    onSuccess: () =>
+      utils.events.getEventDetailsFromId.invalidate({ id: props.event?.id }),
+  });
   const [name, setName] = useState(props.event?.name || "");
   const [description, setDescription] = useState(
     props.event?.description || ""
@@ -318,14 +322,22 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
                 variant="outline"
                 onPress={handleCancel}
                 fullWidth
+                disabled={upsertEventMutation.isPending}
               />
             </View>
             <View className="flex-1">
               <GrouplyButton
-                label={props.event?.id ? "Save Event" : "Create and Host Event"}
+                label={
+                  upsertEventMutation.isPending
+                    ? "Loading..."
+                    : props.event?.id
+                    ? "Save Event"
+                    : "Create and Host Event"
+                }
                 variant="primary"
                 onPress={handleSave}
                 fullWidth
+                disabled={upsertEventMutation.isPending}
               />
             </View>
           </View>

@@ -184,8 +184,15 @@ export default function EventDetails(props: EventDetailsProps) {
             />
           ) : isUserHost ? (
             <GrouplyButton
-              label="You are the host"
-              style={{ backgroundColor: colors.muted.DEFAULT, minHeight: 50 }}
+              label="Edit your event"
+              variant="outline"
+              style={{ minHeight: 50 }}
+              onPress={() =>
+                router.push({
+                  pathname: "/Events/Edit",
+                  params: { existingEventId: props.event.id },
+                })
+              }
             />
           ) : isUserAttending ? (
             <GrouplyButton
