@@ -3,6 +3,7 @@ import { generateEventFromChannel } from "./generateEventFromChannel";
 import { getEventDetailsFromId } from "./getEventDetailsFromId";
 import { getMyRegisteredEvents } from "./getMyRegisteredEvents";
 import { getSuggestedEventsFromUser } from "./getSuggestedEventsFromUser";
+import joinEvent from "./joinEvent";
 import { upsertEvent } from "./upsertEvent";
 
 export const eventsRouter = router({
@@ -11,4 +12,5 @@ export const eventsRouter = router({
   generateEventFromChannel,
   upsertEvent,
   getMyRegisteredEvents,
+  joinEvent,
 });

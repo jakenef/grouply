@@ -37,9 +37,9 @@ export default function ProfilePictureGroup({
     error,
   } = trpc.users.getAvatarUrlsFromIds.useQuery({ userIds: userIds });
 
-  const userList = (users ?? []).slice(0, 5);
+  const pfpUserList = (users ?? []).slice(0, 5);
   const extraPicturesCount = Math.max(0, numberOfPeople - 5);
-  const namesList = userList.map((user) => user.firstName);
+  const namesList = (users ?? []).map((user) => user.firstName);
   const namesListText = generateNamesText(namesList);
 
   const profilePictureStyles =
@@ -64,10 +64,10 @@ export default function ProfilePictureGroup({
   return (
     <>
       <View className="flex-1 py-1">
-        {userList.length > 0 ? (
+        {pfpUserList.length > 0 ? (
           <>
             <View className="flex-row items-center">
-              {userList.map(({ userId, avatarUrl }, idx) => (
+              {pfpUserList.map(({ userId, avatarUrl }, idx) => (
                 <View
                   key={userId}
                   className={

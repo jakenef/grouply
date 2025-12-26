@@ -7,6 +7,8 @@ interface EventCardProps {
   onJoin?: () => void;
 }
 
+// TODO: click anywhere on card to go to details change button to view
+
 export const EventCard: React.FC<EventCardProps> = ({ event, onJoin }) => {
   // Handle both the API structure (event.event) and direct event structure
   const eventData = event.event || event;
@@ -62,7 +64,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onJoin }) => {
             onPress={onJoin}
             className="bg-primary px-6 py-2 rounded-full"
           >
-            <Text className="text-white font-medium">Join</Text>
+            <Text className="text-white font-medium">View</Text>
           </TouchableOpacity>
         </View>
       </View>

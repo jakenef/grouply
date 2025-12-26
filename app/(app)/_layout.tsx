@@ -73,6 +73,7 @@ export default function AppLayout() {
       <Tabs.Screen
         name="Events"
         options={{
+          title: "My Events",
           tabBarIcon: ({ focused, color }) => (
             <Ionicons
               name={focused ? "calendar" : "calendar-outline"}

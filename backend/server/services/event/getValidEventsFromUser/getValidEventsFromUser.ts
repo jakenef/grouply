@@ -39,6 +39,7 @@ export async function getValidEventsFromUser(user: UserWithTraitsAndInterests) {
       },
       isFull: false,
       isCancelled: false,
+      regs: { none: { userId: user.id } },
     },
     include: {
       snapshot: true,

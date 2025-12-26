@@ -34,7 +34,7 @@ export default function EventDetails(props: EventDetailsProps) {
   const { user } = useCurrentUser();
   const formattedStart = format(
     props.event.startTime,
-    "eeee, MMMM d, yyyy • h:mm a - "
+    "eee, MMM d, yyyy • h:mm a - "
   );
   const formattedEndTime = format(props.event.endTime, "h:mm a");
   const fractionAttendees =
@@ -44,6 +44,17 @@ export default function EventDetails(props: EventDetailsProps) {
   const { data: host } = trpc.users.getPublicProfileById.useQuery({
     id: props.event.hostId,
   });
+  const isPast = new Date(props.event.startTime) < new Date();
+  const isFull = props.event.attendeeIds.length >= props.event.maxAttendees;
+  const isUserHost = user?.id == props.event.hostId;
+  const joinMutation = trpc.events.joinEvent.useMutation();
+
+  async function handleJoin() {
+    await joinMutation.mutateAsync({
+      eventId: props.event.id,
+    });
+  }
+
   return (
     <View className="flex-1 bg-background">
       {/* Header */}
@@ -145,17 +156,29 @@ export default function EventDetails(props: EventDetailsProps) {
           </View>
 
           {/* Buttons: if current user is registered for this event, show back out button instead */}
-          {isUserAttending ? (
+          {isPast ? (
+            <GrouplyButton
+              label="This event has passed"
+              style={{ backgroundColor: colors.muted.DEFAULT, minHeight: 50 }}
+            />
+          ) : isFull ? (
+            <GrouplyButton
+              label="Sorry, this event is full"
+              style={{ backgroundColor: colors.muted.DEFAULT, minHeight: 50 }}
+            />
+          ) : isUserAttending ? (
             <GrouplyButton
               label="Back Out"
               style={{ backgroundColor: colors.muted.DEFAULT, minHeight: 50 }}
             />
           ) : (
             <GrouplyButton
-              label="Join Event"
+              label={joinMutation.isPending ? "Joining..." : "Join Event"}
               iconName="checkmark-circle"
               iconPosition="left"
               style={{ minHeight: 50 }}
+              onPress={handleJoin}
+              disabled={joinMutation.isPending}
             />
           )}
 

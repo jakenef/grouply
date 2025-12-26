@@ -272,7 +272,7 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
           )}
 
           <FormField
-            label="Max Attendees"
+            label="Preferred # of Attendees"
             value={maxAttendees}
             onChangeText={setMaxAttendees}
             placeholder="e.g. 10"
