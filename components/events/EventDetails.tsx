@@ -51,7 +51,6 @@ export default function EventDetails(props: EventDetailsProps) {
   const formattedEndTime = format(props.event.endTime, "h:mm a");
   const fractionAttendees =
     props.event.numRegistered / props.event.maxAttendees;
-  //TODO: make edit button for event host and join event / backout switch based on attendance status
   const isUserAttending = !!user && props.event.attendeeIds.includes(user.id);
   const { data: host } = trpc.users.getPublicProfileById.useQuery({
     id: props.event.hostId,
