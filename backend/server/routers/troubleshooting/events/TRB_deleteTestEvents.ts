@@ -3,7 +3,7 @@ import { TRPCError } from "@trpc/server";
 
 export const TRB_deleteTestEvents = adminProcedure.mutation(async ({ ctx }) => {
   try {
-    // First delete all test events
+    // Delete test events - cascade will handle registrations, snapshots, and saved events
     const deletedEvents = await ctx.prisma.event.deleteMany({
       where: {
         id: {

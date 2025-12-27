@@ -39,7 +39,8 @@ export async function generateEventFieldsFromContext(params: {
   });
 
   const activitySuggestion = await getActivityFromDesc(
-    aiResponse.output_parsed?.eventDescription ?? ""
+    aiResponse.output_parsed?.eventDescription ?? "",
+    true
   );
 
   const eventFields = {

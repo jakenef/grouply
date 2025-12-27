@@ -283,7 +283,7 @@ model EventRegistration {
   canceledAt DateTime?
 
   user  User  @relation(fields: [userId], references: [id])
-  event Event @relation(fields: [eventId], references: [id])
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   @@id([userId, eventId])
   @@index([eventId])
@@ -295,7 +295,7 @@ model SavedEvent {
   savedAt DateTime @default(now())
 
   user  User  @relation(fields: [userId], references: [id])
-  event Event @relation(fields: [eventId], references: [id])
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   @@id([userId, eventId])
   @@index([userId])

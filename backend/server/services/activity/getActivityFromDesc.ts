@@ -28,7 +28,10 @@ import { prisma } from "../../prisma";
  * }
  * ```
  */
-export async function getActivityFromDesc(desc: string) {
+export async function getActivityFromDesc(
+  desc: string,
+  returnClosestMatch: boolean = false
+) {
   // generate semantic embedding for desc
   if (desc.trim().length == 0) {
     return null;
@@ -40,7 +43,7 @@ export async function getActivityFromDesc(desc: string) {
     encoding_format: "float",
   });
 
-  const minSimilarity = 0.45;
+  const minSimilarity = 0.3;
   const k = 1;
 
   const embedding = response.data[0].embedding;
@@ -66,8 +69,7 @@ export async function getActivityFromDesc(desc: string) {
   );
 
   const best = results[0];
-  console.log("input: ", desc, "closest activity: ", best);
-  if (best && best.similarity > minSimilarity) {
+  if (best && (returnClosestMatch || best.similarity > minSimilarity)) {
     return best;
   }
   return null;

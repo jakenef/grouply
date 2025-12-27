@@ -4,7 +4,7 @@ import { useCurrentUser } from "@/lib/useCurrentUserHook";
 import { Ionicons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Alert,
   Image,
@@ -43,6 +43,9 @@ interface EventDetailsProps {
 export default function EventDetails(props: EventDetailsProps) {
   const { user } = useCurrentUser();
   const [menuVisible, setMenuVisible] = useState(false);
+  const [isJoining, setIsJoining] = useState(false);
+  const [isLeaving, setIsLeaving] = useState(false);
+  const [isCanceling, setIsCanceling] = useState(false);
 
   const formattedStart = format(
     props.event.startTime,
@@ -75,13 +78,21 @@ export default function EventDetails(props: EventDetailsProps) {
     },
   });
 
+  // Reset loading states when attendance status changes after refetch
+  useEffect(() => {
+    setIsJoining(false);
+    setIsLeaving(false);
+  }, [isUserAttending]);
+
   async function handleJoin() {
+    setIsJoining(true);
     await joinMutation.mutateAsync({
       eventId: props.event.id,
     });
   }
 
   async function handleBackOut() {
+    setIsLeaving(true);
     await leaveEventMutation.mutateAsync({
       eventId: props.event.id,
     });
@@ -101,6 +112,7 @@ export default function EventDetails(props: EventDetailsProps) {
           text: "Yes, Cancel Event",
           style: "destructive",
           onPress: async () => {
+            setIsCanceling(true);
             await cancelEventMutation.mutateAsync({ eventId: props.event.id });
           },
         },
@@ -140,9 +152,7 @@ export default function EventDetails(props: EventDetailsProps) {
           <View className="bg-white rounded-lg m-4 p-4 absolute top-16 right-4">
             <Pressable className="py-3" onPress={handleCancel}>
               <Text className="text-red-500">
-                {cancelEventMutation.isPending
-                  ? "Canceling..."
-                  : "Cancel Event"}
+                {isCanceling ? "Canceling..." : "Cancel Event"}
               </Text>
             </Pressable>
           </View>
@@ -260,26 +270,26 @@ export default function EventDetails(props: EventDetailsProps) {
                 })
               }
             />
+          ) : isUserAttending ? (
+            <GrouplyButton
+              label={isLeaving ? "Leaving..." : "Back Out"}
+              style={{ backgroundColor: colors.muted.DEFAULT, minHeight: 50 }}
+              onPress={handleBackOut}
+              disabled={isLeaving}
+            />
           ) : isFull ? (
             <GrouplyButton
               label="Sorry, this event is full"
               style={{ backgroundColor: colors.muted.DEFAULT, minHeight: 50 }}
             />
-          ) : isUserAttending ? (
-            <GrouplyButton
-              label={leaveEventMutation.isPending ? "Leaving..." : "Back Out"}
-              style={{ backgroundColor: colors.muted.DEFAULT, minHeight: 50 }}
-              onPress={handleBackOut}
-              disabled={leaveEventMutation.isPending}
-            />
           ) : (
             <GrouplyButton
-              label={joinMutation.isPending ? "Joining..." : "Join Event"}
+              label={isJoining ? "Joining..." : "Join Event"}
               iconName="checkmark-circle"
               iconPosition="left"
               style={{ minHeight: 50 }}
               onPress={handleJoin}
-              disabled={joinMutation.isPending}
+              disabled={isJoining}
             />
           )}
 
