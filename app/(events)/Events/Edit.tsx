@@ -1,4 +1,5 @@
 import { EventDetailsForm } from "@/components/events/EventDetailsForm";
+import { EventDetailsFormSkeleton } from "@/components/events/EventDetailsFormSkeleton";
 import { trpc } from "@/lib/trpc";
 import { useLocalSearchParams } from "expo-router";
 import { Text, View } from "react-native";
@@ -35,10 +36,11 @@ export default function EventDetailsEdit() {
   if (isLoading) {
     return (
       <View className="flex-1">
-        <Text>Loading...</Text>
+        <EventDetailsFormSkeleton />
       </View>
     );
   }
+
   if (error) {
     return (
       <View className="flex-1">

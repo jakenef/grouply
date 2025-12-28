@@ -56,6 +56,7 @@ const Home = () => {
 
   const handleBack = () => {
     setMessages([]);
+    setEventSuggestions(undefined);
     setIsChatExpanded(false);
   };
 

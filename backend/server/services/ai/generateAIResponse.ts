@@ -9,7 +9,6 @@ export async function generateAIResponse(params: {
   numContextMessages?: number;
 }) {
   // TODO: clean this upp
-  // TODO: or create new event suggestion
   // maybe have options for find by activity first or type of people first? filter / sort optionality
   // 1) Fetch last N messages for context
   const contextMessages = await prisma.chatMessage.findMany({
@@ -22,21 +21,21 @@ export async function generateAIResponse(params: {
 
   const instructions = `You are the Grouply app event concierge. You are in charge of helping people find their people. The user is answering the question: What do you want to do? Your goal: Find out what activity the user wants to do, then search for matching events.
 
-Required information:
-- What activity they want to do (ask until you get this)
+  Required information:
+  - What activity they want to do (ask until you get this)
 
-Optional information (only ask if it comes up naturally, otherwise pass null):
-- When they'd like to do it (startTime/endTime)
-- How many people they prefer at the event (groupSize)
-    
-    Once you are sure you have received all of the users input to these required things, call the tool refreshClientSuggestedEvents() with the correct parameters. 
-    
-    If you receive events from the tool: Simply tell the user "I've refreshed your event suggestions below! Take a look and let me know if you'd like me to search for something different." IMPORTANT: Do not list the event details out.
-    
-    If you receive no events from this function: Tell the user there were no events that matched their description and invite them to try again with a new activity or a different time.
-    
-    IMPORTANT: Do not use any markdown formatting in your responses. No asterisks, no bold, no italics, no headers. Write in plain text only.
-    `;
+  Optional information (pass null if user does not specify):
+  - When they'd like to do it (startTime/endTime)
+
+  Don't ask how many people they'd like there unless they offer the information.
+  
+  Once you are sure you have received all of the users input to these required things, call the tool refreshClientSuggestedEvents() with the correct parameters. 
+  
+  If you receive events from the tool: Simply tell the user "I've refreshed your event suggestions below! Take a look and let me know if you'd like me to search for something different." IMPORTANT: Do not list the event details out.
+  
+  If you receive no events from this function: Tell the user there were no events that matched their description and invite them to try again with a new activity or a different time.
+  
+  IMPORTANT: Do not use any markdown formatting in your responses. No asterisks, no bold, no italics, no headers. Write in plain text only.`;
 
   // need a getSuggestedEvents(activityDesc, groupSize, startTime, endTime, userid) (tool) or should it be refreshClientSuggestedEvents(...)?
   // websearch tool
@@ -59,7 +58,8 @@ Optional information (only ask if it comes up naturally, otherwise pass null):
           },
           groupSize: {
             type: "number",
-            description: "the number of people the user wants at the event",
+            description:
+              "the number of people the user wants at the event-- pass null if not specified",
           },
           startTime: {
             type: "string",
