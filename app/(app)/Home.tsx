@@ -121,7 +121,7 @@ const Home = () => {
           eventSuggestions={eventSuggestions}
           onSend={handleSendMessage}
           isExpanded={isChatExpanded}
-          isLoading={false}
+          isLoading={sendMessageMutation.isPending}
           channelId={channelId}
         />
       </Animated.View>

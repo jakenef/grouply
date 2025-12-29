@@ -1,11 +1,100 @@
 import { ChatMessage, ChatMessageRole } from "@/types/Chat";
+import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-import { FlatList, Text, TextInput, View } from "react-native";
-import Animated, { FadeInDown } from "react-native-reanimated";
+import { FlatList, Image, Text, TextInput, View } from "react-native";
+import Animated, {
+  Easing,
+  FadeInDown,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
 import CreateEventCard from "../shared/CreateEventCard";
 import { EventCard } from "../shared/EventCard";
 import GrouplyButton from "../shared/GrouplyButton";
+
+// Customize the AI avatar here:
+// Option 1: Use a URL to an image
+const AI_AVATAR_URL = null; // e.g. "https://example.com/ai-avatar.png"
+// Option 2: If null, will use a default icon
+
+// Typing indicator component
+const TypingIndicator = () => {
+  const dot1 = useSharedValue(0);
+  const dot2 = useSharedValue(0);
+  const dot3 = useSharedValue(0);
+
+  useEffect(() => {
+    const animationConfig = {
+      duration: 500,
+      easing: Easing.inOut(Easing.ease),
+    };
+
+    dot1.value = withRepeat(
+      withSequence(
+        withTiming(1, animationConfig),
+        withTiming(0, animationConfig)
+      ),
+      -1
+    );
+    dot2.value = withDelay(
+      150,
+      withRepeat(
+        withSequence(
+          withTiming(1, animationConfig),
+          withTiming(0, animationConfig)
+        ),
+        -1
+      )
+    );
+    dot3.value = withDelay(
+      300,
+      withRepeat(
+        withSequence(
+          withTiming(1, animationConfig),
+          withTiming(0, animationConfig)
+        ),
+        -1
+      )
+    );
+  }, []);
+
+  const dot1Style = useAnimatedStyle(() => ({
+    opacity: 0.3 + dot1.value * 0.7,
+    transform: [{ translateY: -dot1.value * 4 }],
+  }));
+
+  const dot2Style = useAnimatedStyle(() => ({
+    opacity: 0.3 + dot2.value * 0.7,
+    transform: [{ translateY: -dot2.value * 4 }],
+  }));
+
+  const dot3Style = useAnimatedStyle(() => ({
+    opacity: 0.3 + dot3.value * 0.7,
+    transform: [{ translateY: -dot3.value * 4 }],
+  }));
+
+  return (
+    <View className="flex-row items-center gap-1.5">
+      <Animated.View
+        style={dot1Style}
+        className="w-2 h-2 rounded-full bg-gray-500"
+      />
+      <Animated.View
+        style={dot2Style}
+        className="w-2 h-2 rounded-full bg-gray-500"
+      />
+      <Animated.View
+        style={dot3Style}
+        className="w-2 h-2 rounded-full bg-gray-500"
+      />
+    </View>
+  );
+};
 
 type HomeChatSectionProps = {
   messages: ChatMessage[];
@@ -27,8 +116,21 @@ export default function HomeChatSection({
   channelId,
 }: HomeChatSectionProps) {
   const [text, setText] = useState("");
+  const [showTypingIndicator, setShowTypingIndicator] = useState(false);
   const listRef = useRef<FlatList<ChatMessage>>(null);
   const inputRef = useRef<TextInput>(null);
+
+  // Delay showing typing indicator
+  useEffect(() => {
+    if (isLoading) {
+      const timer = setTimeout(() => {
+        setShowTypingIndicator(true);
+      }, 600); // 600ms delay
+      return () => clearTimeout(timer);
+    } else {
+      setShowTypingIndicator(false);
+    }
+  }, [isLoading]);
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -83,17 +185,98 @@ export default function HomeChatSection({
               paddingBottom: 8,
             }}
             renderItem={({ item, index }) => (
-              <Animated.View
-                entering={FadeInDown.delay(Math.min(index, 4) * 40)}
-                className={`mb-2 py-2.5 px-3 rounded-2xl max-w-[80%] ${
+              <View
+                className={`mb-2 flex-row items-end gap-2 ${
                   item.role === ChatMessageRole.user
-                    ? "self-end bg-accent"
-                    : "self-start bg-background-darker"
+                    ? "self-end flex-row-reverse"
+                    : "self-start"
                 }`}
               >
-                <Text className="text-base text-foreground">{item.body}</Text>
-              </Animated.View>
+                {/* AI Avatar - only show for assistant messages */}
+                {item.role === ChatMessageRole.assistant && (
+                  <View
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 16,
+                      backgroundColor: "#4f47e5",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      marginBottom: 2,
+                    }}
+                  >
+                    {AI_AVATAR_URL ? (
+                      <Image
+                        source={{ uri: AI_AVATAR_URL }}
+                        style={{ width: 32, height: 32, borderRadius: 16 }}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <Ionicons name="sparkles" size={16} color="white" />
+                    )}
+                  </View>
+                )}
+
+                {/* Message Bubble */}
+                <Animated.View
+                  entering={FadeInDown.delay(Math.min(index, 4) * 40)}
+                  className={`py-2.5 px-3 rounded-2xl max-w-[80%] ${
+                    item.role === ChatMessageRole.user
+                      ? "bg-accent"
+                      : "bg-background-darker"
+                  }`}
+                >
+                  <Text className="text-base text-foreground">{item.body}</Text>
+                </Animated.View>
+              </View>
             )}
+            ListFooterComponent={
+              showTypingIndicator ? (
+                <View
+                  style={{
+                    marginBottom: 8,
+                    flexDirection: "row",
+                    alignItems: "flex-end",
+                    gap: 8,
+                    alignSelf: "flex-start",
+                  }}
+                >
+                  {/* AI Avatar for typing indicator */}
+                  <View
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 16,
+                      backgroundColor: "#4f47e5",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      marginBottom: 2,
+                    }}
+                  >
+                    {AI_AVATAR_URL ? (
+                      <Image
+                        source={{ uri: AI_AVATAR_URL }}
+                        style={{ width: 32, height: 32, borderRadius: 16 }}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <Ionicons name="sparkles" size={16} color="white" />
+                    )}
+                  </View>
+                  {/* Typing Indicator */}
+                  <View
+                    style={{
+                      paddingVertical: 10,
+                      paddingHorizontal: 16,
+                      borderRadius: 16,
+                      backgroundColor: "#f3f4f6",
+                    }}
+                  >
+                    <TypingIndicator />
+                  </View>
+                </View>
+              ) : null
+            }
           />
         )}
       </View>
@@ -103,7 +286,7 @@ export default function HomeChatSection({
           <FlatList
             data={eventSuggestions}
             renderItem={({ item }) => (
-              <View className="px-2">
+              <View className="px-2 w-96">
                 <EventCard
                   event={item}
                   onJoin={() =>
