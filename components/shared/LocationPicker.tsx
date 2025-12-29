@@ -369,11 +369,7 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
               normalizedValue?.formatted ? "text-foreground" : "text-muted"
             }`}
           >
-            {normalizedValue
-              ? mode === "venue" && normalizedValue.name
-                ? normalizedValue.name
-                : normalizedValue.formatted
-              : effectivePlaceholder}
+            {normalizedValue ? normalizedValue.formatted : effectivePlaceholder}
           </Text>
           <Ionicons
             name={expanded ? "chevron-up" : "chevron-down"}

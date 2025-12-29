@@ -129,7 +129,7 @@ export default function EventDetails(props: EventDetailsProps) {
           size={30}
           onPress={() => router.back()}
         />
-        {isUserHost && !props.event.isCanceled && (
+        {isUserHost && !props.event.isCanceled && !isPast && (
           <Ionicons
             name="ellipsis-horizontal"
             size={30}

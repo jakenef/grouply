@@ -31,6 +31,7 @@ export const upsertEvent = protectedProcedure
             trait: true,
           },
         },
+        profile: true,
       },
     });
 
@@ -41,11 +42,105 @@ export const upsertEvent = protectedProcedure
       });
     }
 
+    // Helper function to calculate age from birthday
+    const calculateAge = (birthday: Date | null | undefined): number | null => {
+      if (!birthday) return null;
+      const today = new Date();
+      const birthDate = new Date(birthday);
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if (
+        monthDiff < 0 ||
+        (monthDiff === 0 && today.getDate() < birthDate.getDate())
+      ) {
+        age--;
+      }
+      return age;
+    };
+
+    // Check if the age range is valid for the creator
+    const creatorAge = calculateAge(organizerUser.profile?.birthday);
+    if (creatorAge !== null) {
+      if (creatorAge < input.minAge || creatorAge > input.maxAge) {
+        throw new TRPCError({
+          message: `Your age (${creatorAge}) is outside the event's age range (${input.minAge}-${input.maxAge})`,
+          code: "BAD_REQUEST",
+        });
+      }
+    }
+
+    // If updating an event, check all registered users
+    if (input.eventId) {
+      const registrations = await prisma.eventRegistration.findMany({
+        where: {
+          eventId: input.eventId,
+          canceledAt: null,
+        },
+        include: {
+          user: {
+            include: {
+              profile: true,
+            },
+          },
+        },
+      });
+
+      const usersOutsideRange: Array<{ name: string; age: number }> = [];
+
+      for (const registration of registrations) {
+        const userAge = calculateAge(registration.user.profile?.birthday);
+        if (
+          userAge !== null &&
+          (userAge < input.minAge || userAge > input.maxAge)
+        ) {
+          usersOutsideRange.push({
+            name: registration.user.givenName,
+            age: userAge,
+          });
+        }
+      }
+
+      if (usersOutsideRange.length > 0) {
+        const userList = usersOutsideRange
+          .map((u) => `${u.name} (age ${u.age})`)
+          .join(", ");
+        throw new TRPCError({
+          message: `Cannot update event: The following registered users are outside the age range (${input.minAge}-${input.maxAge}): ${userList}`,
+          code: "BAD_REQUEST",
+        });
+      }
+    }
+
+    // Validate start time is not in the past
+    const now = new Date();
+    if (input.startTime < now) {
+      throw new TRPCError({
+        message: "Event start time cannot be in the past",
+        code: "BAD_REQUEST",
+      });
+    }
+
+    // Validate end time is after start time
+    if (input.endTime <= input.startTime) {
+      throw new TRPCError({
+        message: "Event end time must be after start time",
+        code: "BAD_REQUEST",
+      });
+    }
+
     const location = await prisma.location.upsert({
       where: {
         id: input.locationData.placeId,
       },
-      update: {},
+      update: {
+        city: input.locationData.city || null,
+        region: input.locationData.region || null,
+        countryCode: input.locationData.countryCode || null,
+        formatted: input.locationData.formatted,
+        lat: input.locationData.lat,
+        lng: input.locationData.lng,
+        precision: "point",
+      },
       create: {
         id: input.locationData.placeId,
         city: input.locationData.city || null,

@@ -86,7 +86,7 @@ export class GooglePlacesApi {
   }
 
   async getPlaceDetails(placeId: string): Promise<PlaceDetails | null> {
-    const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,geometry,address_component&key=${this.apiKey}`;
+    const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,geometry,address_component,formatted_address&key=${this.apiKey}`;
 
     const response = await fetchWithErrorHandling<PlaceDetailsResponse>(url);
 
@@ -143,7 +143,7 @@ export class GooglePlacesApi {
     }
 
     const addressComponents = placeDetails.address_components;
-    let city, region, country, countryCode, streetNumber, route;
+    let city, region, country, countryCode, streetNumber, route, subpremise;
 
     for (const component of addressComponents) {
       if (component.types.includes("locality")) {
@@ -157,6 +157,8 @@ export class GooglePlacesApi {
         streetNumber = component.long_name;
       } else if (component.types.includes("route")) {
         route = component.long_name;
+      } else if (component.types.includes("subpremise")) {
+        subpremise = component.long_name;
       }
     }
 
@@ -166,13 +168,31 @@ export class GooglePlacesApi {
     if (isVenue) {
       const addressParts = [];
       if (streetNumber && route) {
-        addressParts.push(`${streetNumber} ${route}`);
+        const streetAddress = subpremise
+          ? `${streetNumber} ${route} #${subpremise}`
+          : `${streetNumber} ${route}`;
+        addressParts.push(streetAddress);
       } else if (route) {
         addressParts.push(route);
       }
       if (city) addressParts.push(city);
       if (region) addressParts.push(region);
       formatted = addressParts.join(", ");
+
+      // If there's a place name that's different from the address, prepend it
+      // This handles named places like "Kiwanis Park" or "Walmart"
+      const placeName = placeDetails.name;
+      if (placeName) {
+        // Check if the name is meaningful (not just the street address)
+        // Names like "665 N 100 E #1" are just addresses, but "Kiwanis Park" is a real name
+        const isJustAddress =
+          placeName.match(/^\d+/) || // Starts with a number
+          placeName.toLowerCase().includes(route?.toLowerCase() || "");
+
+        if (!isJustAddress) {
+          formatted = `${placeName}, ${formatted}`;
+        }
+      }
     } else {
       formatted = `${city || ""}, ${region || ""}, ${country || ""}`
         .replace(/^, |, ,/g, "")

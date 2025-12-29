@@ -7,6 +7,7 @@ import {
 } from "@/components/shared/LocationPicker";
 import uploadImageUri from "@/lib/storage";
 import { trpc } from "@/lib/trpc";
+import { useCurrentUser } from "@/lib/useCurrentUserHook";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -20,6 +21,21 @@ import {
 import { ActivityPicker } from "../shared/ActivityPicker";
 import UploadMultiplePictures from "../shared/UploadMultiplePictures";
 
+function calculateAge(birthday: Date | null | undefined): number | null {
+  if (!birthday) return null;
+  const today = new Date();
+  const birthDate = new Date(birthday);
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  if (
+    monthDiff < 0 ||
+    (monthDiff === 0 && today.getDate() < birthDate.getDate())
+  ) {
+    age--;
+  }
+  return age;
+}
+
 function validateEventForm({
   name,
   description,
@@ -31,6 +47,7 @@ function validateEventForm({
   minAge,
   maxAge,
   imgUrls,
+  userAge,
 }: {
   name: string;
   description: string;
@@ -42,6 +59,7 @@ function validateEventForm({
   minAge: string;
   maxAge: string;
   imgUrls?: string[];
+  userAge: number | null;
 }) {
   const errors: Record<string, string> = {};
 
@@ -62,8 +80,23 @@ function validateEventForm({
   if (minAge && maxAge && Number(minAge) > Number(maxAge))
     errors.ageRange = "Min age cannot be greater than max age";
 
-  if (startTime && endTime && startTime >= endTime)
-    errors.timeRange = "Start time must be before end time";
+  // Validate creator's age is within range
+  if (userAge !== null && minAge && maxAge) {
+    if (userAge < Number(minAge) || userAge > Number(maxAge)) {
+      errors.ageRange = `Your age (${userAge}) is outside the event's age range (${minAge}-${maxAge})`;
+    }
+  }
+
+  // Validate start time is not in the past
+  const now = new Date();
+  if (startTime < now) {
+    errors.startTime = "Event start time cannot be in the past";
+  }
+
+  // Validate end time is after start time
+  if (startTime && endTime && endTime <= startTime) {
+    errors.timeRange = "Event end time must be after start time";
+  }
 
   return errors;
 }
@@ -87,6 +120,7 @@ interface EventDetails {
 }
 
 export const EventDetailsForm = (props: EventDetailsFormProps) => {
+  const { user } = useCurrentUser();
   const utils = trpc.useUtils();
   const upsertEventMutation = trpc.events.upsertEvent.useMutation({
     onSuccess: () =>
@@ -129,6 +163,7 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleSave = async () => {
+    const userAge = calculateAge(new Date(user?.profile?.birthday!));
     const validationErrors = validateEventForm({
       name,
       description,
@@ -140,6 +175,7 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
       minAge,
       maxAge,
       imgUrls,
+      userAge,
     });
 
     if (Object.keys(validationErrors).length > 0) {
@@ -263,6 +299,11 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
             value={startTime}
             onChange={setStartTime}
           />
+          {errors.startTime && (
+            <Text className="text-danger text-sm mt-1 mb-4">
+              {errors.startTime}
+            </Text>
+          )}
 
           <DateTimePicker
             label="End Time"
