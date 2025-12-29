@@ -1,6 +1,6 @@
 import { Prisma } from "@/backend/generated/prisma";
-import OpenAI from "openai";
 import { prisma } from "../../prisma";
+import { openai } from "../../openai";
 
 /**
  * Finds the most similar activity from the database based on a text description.
@@ -36,7 +36,6 @@ export async function getActivityFromDesc(
   if (desc.trim().length == 0) {
     return null;
   }
-  const openai = new OpenAI();
   const response = await openai.embeddings.create({
     model: "text-embedding-3-small",
     input: desc,

@@ -5,55 +5,239 @@ import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
 
 const starterTraits = [
+  // 🌱 Social Energy
   {
-    slug: "introversion",
-    label: "Introversion",
-    desc: "Preference for quiet, low-stimulation environments and smaller social gatherings.",
+    slug: "introverted",
+    label: "Introverted",
+    desc: "Tends to prefer quieter settings, smaller groups, and time to recharge alone.",
   },
   {
-    slug: "extroversion",
-    label: "Extroversion",
-    desc: "Preference for social interaction, high-energy environments, and larger groups.",
+    slug: "extroverted",
+    label: "Extroverted",
+    desc: "Feels energized by being around people and enjoys lively, social environments.",
   },
   {
-    slug: "risk-tolerance",
-    label: "Risk Tolerance",
-    desc: "Comfort level with uncertainty, adventure, and trying new experiences.",
+    slug: "social",
+    label: "Social",
+    desc: "Enjoys spending time with others and being part of group activities.",
   },
   {
-    slug: "spontaneity",
-    label: "Spontaneity",
-    desc: "Preference for impromptu plans and flexibility over rigid schedules.",
+    slug: "reserved",
+    label: "Reserved",
+    desc: "More quiet or low-key in group settings, especially around new people.",
   },
   {
-    slug: "structure-preference",
-    label: "Structure Preference",
-    desc: "Preference for organized, planned activities with clear expectations.",
+    slug: "outgoing",
+    label: "Outgoing",
+    desc: "Comfortable starting conversations and engaging with people easily.",
+  },
+
+  // 🗓 Planning & Structure
+  {
+    slug: "planner",
+    label: "Planner",
+    desc: "Likes having plans set in advance and knowing what to expect.",
   },
   {
-    slug: "competitiveness",
-    label: "Competitiveness",
-    desc: "Drive to win and excel in competitive activities and games.",
+    slug: "go-with-the-flow",
+    label: "Go With the Flow",
+    desc: "Prefers flexible plans and is comfortable adjusting as things change.",
   },
   {
-    slug: "creativity",
-    label: "Creativity",
-    desc: "Interest in artistic expression, innovation, and imaginative pursuits.",
+    slug: "organized",
+    label: "Organized",
+    desc: "Enjoys keeping things structured, tidy, and well thought out.",
   },
   {
-    slug: "physical-activity",
-    label: "Physical Activity",
-    desc: "Preference for active, sports-oriented, and physically demanding activities.",
+    slug: "easygoing",
+    label: "Easygoing",
+    desc: "Relaxed attitude toward plans, people, and unexpected changes.",
   },
   {
-    slug: "intellectual-curiosity",
-    label: "Intellectual Curiosity",
-    desc: "Interest in learning, discussions, and mentally stimulating activities.",
+    slug: "routine-oriented",
+    label: "Routine-Oriented",
+    desc: "Likes consistent habits and familiar rhythms in daily life.",
+  },
+
+  // 🎉 Group Style
+  {
+    slug: "group-leader",
+    label: "Group Leader",
+    desc: "Often takes initiative in planning, organizing, or guiding group activities.",
   },
   {
-    slug: "sociability",
-    label: "Sociability",
-    desc: "Enjoyment of meeting new people and building social connections.",
+    slug: "follower",
+    label: "Happy to Follow",
+    desc: "Prefers joining plans rather than organizing or leading them.",
+  },
+  {
+    slug: "team-player",
+    label: "Team Player",
+    desc: "Enjoys collaborating and working toward shared goals with others.",
+  },
+  {
+    slug: "independent",
+    label: "Independent",
+    desc: "Comfortable doing things solo and making decisions on their own.",
+  },
+  {
+    slug: "supportive",
+    label: "Supportive",
+    desc: "Naturally encouraging and attentive to others’ needs and feelings.",
+  },
+
+  // 🎮 Energy & Engagement
+  {
+    slug: "competitive",
+    label: "Competitive",
+    desc: "Enjoys competition and pushing to win or improve performance.",
+  },
+  {
+    slug: "laid-back",
+    label: "Laid Back",
+    desc: "Prefers relaxed environments and low-pressure situations.",
+  },
+  {
+    slug: "energetic",
+    label: "Energetic",
+    desc: "Brings enthusiasm and momentum to activities and group settings.",
+  },
+  {
+    slug: "calm",
+    label: "Calm",
+    desc: "Steady and composed, even in busy or stressful situations.",
+  },
+  {
+    slug: "focused",
+    label: "Focused",
+    desc: "Able to concentrate deeply and stay engaged with tasks or conversations.",
+  },
+
+  // 🎨 Interests & Expression
+  {
+    slug: "creative",
+    label: "Creative",
+    desc: "Enjoys expressing ideas through art, writing, design, or imaginative thinking.",
+  },
+  {
+    slug: "analytical",
+    label: "Analytical",
+    desc: "Likes thinking through problems logically and understanding how things work.",
+  },
+  {
+    slug: "curious",
+    label: "Curious",
+    desc: "Interested in learning new things and asking questions about the world.",
+  },
+  {
+    slug: "thoughtful",
+    label: "Thoughtful",
+    desc: "Reflective and considerate in conversations and decisions.",
+  },
+  {
+    slug: "opinionated",
+    label: "Opinionated",
+    desc: "Comfortable sharing viewpoints and having strong preferences.",
+  },
+
+  // 🏃 Activity Level
+  {
+    slug: "active",
+    label: "Active",
+    desc: "Enjoys moving, exercising, or staying physically engaged.",
+  },
+  {
+    slug: "low-key",
+    label: "Low Key",
+    desc: "Prefers relaxed activities over high-energy or intense ones.",
+  },
+  {
+    slug: "outdoorsy",
+    label: "Outdoorsy",
+    desc: "Enjoys spending time outside in nature or open-air environments.",
+  },
+  {
+    slug: "indoorsy",
+    label: "Indoorsy",
+    desc: "Prefers indoor activities and comfortable, familiar spaces.",
+  },
+
+  // 🤝 Social Preferences
+  {
+    slug: "people-person",
+    label: "People Person",
+    desc: "Genuinely enjoys interacting with others and building relationships.",
+  },
+  {
+    slug: "small-groups",
+    label: "Prefers Small Groups",
+    desc: "Feels most comfortable socializing in smaller, more intimate settings.",
+  },
+  {
+    slug: "large-groups",
+    label: "Enjoys Large Groups",
+    desc: "Likes being part of big gatherings, parties, or group events.",
+  },
+  {
+    slug: "one-on-one",
+    label: "One-on-One Oriented",
+    desc: "Prefers deeper conversations with individuals over group discussions.",
+  },
+
+  // 🧠 Mindset
+  {
+    slug: "open-minded",
+    label: "Open-Minded",
+    desc: "Welcoming of different ideas, perspectives, and experiences.",
+  },
+  {
+    slug: "practical",
+    label: "Practical",
+    desc: "Focuses on what is useful, realistic, and effective.",
+  },
+  {
+    slug: "optimistic",
+    label: "Optimistic",
+    desc: "Generally positive outlook and hopeful attitude.",
+  },
+  {
+    slug: "realistic",
+    label: "Realistic",
+    desc: "Grounded and clear-eyed about expectations and outcomes.",
+  },
+
+  // 💬 Communication Style
+  {
+    slug: "talkative",
+    label: "Talkative",
+    desc: "Enjoys conversation and tends to speak freely in groups.",
+  },
+  {
+    slug: "good-listener",
+    label: "Good Listener",
+    desc: "Attentive to what others say and values meaningful dialogue.",
+  },
+  {
+    slug: "direct",
+    label: "Direct",
+    desc: "Communicates clearly and straightforwardly.",
+  },
+  {
+    slug: "easy-to-talk-to",
+    label: "Easy to Talk To",
+    desc: "Approachable and makes others feel comfortable opening up.",
+  },
+
+  // 🌟 Lifestyle
+  {
+    slug: "morning-person",
+    label: "Morning Person",
+    desc: "Feels most energized earlier in the day.",
+  },
+  {
+    slug: "night-owl",
+    label: "Night Owl",
+    desc: "Feels most energized later in the evening or at night.",
   },
 ];
 

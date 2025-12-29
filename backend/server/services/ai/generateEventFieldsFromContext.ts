@@ -1,6 +1,6 @@
 import { ChatMessage } from "@/backend/generated/prisma";
-import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
+import { openai } from "../../openai";
 import z from "zod";
 import { getActivityFromDesc } from "../activity/getActivityFromDesc";
 
@@ -39,8 +39,7 @@ export async function generateEventFieldsFromContext(params: {
     timeZoneName: "short",
   });
 
-  const aiClient = new OpenAI();
-  const aiResponse = await aiClient.responses.parse({
+  const aiResponse = await openai.responses.parse({
     model: "gpt-4o-mini",
     input,
     instructions: `The current date and time is ${readableDate} (${formattedCurrentDate}).

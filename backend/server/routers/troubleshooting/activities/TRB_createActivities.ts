@@ -1,8 +1,6 @@
 import { adminProcedure } from "@/backend/server/trpc";
 import { TRPCError } from "@trpc/server";
-import OpenAI from "openai";
-
-const client = new OpenAI();
+import { openai } from "../../../openai";
 
 const starterActivities = [
   // 🎬 Entertainment & Media
@@ -298,7 +296,7 @@ export const TRB_createActivities = adminProcedure.mutation(async ({ ctx }) => {
       });
 
       // 2) generate embedding
-      const embResp = await client.embeddings.create({
+      const embResp = await openai.embeddings.create({
         model: "text-embedding-3-small",
         input: description,
         encoding_format: "float",

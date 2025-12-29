@@ -1,5 +1,5 @@
 import { ChatMessageRole } from "@/backend/generated/prisma/client";
-import OpenAI from "openai";
+import { openai } from "../../openai";
 import { prisma } from "../../prisma";
 import { getSuggestedEventsFromActivityDesc } from "../event/getSuggestedEventsFromActivityDesc/getSuggestedEventsFromActivityDesc";
 
@@ -87,8 +87,7 @@ export async function generateAIResponse(params: {
   }));
 
   // 2) Call AI, decide if needs Tools
-  const client = new OpenAI();
-  let aiResponse = await client.responses.create({
+  let aiResponse = await openai.responses.create({
     model: "gpt-4o-mini",
     input,
     instructions,
@@ -147,7 +146,7 @@ export async function generateAIResponse(params: {
     }
 
     try {
-      aiResponse = await client.responses.create({
+      aiResponse = await openai.responses.create({
         model: "gpt-4o-mini",
         input,
         tools,
