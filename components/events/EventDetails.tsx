@@ -1,3 +1,4 @@
+import { openInMaps } from "@/lib/maps";
 import { colors } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";
 import { useCurrentUser } from "@/lib/useCurrentUserHook";
@@ -27,6 +28,8 @@ interface EventDetailsObject {
   maxAge: number;
   name: string;
   locationString: string;
+  lat?: number;
+  lng?: number;
   startTime: string;
   endTime: string;
   numRegistered: number;
@@ -194,7 +197,18 @@ export default function EventDetails(props: EventDetailsProps) {
               {formattedStart + formattedEndTime}
             </Text>
           </View>
-          <View className="flex-row items-center pb-2">
+          <Pressable
+            className="flex-row items-center pb-2"
+            onPress={() => {
+              if (props.event.lat && props.event.lng) {
+                openInMaps({
+                  lat: props.event.lat,
+                  lng: props.event.lng,
+                  label: props.event.locationString,
+                });
+              }
+            }}
+          >
             <Ionicons
               name="location"
               color={colors.primary}
@@ -204,7 +218,7 @@ export default function EventDetails(props: EventDetailsProps) {
             <Text className="text-lg text-muted" style={{ flexShrink: 1 }}>
               {props.event.locationString}
             </Text>
-          </View>
+          </Pressable>
 
           {/* Pictures */}
           <View className="py-3">
@@ -238,7 +252,7 @@ export default function EventDetails(props: EventDetailsProps) {
             </View>
             {props.event.isCanceled ? (
               <Text className="text-sm text-muted ml-2">
-                This event has been canceled.
+                This event has been canceled
               </Text>
             ) : props.event.attendeeIds.length < props.event.minAttendees ? (
               <Text className="text-sm text-muted ml-2">
@@ -246,7 +260,7 @@ export default function EventDetails(props: EventDetailsProps) {
               </Text>
             ) : (
               <Text className="text-sm text-muted ml-2">
-                This event is confirmed!
+                This event is confirmed
               </Text>
             )}
           </View>
