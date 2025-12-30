@@ -1,7 +1,7 @@
 import EventCardRegistered, {
   EventCardRegisteredEvent,
-} from "@/components/events/EventCardRegistered";
-import SkeletonLoadingEvents from "@/components/events/SkeletonLoadingEvents";
+} from "@/app-components/events/EventCardRegistered";
+import SkeletonLoadingEvents from "@/app-components/events/SkeletonLoadingEvents";
 import { colors } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";
 import React, { useState } from "react";

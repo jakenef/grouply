@@ -1,8 +1,8 @@
-import FormField from "@/components/shared/FormField";
+import FormField from "@/app-components/shared/FormField";
 import LocationPicker, {
   LocationData,
-} from "@/components/shared/LocationPicker";
-import ProfileImagePicker from "@/components/shared/ProfileImagePicker";
+} from "@/app-components/shared/LocationPicker";
+import ProfileImagePicker from "@/app-components/shared/ProfileImagePicker";
 import { useAuth } from "@/lib/auth";
 import uploadImageUri from "@/lib/storage";
 import { colors } from "@/lib/theme";
@@ -21,7 +21,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
-import GrouplyButton from "../../components/shared/GrouplyButton";
+import GrouplyButton from "../../app-components/shared/GrouplyButton";
 
 type Gender = "Male" | "Female" | "Other" | null;
 

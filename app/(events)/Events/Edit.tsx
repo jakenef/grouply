@@ -1,5 +1,5 @@
-import { EventDetailsForm } from "@/components/events/EventDetailsForm";
-import { EventDetailsFormSkeleton } from "@/components/events/EventDetailsFormSkeleton";
+import { EventDetailsForm } from "@/app-components/events/EventDetailsForm";
+import { EventDetailsFormSkeleton } from "@/app-components/events/EventDetailsFormSkeleton";
 import { trpc } from "@/lib/trpc";
 import { useLocalSearchParams } from "expo-router";
 import { Text, View } from "react-native";

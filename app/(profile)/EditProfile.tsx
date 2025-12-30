@@ -1,11 +1,11 @@
-import FormField from "@/components/shared/FormField";
+import FormField from "@/app-components/shared/FormField";
 import LocationPicker, {
   LocationData,
-} from "@/components/shared/LocationPicker";
-import OptionsSelector from "@/components/shared/OptionsSelector";
-import ProfileImagePicker from "@/components/shared/ProfileImagePicker";
-import RangeSlider from "@/components/shared/RangeSlider";
-import SliderSingle from "@/components/shared/SliderSingle";
+} from "@/app-components/shared/LocationPicker";
+import OptionsSelector from "@/app-components/shared/OptionsSelector";
+import ProfileImagePicker from "@/app-components/shared/ProfileImagePicker";
+import RangeSlider from "@/app-components/shared/RangeSlider";
+import SliderSingle from "@/app-components/shared/SliderSingle";
 import uploadImageUri from "@/lib/storage";
 import { colors } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";

@@ -1,5 +1,5 @@
-import EventSuggestions from "@/components/home/EventSuggestions";
-import HomeChatSection from "@/components/home/HomeChatSection";
+import EventSuggestions from "@/app-components/home/EventSuggestions";
+import HomeChatSection from "@/app-components/home/HomeChatSection";
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";

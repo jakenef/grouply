@@ -1,6 +1,6 @@
-import BubbleList from "@/components/shared/BubbleList";
-import GrouplyButton from "@/components/shared/GrouplyButton";
-import ProfileImagePicker from "@/components/shared/ProfileImagePicker";
+import BubbleList from "@/app-components/shared/BubbleList";
+import GrouplyButton from "@/app-components/shared/GrouplyButton";
+import ProfileImagePicker from "@/app-components/shared/ProfileImagePicker";
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/lib/theme";
 import { useCurrentUser } from "@/lib/useCurrentUserHook";

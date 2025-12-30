@@ -3,11 +3,11 @@ import React, { useEffect, useState } from "react";
 import { Alert, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import GrouplyButton from "@/components/shared/GrouplyButton";
-import MultipleChoiceSelector from "@/components/shared/MultipleChoiceSelector";
-import OptionsSelector from "@/components/shared/OptionsSelector";
-import RangeSlider from "@/components/shared/RangeSlider";
-import SliderSingle from "@/components/shared/SliderSingle";
+import GrouplyButton from "@/app-components/shared/GrouplyButton";
+import MultipleChoiceSelector from "@/app-components/shared/MultipleChoiceSelector";
+import OptionsSelector from "@/app-components/shared/OptionsSelector";
+import RangeSlider from "@/app-components/shared/RangeSlider";
+import SliderSingle from "@/app-components/shared/SliderSingle";
 import { useAuth } from "@/lib/auth";
 import { trpc } from "@/lib/trpc";
 

@@ -28,8 +28,8 @@ interface EventDetailsObject {
   maxAge: number;
   name: string;
   locationString: string;
-  lat?: number;
-  lng?: number;
+  lat: number | null;
+  lng: number | null;
   startTime: string;
   endTime: string;
   numRegistered: number;

@@ -1,10 +1,10 @@
-import { DateTimePicker } from "@/components/shared/DateTimePicker";
-import { FormField } from "@/components/shared/FormField";
-import GrouplyButton from "@/components/shared/GrouplyButton";
+import { DateTimePicker } from "@/app-components/shared/DateTimePicker";
+import { FormField } from "@/app-components/shared/FormField";
+import GrouplyButton from "@/app-components/shared/GrouplyButton";
 import {
   LocationData,
   LocationPicker,
-} from "@/components/shared/LocationPicker";
+} from "@/app-components/shared/LocationPicker";
 import uploadImageUri from "@/lib/storage";
 import { trpc } from "@/lib/trpc";
 import { useCurrentUser } from "@/lib/useCurrentUserHook";

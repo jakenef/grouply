@@ -1,4 +1,4 @@
-import ConfirmEmail from "@/components/onboarding/ConfirmEmail";
+import ConfirmEmail from "@/app-components/onboarding/ConfirmEmail";
 import { useAuth } from "@/lib/auth";
 import { router } from "expo-router";
 import React from "react";

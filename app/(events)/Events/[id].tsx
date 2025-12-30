@@ -1,4 +1,4 @@
-import EventDetails from "@/components/events/EventDetails";
+import EventDetails from "@/app-components/events/EventDetails";
 import { trpc } from "@/lib/trpc";
 import { useLocalSearchParams } from "expo-router";
 import { Skeleton } from "moti/skeleton";
