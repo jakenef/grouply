@@ -18,6 +18,7 @@ export const generateEventFromChannel = protectedProcedure
       startTime: z.date(),
       endTime: z.date(),
       maxAttendees: z.number(),
+      minAttendees: z.number(),
       minAge: z.number(),
       maxAge: z.number(),
       activityId: z.string().nullable(),

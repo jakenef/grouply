@@ -56,9 +56,11 @@ export default function EventDetailsEdit() {
     ? {
         ...eventFields,
         id: existingEvent?.id, // Only include id if editing existing event
+        minAttendees: eventFields.minAttendees ?? 1, // Default to 1 if not set
         startTime: new Date(eventFields.startTime),
         endTime: new Date(eventFields.endTime),
         isCanceled: existingEvent?.isCanceled ?? false, // Only from existing events
+        currentAttendees: existingEvent?.attendeeIds?.length, // Only populate for existing events
         imgUrls: existingEvent?.coverImageUrl
           ? [
               existingEvent?.coverImageUrl,

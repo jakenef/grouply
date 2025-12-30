@@ -89,6 +89,7 @@ const Events = () => {
               isCanceled: item.isCancelled,
               location: item.location.formatted ?? "TBD",
               maxParticipants: item.maxAttendees,
+              minParticipants: item.minAttendees,
               startTime: new Date(item.startsAt),
             };
             return <EventCardRegistered event={event} />;

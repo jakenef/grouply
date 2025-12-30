@@ -44,10 +44,12 @@ function validateEventForm({
   startTime,
   endTime,
   maxAttendees,
+  minAttendees,
   minAge,
   maxAge,
   imgUrls,
   userAge,
+  currentAttendees,
 }: {
   name: string;
   description: string;
@@ -56,10 +58,12 @@ function validateEventForm({
   startTime: Date;
   endTime: Date;
   maxAttendees: string;
+  minAttendees: string;
   minAge: string;
   maxAge: string;
   imgUrls?: string[];
   userAge: number | null;
+  currentAttendees?: number;
 }) {
   const errors: Record<string, string> = {};
 
@@ -72,6 +76,23 @@ function validateEventForm({
 
   if (!maxAttendees || isNaN(Number(maxAttendees)) || Number(maxAttendees) <= 0)
     errors.maxAttendees = "Must be a positive number";
+  if (!minAttendees || isNaN(Number(minAttendees)) || Number(minAttendees) <= 0)
+    errors.minAttendees = "Must be a positive number";
+
+  // Validate min <= max attendees
+  if (
+    minAttendees &&
+    maxAttendees &&
+    Number(minAttendees) > Number(maxAttendees)
+  )
+    errors.attendeeRange = "Min attendees cannot be greater than max attendees";
+
+  // Validate against current attendees if provided
+  if (currentAttendees !== undefined) {
+    if (maxAttendees && Number(maxAttendees) < currentAttendees)
+      errors.maxAttendees = `Cannot be less than current attendees (${currentAttendees})`;
+  }
+
   if (!minAge || isNaN(Number(minAge)) || Number(minAge) <= 0)
     errors.minAge = "Must be a positive number";
   if (!maxAge || isNaN(Number(maxAge)) || Number(maxAge) <= 0)
@@ -112,6 +133,8 @@ interface EventDetails {
   minAge: number;
   maxAge: number;
   maxAttendees: number;
+  minAttendees: number;
+  currentAttendees?: number;
   startTime: Date;
   endTime: Date;
   activityId: string | null;
@@ -120,6 +143,7 @@ interface EventDetails {
 }
 
 export const EventDetailsForm = (props: EventDetailsFormProps) => {
+  // TODO: check that edited max attendees isn't lower than current attendees
   const { user } = useCurrentUser();
   const utils = trpc.useUtils();
   const upsertEventMutation = trpc.events.upsertEvent.useMutation({
@@ -156,6 +180,9 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
   const [maxAttendees, setMaxAttendees] = useState(
     props.event?.maxAttendees?.toString() || ""
   );
+  const [minAttendees, setMinAttendees] = useState(
+    props.event?.minAttendees?.toString() || ""
+  );
   const [minAge, setMinAge] = useState(props.event?.minAge?.toString() || "");
   const [maxAge, setMaxAge] = useState(props.event?.maxAge?.toString() || "");
 
@@ -172,10 +199,12 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
       startTime,
       endTime,
       maxAttendees,
+      minAttendees,
       minAge,
       maxAge,
       imgUrls,
       userAge,
+      currentAttendees: props.event?.currentAttendees,
     });
 
     if (Object.keys(validationErrors).length > 0) {
@@ -215,6 +244,7 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
         imageUrls: uploadedUrls.map((uploadedObj) => uploadedObj.publicUrl),
         coverImageUrl: coverImageUrl.publicUrl,
         maxAttendees: Number(maxAttendees),
+        minAttendees: Number(minAttendees),
         minAge: Number(minAge),
         maxAge: Number(maxAge),
       });
@@ -316,14 +346,35 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
             </Text>
           )}
 
-          <FormField
-            label="Preferred # of Attendees"
-            value={maxAttendees}
-            onChangeText={setMaxAttendees}
-            placeholder="e.g. 10"
-            keyboardType="numeric"
-            error={errors.maxAttendees}
-          />
+          <View className="flex-row gap-4 mb-6">
+            <View className="flex-1">
+              <FormField
+                label="Min Attendees"
+                value={minAttendees}
+                onChangeText={setMinAttendees}
+                placeholder="e.g. 4"
+                keyboardType="numeric"
+                containerClassName="mb-0"
+                error={errors.minAttendees}
+              />
+            </View>
+            <View className="flex-1">
+              <FormField
+                label="Max Attendees"
+                value={maxAttendees}
+                onChangeText={setMaxAttendees}
+                placeholder="e.g. 10"
+                keyboardType="numeric"
+                containerClassName="mb-0"
+                error={errors.maxAttendees}
+              />
+            </View>
+          </View>
+          {errors.attendeeRange && (
+            <Text className="text-danger text-sm -mt-4 mb-4">
+              {errors.attendeeRange}
+            </Text>
+          )}
 
           <View className="flex-row gap-4 mb-6">
             <View className="flex-1">

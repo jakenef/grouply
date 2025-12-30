@@ -10,6 +10,7 @@ export interface EventCardRegisteredEvent {
   location: string;
   currentParticipants: number;
   maxParticipants: number;
+  minParticipants: number;
   isCanceled: boolean;
 }
 
@@ -20,7 +21,7 @@ interface EventCardRegisteredProps {
 export default function eventCardRegistered(props: EventCardRegisteredProps) {
   let eventStatusProps: EventStatusProps = {
     status:
-      props.event.currentParticipants >= props.event.maxParticipants
+      props.event.currentParticipants >= props.event.minParticipants
         ? "confirmed"
         : "pending",
   };

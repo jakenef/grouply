@@ -1,7 +1,7 @@
 import { ChatMessage } from "@/backend/generated/prisma";
 import { zodTextFormat } from "openai/helpers/zod";
-import { openai } from "../../openai";
 import z from "zod";
+import { openai } from "../../openai";
 import { getActivityFromDesc } from "../activity/getActivityFromDesc";
 
 export async function generateEventFieldsFromContext(params: {
@@ -12,6 +12,7 @@ export async function generateEventFieldsFromContext(params: {
   startTime: Date;
   endTime: Date;
   maxAttendees: number;
+  minAttendees: number;
   activityId: string | null;
 }> {
   let input: any[] = params.messages.map((m) => ({
@@ -25,6 +26,7 @@ export async function generateEventFieldsFromContext(params: {
     startTime: z.string(),
     endTime: z.string(),
     maxAttendees: z.number(),
+    minAttendees: z.number(),
   });
 
   const currentDate = new Date();
@@ -48,7 +50,8 @@ export async function generateEventFieldsFromContext(params: {
     
     Use the messages input as context for what the user wants and make your best guess for each field if there is not enough information. When the user mentions relative times like "this weekend", "next week", "tonight", "tomorrow", etc., calculate the actual date and time based on the current date provided above.
     
-    maxAttendees is the field that is the optimal amount of people attending.
+    maxAttendees is the preferred max amount of people attending.
+    minAttendees is the minimum number of RSVPs required for the event to be confirmed (not pending). Default to 2 unless the user indicates they want more people.
     
     IMPORTANT: Return startTime and endTime in ISO 8601 format (YYYY-MM-DDTHH:mm:ss.sssZ). Make sure the dates are in the future relative to the current date provided above.`,
     text: {
@@ -71,6 +74,7 @@ export async function generateEventFieldsFromContext(params: {
       ? new Date(aiResponse.output_parsed.endTime)
       : new Date(),
     maxAttendees: aiResponse.output_parsed?.maxAttendees ?? 5,
+    minAttendees: aiResponse.output_parsed?.minAttendees ?? 2,
     activityId: activitySuggestion?.id ?? null,
   };
 

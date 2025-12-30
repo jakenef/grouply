@@ -17,6 +17,7 @@ export const upsertEvent = protectedProcedure
       imageUrls: z.array(z.string().trim().min(0)),
       coverImageUrl: z.string().trim().min(0),
       maxAttendees: z.number(),
+      minAttendees: z.number(),
       minAge: z.number(),
       maxAge: z.number(),
     })
@@ -111,6 +112,45 @@ export const upsertEvent = protectedProcedure
       }
     }
 
+    // Validate minAttendees and maxAttendees
+    if (input.minAttendees <= 0) {
+      throw new TRPCError({
+        message: "Min attendees must be a positive number",
+        code: "BAD_REQUEST",
+      });
+    }
+
+    if (input.maxAttendees <= 0) {
+      throw new TRPCError({
+        message: "Max attendees must be a positive number",
+        code: "BAD_REQUEST",
+      });
+    }
+
+    if (input.minAttendees > input.maxAttendees) {
+      throw new TRPCError({
+        message: "Min attendees cannot be greater than max attendees",
+        code: "BAD_REQUEST",
+      });
+    }
+
+    // If updating an event, validate against current attendees
+    if (input.eventId) {
+      const currentRegistrations = await prisma.eventRegistration.count({
+        where: {
+          eventId: input.eventId,
+          canceledAt: null,
+        },
+      });
+
+      if (input.maxAttendees < currentRegistrations) {
+        throw new TRPCError({
+          message: `Max attendees (${input.maxAttendees}) cannot be less than current attendees (${currentRegistrations})`,
+          code: "BAD_REQUEST",
+        });
+      }
+    }
+
     // Validate start time is not in the past
     const now = new Date();
     if (input.startTime < now) {
@@ -163,7 +203,7 @@ export const upsertEvent = protectedProcedure
       location: { connect: { id: input.locationData.placeId } },
       imageUrls: input.imageUrls,
       coverImageUrl: input.coverImageUrl,
-      minAttendees: 2,
+      minAttendees: input.minAttendees,
       maxAttendees: input.maxAttendees,
       eventUrl: "not_implemented.com",
       lowerAgeLimit: input.minAge,

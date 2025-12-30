@@ -21,6 +21,7 @@ import ProfilePictureGroup from "../users/ProfilePictureGroup";
 interface EventDetailsObject {
   description: string;
   maxAttendees: number;
+  minAttendees: number;
   id: string;
   minAge: number;
   maxAge: number;
@@ -200,7 +201,7 @@ export default function EventDetails(props: EventDetailsProps) {
               size={15}
               className="pr-2"
             />
-            <Text className="text-lg text-muted">
+            <Text className="text-lg text-muted" style={{ flexShrink: 1 }}>
               {props.event.locationString}
             </Text>
           </View>
@@ -219,20 +220,35 @@ export default function EventDetails(props: EventDetailsProps) {
             {props.event.description}
           </Text>
 
-          <View className="bg-gray-100 rounded-md p-3 flex-row items-center">
-            <Ionicons name="people" size={25} color={colors.primary} />
-            <View className="flex-col items-start pl-3">
-              <Text className="mb-2">
-                {props.event.numRegistered} of {props.event.maxAttendees} spots
-                filled
-              </Text>
-              <View className="h-2 w-full bg-gray-300 rounded">
-                <View
-                  className="h-2 bg-primary rounded"
-                  style={{ width: `${fractionAttendees * 100}%` }}
-                />
+          <View className="bg-gray-100 rounded-md p-3 flex-row items-center justify-between">
+            <View className="flex-row items-center">
+              <Ionicons name="people" size={25} color={colors.primary} />
+              <View className="flex-col items-start pl-3">
+                <Text className="mb-2">
+                  {props.event.numRegistered} of {props.event.maxAttendees}{" "}
+                  spots filled
+                </Text>
+                <View className="h-2 w-full bg-gray-300 rounded">
+                  <View
+                    className="h-2 bg-primary rounded"
+                    style={{ width: `${fractionAttendees * 100}%` }}
+                  />
+                </View>
               </View>
             </View>
+            {props.event.isCanceled ? (
+              <Text className="text-sm text-muted ml-2">
+                This event has been canceled.
+              </Text>
+            ) : props.event.attendeeIds.length < props.event.minAttendees ? (
+              <Text className="text-sm text-muted ml-2">
+                Need at least {props.event.minAttendees} to confirm
+              </Text>
+            ) : (
+              <Text className="text-sm text-muted ml-2">
+                This event is confirmed!
+              </Text>
+            )}
           </View>
 
           <View className="flex-row items-center pb-3">
