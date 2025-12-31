@@ -13,7 +13,7 @@
     "build:server": "tsc backend/server/index.ts --outDir dist",
     "test": "jest",
     "start:server:prod": "node dist/index.js",
-    "build:server:prod": "npx prisma generate && npx prisma migrate deploy && npx tsc backend/server/index.ts --outDir dist --module commonjs --esModuleInterop --resolveJsonModule --skipLibCheck"
+    "build:server:prod": "npx prisma generate && npx prisma migrate deploy && npx tsc --project tsconfig.server.json"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
