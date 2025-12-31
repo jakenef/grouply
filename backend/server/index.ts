@@ -1,3 +1,9 @@
+import moduleAlias from "module-alias";
+import path from "path";
+
+// Register path aliases for production
+moduleAlias.addAlias("@", path.join(__dirname, "../.."));
+
 import * as trpcExpress from "@trpc/server/adapters/express";
 import cors from "cors";
 import dotenv from "dotenv";
