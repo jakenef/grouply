@@ -25,7 +25,6 @@ export const getPlaceDetails = publicProcedure
 
       return {
         placeId,
-        name: placeDetails.name,
         ...googlePlacesApi.extractLocationData(
           placeDetails,
           precision === "venue"

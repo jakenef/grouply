@@ -37,7 +37,6 @@ export const getLocationFromCoords = publicProcedure
 
       return {
         placeId,
-        name: placeDetails.name,
         ...googlePlacesApi.extractLocationData(placeDetails),
       };
     } catch (error) {

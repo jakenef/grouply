@@ -77,10 +77,11 @@ describe("getSuggestedEventsFromUser integration", () => {
         lowerAgeLimit: 18,
         upperAgeLimit: 50,
         maxAttendees: 20,
+        coverImageUrl: "test",
         snapshot: {
           create: {
             hostUserId: testUserId,
-            hostDisplayName: "Test User",
+            hostGivenName: "Test User",
             interestIds: [testInterestId], // Matches user's hiking interest
             traitScores: { [testTraitId]: 0.8 }, // Close to user's 0.7
           },
@@ -105,10 +106,11 @@ describe("getSuggestedEventsFromUser integration", () => {
         upperAgeLimit: 50,
         minAttendees: 2,
         maxAttendees: 20,
+        coverImageUrl: "test",
         snapshot: {
           create: {
             hostUserId: testUserId,
-            hostDisplayName: "Test User",
+            hostGivenName: "Test User",
             interestIds: [], // No matching interests
             traitScores: { [testTraitId]: 0.1 }, // Very different from user's 0.7
           },
