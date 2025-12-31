@@ -13,7 +13,7 @@
     "build:server": "tsc backend/server/index.ts --outDir dist",
     "test": "jest",
     "start:server:prod": "node dist/backend/server/index.js",
-    "build:server:prod": "npx prisma generate && npx prisma migrate deploy && npx tsc --project tsconfig.server.json"
+    "build:server:prod": "npx prisma generate && npx prisma migrate deploy && npx tsc --project tsconfig.server.json && cpy 'backend/generated/**' dist/backend/generated"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
@@ -78,6 +78,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/react": "~19.1.0",
     "babel-plugin-module-resolver": "^5.0.2",
+    "cpy-cli": "^6.0.0",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
     "jest": "~29.7.0",
