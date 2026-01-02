@@ -143,7 +143,6 @@ interface EventDetails {
 }
 
 export const EventDetailsForm = (props: EventDetailsFormProps) => {
-  // TODO: make save turn to saving on click, no delay
   const { user } = useCurrentUser();
   const utils = trpc.useUtils();
   const upsertEventMutation = trpc.events.upsertEvent.useMutation({
@@ -189,6 +188,8 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
   const [imgUrls, setImgUrls] = useState(props.event?.imgUrls);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  const [isLoading, setIsLoading] = useState(false);
+
   const handleSave = async () => {
     const userAge = calculateAge(new Date(user?.profile?.birthday!));
     const validationErrors = validateEventForm({
@@ -217,6 +218,7 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
     }
 
     setErrors({});
+    setIsLoading(true);
 
     try {
       // Upload all images
@@ -260,6 +262,7 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
     } catch (error) {
       console.error("Error saving event:", error);
       Alert.alert("Error", "Failed to save event. Please try again.");
+      setIsLoading(false);
     }
   };
 
@@ -414,13 +417,13 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
                 variant="outline"
                 onPress={handleCancel}
                 fullWidth
-                disabled={upsertEventMutation.isPending}
+                disabled={isLoading}
               />
             </View>
             <View className="flex-1">
               <GrouplyButton
                 label={
-                  upsertEventMutation.isPending
+                  isLoading
                     ? "Loading..."
                     : props.event?.id
                     ? "Save Event"
@@ -429,7 +432,7 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
                 variant="primary"
                 onPress={handleSave}
                 fullWidth
-                disabled={upsertEventMutation.isPending}
+                disabled={isLoading}
               />
             </View>
           </View>

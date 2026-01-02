@@ -44,7 +44,7 @@ interface EventDetailsProps {
   event: EventDetailsObject;
 }
 
-// TODO: handle errors from TRPC, like trying to join event that is outside age range etc
+// TODO: handle errors from TRPC, like trying to join event that is outside age range etc. actually just block button for out of age range
 
 export default function EventDetails(props: EventDetailsProps) {
   const { user } = useCurrentUser();
@@ -92,9 +92,15 @@ export default function EventDetails(props: EventDetailsProps) {
 
   async function handleJoin() {
     setIsJoining(true);
-    await joinMutation.mutateAsync({
-      eventId: props.event.id,
-    });
+    try {
+      await joinMutation.mutateAsync({
+        eventId: props.event.id,
+      });
+    } catch (error: any) {
+      console.error(error);
+      Alert.alert("Error", "Failed to join event. Please try again.");
+      setIsJoining(false);
+    }
   }
 
   async function handleBackOut() {
