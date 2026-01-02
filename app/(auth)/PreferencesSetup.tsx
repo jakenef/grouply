@@ -341,20 +341,18 @@ const PreferencesSetup = () => {
           minValue={3}
           maxValue={6}
           minLimit={2}
-          maxLimit={9}
+          maxLimit={12}
           step={1}
           onValuesChange={(values) => setGroupSizeRange(values)}
           formatLabel={(value) => (value === 9 ? "9" : String(value))}
         />
 
-        {/* // TODO: fix slider range for distance to min 10 and max 100 */}
-
         {/* Max Travel Distance */}
         <SliderSingle
           label="How far are you willing to travel for an event?"
           value={travelDistance}
-          minLimit={1}
-          maxLimit={50}
+          minLimit={10}
+          maxLimit={100}
           step={1}
           onValueChange={(value) => setTravelDistance(value)}
           formatLabel={(value) => `${value} mi (${milesToKm(value)} km)`}

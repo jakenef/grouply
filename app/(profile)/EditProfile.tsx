@@ -40,14 +40,28 @@ interface Trait {
 //   label: string;
 // }
 
-// TODO: fix slider range for distance to min 10 and max 100, update pfp and bio and location didn't work, didn't prefill group size and age range correctly. Age range needs validation.
-
 const milesToKm = (miles: number): number => {
   return Math.round(miles * 1.60934);
 };
 
 const kmToMiles = (km: number): number => {
   return Math.round(km / 1.60934);
+};
+
+// Calculate age from birthday
+const calculateAge = (birthday: Date | null | undefined) => {
+  if (!birthday) return null;
+  const today = new Date();
+  const birthDate = new Date(birthday);
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  if (
+    monthDiff < 0 ||
+    (monthDiff === 0 && today.getDate() < birthDate.getDate())
+  ) {
+    age--;
+  }
+  return age;
 };
 
 const EditProfile = () => {
@@ -89,6 +103,7 @@ const EditProfile = () => {
     location?: string;
     traits?: string;
     interests?: string;
+    ageRange?: string;
   }>({});
 
   const utils = trpc.useUtils();
@@ -99,12 +114,14 @@ const EditProfile = () => {
   });
   const interestsQuery = trpc.interests.getAllApprovedInterests.useQuery();
   const traitsQuery = trpc.traits.getAllApprovedTraits.useQuery();
+  const userAge = calculateAge(new Date(user?.profile?.birthday!)) ?? 18;
 
   const validateForm = (): boolean => {
     const newErrors: {
       interests?: string;
       traits?: string;
       location?: string;
+      ageRange?: string;
     } = {};
 
     if (selectedInterests.length < 3) {
@@ -117,6 +134,10 @@ const EditProfile = () => {
 
     if (!location) {
       newErrors.location = "Please select a location";
+    }
+
+    if (userAge < ageRange[0] || userAge > ageRange[1]) {
+      newErrors.ageRange = "Your age is not in your preferred age range";
     }
 
     setErrors(newErrors);
@@ -171,6 +192,8 @@ const EditProfile = () => {
         minAgePref: ageRange[0],
         maxAgePref: ageRange[1],
         maxTravelKm,
+        avatarUrl: avatarUrlToSend,
+        bio,
       });
 
       router.back();
@@ -275,10 +298,10 @@ const EditProfile = () => {
         {/* Group Size Range */}
         <RangeSlider
           label="What is your preferred group size?"
-          minValue={3}
-          maxValue={6}
+          minValue={user?.profile?.preferredGroupSizeMin ?? 3}
+          maxValue={user?.profile?.preferredGroupSizeMax ?? 6}
           minLimit={2}
-          maxLimit={9}
+          maxLimit={12}
           step={1}
           onValuesChange={(values) => setGroupSizeRange(values)}
           formatLabel={(value) => (value === 9 ? "9" : String(value))}
@@ -288,8 +311,8 @@ const EditProfile = () => {
         <SliderSingle
           label="How far are you willing to travel for an event?"
           value={travelDistance}
-          minLimit={1}
-          maxLimit={50}
+          minLimit={10}
+          maxLimit={100}
           step={1}
           onValueChange={(value) => setTravelDistance(value)}
           formatLabel={(value) => `${value} mi (${milesToKm(value)} km)`}
@@ -298,13 +321,14 @@ const EditProfile = () => {
         {/* Age Range */}
         <RangeSlider
           label="What is your preferred age range of other attendees?"
-          minValue={18}
-          maxValue={25}
+          minValue={user?.profile?.minAgePref ?? 18}
+          maxValue={user?.profile?.maxAgePref ?? 25}
           minLimit={18}
           maxLimit={60}
           step={1}
           onValuesChange={(values) => setAgeRange(values)}
           formatLabel={(value) => (value === 60 ? "60" : String(value))}
+          error={errors.ageRange}
         />
       </ScrollView>
     </View>
