@@ -9,8 +9,6 @@ import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { FlatList, Pressable, Text, View } from "react-native";
 
-// TODO: fix upcoming / past visual jump
-
 const Events = () => {
   const { user } = useCurrentUser();
   const [showUpcoming, setShowUpcoming] = useState(true);
@@ -39,8 +37,6 @@ const Events = () => {
     events.filter((event) => new Date(event.startsAt).getTime() > now)
   );
 
-  // when hostedByMe is true: upcomingEvents.filter((event) => hostId == user.id)
-
   return (
     <View className="flex-1 bg-background px-4 pt-2">
       <View className="flex-row justify-between items-center">
@@ -68,7 +64,7 @@ const Events = () => {
                   borderBottomWidth: 3,
                   borderColor: colors.primary,
                 }
-              : undefined
+              : { borderBottomWidth: 3, borderColor: colors.background.DEFAULT }
           }
         >
           <View className="pb-3">
@@ -90,7 +86,7 @@ const Events = () => {
                   borderBottomWidth: 3,
                   borderColor: colors.primary,
                 }
-              : undefined
+              : { borderBottomWidth: 3, borderColor: colors.background.DEFAULT }
           }
         >
           <View className="pb-3">
