@@ -347,6 +347,8 @@ const PreferencesSetup = () => {
           formatLabel={(value) => (value === 9 ? "9" : String(value))}
         />
 
+        {/* // TODO: fix slider range for distance to min 10 and max 100 */}
+
         {/* Max Travel Distance */}
         <SliderSingle
           label="How far are you willing to travel for an event?"

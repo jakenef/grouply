@@ -21,6 +21,8 @@ interface OptionsSelectorProps {
   onCustomOptionAdded?: (option: { id: string; label: string }) => void;
 }
 
+// TODO: fix bug where on select of an item, the load more items disappear and it all collapses
+
 const OptionsSelector = ({
   title,
   options,

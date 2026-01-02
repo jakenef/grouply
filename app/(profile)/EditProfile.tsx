@@ -40,6 +40,8 @@ interface Trait {
 //   label: string;
 // }
 
+// TODO: fix slider range for distance to min 10 and max 100, update pfp and bio and location didn't work, didn't prefill group size and age range correctly. Age range needs validation.
+
 const milesToKm = (miles: number): number => {
   return Math.round(miles * 1.60934);
 };

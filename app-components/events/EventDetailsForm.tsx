@@ -143,7 +143,7 @@ interface EventDetails {
 }
 
 export const EventDetailsForm = (props: EventDetailsFormProps) => {
-  // TODO: check that edited max attendees isn't lower than current attendees
+  // TODO: make save turn to saving on click, no delay
   const { user } = useCurrentUser();
   const utils = trpc.useUtils();
   const upsertEventMutation = trpc.events.upsertEvent.useMutation({

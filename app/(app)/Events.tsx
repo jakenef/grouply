@@ -4,11 +4,18 @@ import EventCardRegistered, {
 import SkeletonLoadingEvents from "@/app-components/events/SkeletonLoadingEvents";
 import { colors } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";
+import { useCurrentUser } from "@/lib/useCurrentUserHook";
+import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { FlatList, Pressable, Text, View } from "react-native";
 
+// TODO: fix upcoming / past visual jump
+
 const Events = () => {
+  const { user } = useCurrentUser();
   const [showUpcoming, setShowUpcoming] = useState(true);
+  const [hostedByMe, setHostedByMe] = useState(false);
+
   const {
     data: events = [],
     isLoading,
@@ -18,17 +25,39 @@ const Events = () => {
   } = trpc.events.getMyRegisteredEvents.useQuery();
 
   const now = Date.now();
-  const pastEvents = events.filter(
-    (event) => new Date(event.startsAt).getTime() <= now
+
+  const filterByHost = (eventsArr: typeof events) =>
+    hostedByMe && user?.id
+      ? eventsArr.filter((event) => event.organizerId === user.id)
+      : eventsArr;
+
+  const pastEvents = filterByHost(
+    events.filter((event) => new Date(event.startsAt).getTime() <= now)
+  ).reverse();
+
+  const upcomingEvents = filterByHost(
+    events.filter((event) => new Date(event.startsAt).getTime() > now)
   );
-  const upcomingEvents = events.filter(
-    (event) => new Date(event.startsAt).getTime() > now
-  );
-  pastEvents.reverse();
+
+  // when hostedByMe is true: upcomingEvents.filter((event) => hostId == user.id)
 
   return (
     <View className="flex-1 bg-background px-4 pt-2">
-      <Text className="text-4xl font-semibold">My Events</Text>
+      <View className="flex-row justify-between items-center">
+        <Text className="text-4xl font-semibold">My Events</Text>
+        <Pressable
+          className="flex-row justify-between items-center"
+          onPress={() => setHostedByMe(!hostedByMe)}
+        >
+          <Text className="text-muted-darker pr-2">Hosted by me</Text>
+          <Ionicons
+            name={hostedByMe ? "checkbox" : "checkbox-outline"}
+            color={colors.primary}
+            size={30}
+          />
+        </Pressable>
+      </View>
+
       <View className="flex-row items-center py-4">
         <Pressable
           className="flex-1 items-center"
@@ -94,7 +123,11 @@ const Events = () => {
             };
             return <EventCardRegistered event={event} />;
           }}
-          ListEmptyComponent={<Text>No events found.</Text>}
+          ListEmptyComponent={
+            <Text className="text-2xl text-muted-darker text-center">
+              No events found.
+            </Text>
+          }
         ></FlatList>
       )}
     </View>

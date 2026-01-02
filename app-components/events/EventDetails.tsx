@@ -44,6 +44,8 @@ interface EventDetailsProps {
   event: EventDetailsObject;
 }
 
+// TODO: handle errors from TRPC, like trying to join event that is outside age range etc
+
 export default function EventDetails(props: EventDetailsProps) {
   const { user } = useCurrentUser();
   const [menuVisible, setMenuVisible] = useState(false);

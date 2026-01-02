@@ -13,6 +13,10 @@ import Animated, {
   LinearTransition,
 } from "react-native-reanimated";
 
+// TODO: fix home chat section clipping above the "what do you want to do" when text input is large enough, idk how the auto-scroll is on the chat section
+
+// TODO: bad word filter
+
 const Home = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [eventSuggestions, setEventSuggestions] = useState<any[] | undefined>(
