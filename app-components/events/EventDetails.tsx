@@ -2,6 +2,7 @@ import { openInMaps } from "@/lib/maps";
 import { colors } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";
 import { useCurrentUser } from "@/lib/useCurrentUserHook";
+import calculateAge from "@/shared/utils/calculateAge";
 import { Ionicons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import { router } from "expo-router";
@@ -44,8 +45,6 @@ interface EventDetailsProps {
   event: EventDetailsObject;
 }
 
-// TODO: handle errors from TRPC, like trying to join event that is outside age range etc. actually just block button for out of age range
-
 export default function EventDetails(props: EventDetailsProps) {
   const { user } = useCurrentUser();
   const [menuVisible, setMenuVisible] = useState(false);
@@ -66,6 +65,9 @@ export default function EventDetails(props: EventDetailsProps) {
   });
   const isPast = new Date(props.event.startTime) < new Date();
   const isFull = props.event.attendeeIds.length >= props.event.maxAttendees;
+  const userAge = calculateAge(new Date(user?.profile?.birthday!)) ?? 18;
+  const isUserInAgeRange =
+    userAge <= props.event.maxAge && userAge >= props.event.minAge;
   const isUserHost = user?.id == props.event.hostId;
   const utils = trpc.useUtils();
   const joinMutation = trpc.events.joinEvent.useMutation({
@@ -105,9 +107,15 @@ export default function EventDetails(props: EventDetailsProps) {
 
   async function handleBackOut() {
     setIsLeaving(true);
-    await leaveEventMutation.mutateAsync({
-      eventId: props.event.id,
-    });
+    try {
+      await leaveEventMutation.mutateAsync({
+        eventId: props.event.id,
+      });
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error", "Failed to leave event. Please try again.");
+      setIsLeaving(false);
+    }
   }
 
   function handleCancel() {
@@ -125,7 +133,15 @@ export default function EventDetails(props: EventDetailsProps) {
           style: "destructive",
           onPress: async () => {
             setIsCanceling(true);
-            await cancelEventMutation.mutateAsync({ eventId: props.event.id });
+            try {
+              await cancelEventMutation.mutateAsync({
+                eventId: props.event.id,
+              });
+            } catch (error) {
+              console.error(error);
+              Alert.alert("Error", "Failed to cancel event. Please try again.");
+              setIsCanceling(false);
+            }
           },
         },
       ]
@@ -314,6 +330,11 @@ export default function EventDetails(props: EventDetailsProps) {
               style={{ backgroundColor: colors.muted.DEFAULT, minHeight: 50 }}
               onPress={handleBackOut}
               disabled={isLeaving}
+            />
+          ) : !isUserInAgeRange ? (
+            <GrouplyButton
+              label="Sorry, you are outside the age range for this event"
+              style={{ backgroundColor: colors.muted.DEFAULT, minHeight: 50 }}
             />
           ) : isFull ? (
             <GrouplyButton

@@ -1,7 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import z from "zod";
+import calculateAge from "../../../../shared/utils/calculateAge";
 import { protectedProcedure } from "../../trpc";
-import calculateAge from "../../utils/api/calculateAge";
 
 const joinEvent = protectedProcedure
   .input(

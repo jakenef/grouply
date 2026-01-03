@@ -3,7 +3,7 @@ import HomeChatSection from "@/app-components/home/HomeChatSection";
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";
-import { ChatMessage, ChatMessageRole } from "@/types/Chat";
+import { ChatMessage, ChatMessageRole } from "@/shared/types/Chat";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
@@ -12,8 +12,6 @@ import Animated, {
   FadeOut,
   LinearTransition,
 } from "react-native-reanimated";
-
-// TODO: fix home chat section clipping above the "what do you want to do" when text input is large enough, idk how the auto-scroll is on the chat section
 
 // TODO: bad word filter
 

@@ -4,6 +4,7 @@ import ProfileImagePicker from "@/app-components/shared/ProfileImagePicker";
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/lib/theme";
 import { useCurrentUser } from "@/lib/useCurrentUserHook";
+import calculateAge from "@/shared/utils/calculateAge";
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
@@ -15,22 +16,6 @@ const Profile = () => {
 
   const router = useRouter();
   const isAdmin = user?.role === "ADMIN";
-
-  // Calculate age from birthday
-  const calculateAge = (birthday: Date | null | undefined) => {
-    if (!birthday) return null;
-    const today = new Date();
-    const birthDate = new Date(birthday);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (
-      monthDiff < 0 ||
-      (monthDiff === 0 && today.getDate() < birthDate.getDate())
-    ) {
-      age--;
-    }
-    return age;
-  };
 
   // Format joined date
   const formatJoinedDate = (date: Date | null | undefined) => {

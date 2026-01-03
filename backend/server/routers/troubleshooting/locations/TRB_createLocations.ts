@@ -1,5 +1,5 @@
 import { adminProcedure } from "@/backend/server/trpc";
-import { Location } from "@/types/Location";
+import { Location } from "@/shared/types/Location";
 import { TRPCError } from "@trpc/server";
 
 // Test locations with varying detail levels

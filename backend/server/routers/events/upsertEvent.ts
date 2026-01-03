@@ -1,5 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import z from "zod";
+import calculateAge from "../../../../shared/utils/calculateAge";
 import { prisma } from "../../prisma";
 import { locationDataSchema } from "../../schemas";
 import { protectedProcedure } from "../../trpc";
@@ -42,22 +43,6 @@ export const upsertEvent = protectedProcedure
         code: "NOT_FOUND",
       });
     }
-
-    // Helper function to calculate age from birthday
-    const calculateAge = (birthday: Date | null | undefined): number | null => {
-      if (!birthday) return null;
-      const today = new Date();
-      const birthDate = new Date(birthday);
-      let age = today.getFullYear() - birthDate.getFullYear();
-      const monthDiff = today.getMonth() - birthDate.getMonth();
-      if (
-        monthDiff < 0 ||
-        (monthDiff === 0 && today.getDate() < birthDate.getDate())
-      ) {
-        age--;
-      }
-      return age;
-    };
 
     // Check if the age range is valid for the creator
     const creatorAge = calculateAge(organizerUser.profile?.birthday);

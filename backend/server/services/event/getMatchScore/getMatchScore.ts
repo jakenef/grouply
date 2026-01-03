@@ -1,5 +1,5 @@
-import { EventWithSnapshotData } from "@/types/Event";
-import { UserWithTraitsAndInterests } from "@/types/User";
+import { EventWithSnapshotData } from "@/shared/types/Event";
+import { UserWithTraitsAndInterests } from "@/shared/types/User";
 import { getInterestOverlapScore } from "../getInterestOverlapScore/getInterestOverlapScore";
 import { getTraitSimilarityScore } from "../getTraitSimilarityScore/getTraitSimilarityScore";
 

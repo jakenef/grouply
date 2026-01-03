@@ -1,5 +1,5 @@
-import { EventWithSnapshotData } from "@/types/Event";
-import { UserWithTraitsAndInterests } from "@/types/User";
+import { EventWithSnapshotData } from "@/shared/types/Event";
+import { UserWithTraitsAndInterests } from "@/shared/types/User";
 import { prisma } from "../../../prisma";
 import { getMatchScore } from "../getMatchScore/getMatchScore";
 import { getValidEventsFromUser } from "../getValidEventsFromUser/getValidEventsFromUser";

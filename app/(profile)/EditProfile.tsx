@@ -10,6 +10,7 @@ import uploadImageUri from "@/lib/storage";
 import { colors } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";
 import { useCurrentUser } from "@/lib/useCurrentUserHook";
+import calculateAge from "@/shared/utils/calculateAge";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useState } from "react";
@@ -46,22 +47,6 @@ const milesToKm = (miles: number): number => {
 
 const kmToMiles = (km: number): number => {
   return Math.round(km / 1.60934);
-};
-
-// Calculate age from birthday
-const calculateAge = (birthday: Date | null | undefined) => {
-  if (!birthday) return null;
-  const today = new Date();
-  const birthDate = new Date(birthday);
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const monthDiff = today.getMonth() - birthDate.getMonth();
-  if (
-    monthDiff < 0 ||
-    (monthDiff === 0 && today.getDate() < birthDate.getDate())
-  ) {
-    age--;
-  }
-  return age;
 };
 
 const EditProfile = () => {

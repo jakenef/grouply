@@ -1,4 +1,4 @@
-import { ChatMessage, ChatMessageRole } from "@/types/Chat";
+import { ChatMessage, ChatMessageRole } from "@/shared/types/Chat";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
@@ -317,7 +317,7 @@ export default function HomeChatSection({
       )}
 
       {/* Input bar - always visible */}
-      <View className="border-border px-3 py-2">
+      <View className="px-3 py-2 h-20">
         <View className="flex-row items-end gap-2">
           <TextInput
             ref={inputRef}
@@ -328,8 +328,9 @@ export default function HomeChatSection({
             returnKeyType="send"
             onSubmitEditing={handleSend}
             multiline
-            textAlignVertical="center"
-            className="flex-1 min-h-[40px] max-h-[100px] px-3.5 py-2 border border-border rounded-[20px] text-foreground"
+            scrollEnabled
+            textAlignVertical="top"
+            className="flex-1 px-3.5 py-2 border border-border rounded-[20px] text-foreground"
           />
           <GrouplyButton
             onPress={handleSend}

@@ -8,6 +8,7 @@ import {
 import uploadImageUri from "@/lib/storage";
 import { trpc } from "@/lib/trpc";
 import { useCurrentUser } from "@/lib/useCurrentUserHook";
+import calculateAge from "@/shared/utils/calculateAge";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -20,21 +21,6 @@ import {
 } from "react-native";
 import { ActivityPicker } from "../shared/ActivityPicker";
 import UploadMultiplePictures from "../shared/UploadMultiplePictures";
-
-function calculateAge(birthday: Date | null | undefined): number | null {
-  if (!birthday) return null;
-  const today = new Date();
-  const birthDate = new Date(birthday);
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const monthDiff = today.getMonth() - birthDate.getMonth();
-  if (
-    monthDiff < 0 ||
-    (monthDiff === 0 && today.getDate() < birthDate.getDate())
-  ) {
-    age--;
-  }
-  return age;
-}
 
 function validateEventForm({
   name,

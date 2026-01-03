@@ -1,5 +1,5 @@
 import { prisma } from "@/backend/server/prisma";
-import { UserWithTraitsAndInterests } from "@/types/User";
+import { UserWithTraitsAndInterests } from "@/shared/types/User";
 
 export async function getValidEventsFromUser(user: UserWithTraitsAndInterests) {
   const now = new Date();
