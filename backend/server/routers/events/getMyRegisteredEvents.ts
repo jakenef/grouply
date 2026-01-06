@@ -4,14 +4,14 @@ export const getMyRegisteredEvents = protectedProcedure.query(
   async ({ ctx }) => {
     const events = await ctx.prisma.event.findMany({
       where: {
-        regs: {
+        registrations: {
           some: {
             userId: ctx.user.id,
           },
         },
       },
       include: {
-        regs: true,
+        registrations: true,
         location: { select: { formatted: true } },
       },
       orderBy: { startsAt: "asc" },

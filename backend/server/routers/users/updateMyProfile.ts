@@ -20,15 +20,15 @@ export const updateMyUserAndProfile = protectedProcedure
   .mutation(async ({ ctx, input }) => {
     try {
       const result = ctx.prisma.$transaction(async (tx) => {
-        const updatedProfile = await tx.userProfile.update({
-          where: { userId: ctx.user.id },
+        const updatedProfile = await tx.user.update({
+          where: { id: ctx.user.id },
           data: {
             bio: input.bio,
-            preferredGroupSizeMax: input.preferredGroupSizeMax,
-            preferredGroupSizeMin: input.preferredGroupSizeMin,
+            maxGroupSize: input.preferredGroupSizeMax,
+            minGroupSize: input.preferredGroupSizeMin,
             maxTravelKm: input.maxTravelKm,
-            maxAgePref: input.maxAgePref,
-            minAgePref: input.minAgePref,
+            maxAgePreference: input.maxAgePref,
+            minAgePreference: input.minAgePref,
           },
         });
 

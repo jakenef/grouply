@@ -65,7 +65,7 @@ export default function EventDetails(props: EventDetailsProps) {
   });
   const isPast = new Date(props.event.startTime) < new Date();
   const isFull = props.event.attendeeIds.length >= props.event.maxAttendees;
-  const userAge = calculateAge(new Date(user?.profile?.birthday!)) ?? 18;
+  const userAge = calculateAge(new Date(user?.birthday!)) ?? 18;
   const isUserInAgeRange =
     userAge <= props.event.maxAge && userAge >= props.event.minAge;
   const isUserHost = user?.id == props.event.hostId;

@@ -51,7 +51,7 @@ const kmToMiles = (km: number): number => {
 
 const EditProfile = () => {
   const { user } = useCurrentUser();
-  const [bio, setBio] = useState(user?.profile?.bio ?? "");
+  const [bio, setBio] = useState(user?.bio ?? "");
   const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl ?? null);
   const initialLocation: LocationData | null = user?.location
     ? {

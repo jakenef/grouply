@@ -2,7 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { protectedProcedure } from "../../trpc";
 
-export const saveUserAndUserProfilePreferences = protectedProcedure
+export const  = protectedProcedure
   .input(
     z.object({
       interests: z.array(z.string()),
@@ -33,15 +33,15 @@ export const saveUserAndUserProfilePreferences = protectedProcedure
   .mutation(async ({ ctx, input }) => {
     try {
       const result = await ctx.prisma.$transaction(async (tx) => {
-        const updatedProfile = await tx.userProfile.update({
+        const updatedProfile = await tx.user.update({
           where: {
-            userId: ctx.user.id,
+            id: ctx.user.id,
           },
           data: {
-            preferredGroupSizeMax: input.preferredGroupSizeMax,
-            preferredGroupSizeMin: input.preferredGroupSizeMin,
-            maxAgePref: input.preferredAgeMax,
-            minAgePref: input.preferredAgeMin,
+            maxGroupSize: input.preferredGroupSizeMax,
+            minGroupSize: input.preferredGroupSizeMin,
+            maxAgePreference: input.preferredAgeMax,
+            minAgePreference: input.preferredAgeMin,
             maxTravelKm: input.maxTravelDist,
           },
         });

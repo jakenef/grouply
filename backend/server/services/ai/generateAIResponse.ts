@@ -164,7 +164,7 @@ export async function generateAIResponse(params: {
     authorId: "ai-assistant",
     channelId: params.channelId,
     body: aiResponse.output_text,
-    role: ChatMessageRole.assistant,
+    role: ChatMessageRole.ASSISTANT,
     tools: aiResponse.tools,
   };
 

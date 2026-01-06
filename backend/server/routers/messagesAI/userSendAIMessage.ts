@@ -20,7 +20,7 @@ export const userSendAIMessage = protectedProcedure
       authorId: z.string(),
       body: z.string(),
       createdAt: z.date(),
-      editedAt: z.date().nullable(),
+      updatedAt: z.date(),
       deletedAt: z.date().nullable(),
       toolName: z.string().nullable(),
       toolArgs: z.any().nullable(),
@@ -54,7 +54,7 @@ export const userSendAIMessage = protectedProcedure
       data: {
         body: input.text,
         channelId: channel.id,
-        role: "user",
+        role: "USER",
         authorId: ctx.user.id,
       },
     });
@@ -72,7 +72,7 @@ export const userSendAIMessage = protectedProcedure
         id: "ai-location",
         city: "AI City",
         countryCode: "AI",
-        precision: "city",
+        precision: "CITY",
       },
     });
 

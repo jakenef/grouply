@@ -181,7 +181,7 @@ model Event {
   desc          String?
   startsAt      DateTime
   endsAt        DateTime
-  isCancelled   Boolean  @default(false)
+  isCanceled   Boolean  @default(false) @map("isCancelled")
   maxAgeLimit   Int?
   minAgeLimit   Int?
   imageUrls     String[]
@@ -217,7 +217,7 @@ model Event {
   @@index([activityId])
   @@index([startsAt])
   @@index([locationId])
-  @@index([isCancelled, startsAt])
+  @@index([isCanceled, startsAt])
 }
 
 model EventProfileSnapshot {
@@ -230,13 +230,24 @@ model EventProfileSnapshot {
   hostGivenName String
 
   // matchable signals (keep flexible)
-  interestIds String[] // e.g., top N of host's interests at creation
-  traitScores Json? // { "introversion": 0.7, "risk-tolerance": 0.3, ... }
+  interestIds String[]
+  traitScores EventSnapshotTraitScore[]
 
   // metadata
   capturedAt DateTime @default(now())
 
   @@index([capturedAt])
+}
+
+model EventSnapshotTraitScore {
+  snapshotId String
+  traitSlug  String
+  score      Float
+
+  snapshot EventProfileSnapshot @relation(fields: [snapshotId], references: [eventId], onDelete: Cascade)
+
+  @@id([snapshotId, traitSlug])
+  @@index([traitSlug])
 }
 
 // ---------- Participation & Saves ----------

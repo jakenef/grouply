@@ -52,7 +52,7 @@ export const createUserAndUserProfile = authProcedure
             formatted: input.location.formatted,
             lat: input.location.lat,
             lng: input.location.lng,
-            precision: "city",
+            precision: "CITY",
           },
         });
         locationId = newLocation.id;
@@ -69,19 +69,13 @@ export const createUserAndUserProfile = authProcedure
             familyName: input.familyName,
             locationId: locationId,
             avatarUrl: input.avatarUrl,
-          },
-        });
-
-        const profile = await tx.userProfile.create({
-          data: {
-            userId: user.id,
             birthday: input.birthday,
             gender: input.gender,
             bio: input.bio,
           },
         });
 
-        return { user, profile };
+        return { user };
       });
 
       return result;

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { protectedProcedure } from "../../trpc";
 
-export const getMyProfile = protectedProcedure
+export const getMyUser = protectedProcedure
   .input(
     z.object({
       authId: z.string(),
@@ -39,7 +39,6 @@ export const getMyProfile = protectedProcedure
             trait: true,
           },
         },
-        profile: true,
       },
     });
   });

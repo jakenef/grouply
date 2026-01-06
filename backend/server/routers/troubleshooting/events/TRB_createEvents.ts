@@ -106,16 +106,15 @@ export const TRB_createEvents = adminProcedure
           organizerId: organizer.id,
           locationId: location.id,
           activityId: activity.id,
-          lowerAgeLimit: minAgePref,
-          upperAgeLimit: maxAgePref,
+          minAgeLimit: minAgePref,
+          maxAgeLimit: maxAgePref,
           imageUrls: pictureUrls,
           coverImageUrl: coverImageUrl,
-          regs: {
+          registrations: {
             create: attendees.map((u) => ({
               user: { connect: { id: u.id } },
             })),
           },
-          eventUrl: "fakeURL",
           minAttendees,
           maxAttendees,
           isFull: attendees.length >= maxAttendees,
@@ -125,8 +124,6 @@ export const TRB_createEvents = adminProcedure
               hostGivenName: organizer.givenName,
               interestIds: interestIds,
               traitScores: traitScores,
-              lowerAgeLimit: minAgePref,
-              upperAgeLimit: maxAgePref,
             },
           },
         },

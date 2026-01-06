@@ -110,8 +110,8 @@ const Events = () => {
             const event: EventCardRegisteredEvent = {
               id: item.id,
               title: item.name,
-              currentParticipants: item.regs.length,
-              isCanceled: item.isCancelled,
+              currentParticipants: item.registrations.length,
+              isCanceled: item.isCanceled,
               location: item.location.formatted ?? "TBD",
               maxParticipants: item.maxAttendees,
               minParticipants: item.minAttendees,
