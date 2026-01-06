@@ -23,7 +23,9 @@ import {
 } from "react-native";
 import GrouplyButton from "../../app-components/shared/GrouplyButton";
 
-type Gender = "Male" | "Female" | "Other" | null;
+type Gender = "MALE" | "FEMALE" | "OTHER" | null;
+
+// TODO: they have to be at least 18
 
 const AboutYouSetup = () => {
   const { user, session } = useAuth(); // Get authentication context
@@ -92,7 +94,6 @@ const AboutYouSetup = () => {
     if (locationData) {
       // Set the formatted location name to the state
       setLocation(locationData);
-      console.log("Selected location:", locationData);
     } else {
       // Clear the location if null is passed
       setLocation(null);
@@ -221,7 +222,7 @@ const AboutYouSetup = () => {
       setIsSubmitting(false);
     }
   };
-  const genderOptions: Gender[] = ["Male", "Female", "Other"];
+  const genderOptions: Gender[] = ["MALE", "FEMALE", "OTHER"];
 
   // Handle outside touch to dismiss date picker
   const handleOutsideTouch = () => {
@@ -337,7 +338,7 @@ const AboutYouSetup = () => {
                       gender === option ? "text-white" : "text-foreground"
                     }`}
                   >
-                    {option}
+                    {option?.charAt(0)! + option?.slice(1).toLowerCase()}
                   </Text>
                 </Pressable>
               ))}

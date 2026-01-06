@@ -123,7 +123,7 @@ const PreferencesSetup = () => {
   const [selectedTraits, setSelectedTraits] = useState<string[]>([]);
 
   // State for travel distance (single value)
-  const [travelDistance, setTravelDistance] = useState<number>(10);
+  const [travelDistance, setTravelDistance] = useState<number>(20);
 
   // State for age preferences
   const [ageRange, setAgeRange] = useState<[number, number]>([21, 35]);
@@ -309,7 +309,8 @@ const PreferencesSetup = () => {
           selectedOptions={selectedInterests}
           onSelectionChange={setSelectedInterests}
           minRequired={3}
-          allowOther={false}
+          // TODO: change back to false
+          allowOther={true}
           error={errors.interests}
           onCustomOptionAdded={(customOption) => {
             setCustomInterests((prev) => [...prev, customOption]);
@@ -328,7 +329,7 @@ const PreferencesSetup = () => {
           selectedOptions={selectedTraits}
           onSelectionChange={setSelectedTraits}
           minRequired={3}
-          allowOther={false}
+          allowOther={true}
           error={errors.traits}
           onCustomOptionAdded={(customOption) => {
             setCustomTraits((prev) => [...prev, customOption]);
@@ -353,7 +354,7 @@ const PreferencesSetup = () => {
           value={travelDistance}
           minLimit={10}
           maxLimit={100}
-          step={1}
+          step={5}
           onValueChange={(value) => setTravelDistance(value)}
           formatLabel={(value) => `${value} mi (${milesToKm(value)} km)`}
         />

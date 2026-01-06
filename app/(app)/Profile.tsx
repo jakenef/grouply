@@ -161,7 +161,7 @@ const Profile = () => {
         </TouchableOpacity>
       )}
 
-      <View className="pb-6">
+      <View className="pb-6 pt-2">
         <GrouplyButton label="Logout" onPress={signOut} />
       </View>
     </ScrollView>

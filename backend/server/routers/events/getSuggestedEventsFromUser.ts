@@ -16,10 +16,9 @@ export const getSuggestedEventsFromUser = protectedProcedure
           desc: scoredEvent.event.desc,
           startsAt: scoredEvent.event.startsAt,
           endsAt: scoredEvent.event.endsAt,
-          isCancelled: scoredEvent.event.isCancelled,
-          upperAgeLimit: scoredEvent.event.upperAgeLimit,
-          lowerAgeLimit: scoredEvent.event.lowerAgeLimit,
-          eventUrl: scoredEvent.event.eventUrl,
+          isCanceled: scoredEvent.event.isCanceled,
+          maxAgeLimit: scoredEvent.event.maxAgeLimit,
+          minAgeLimit: scoredEvent.event.minAgeLimit,
           imageUrls: scoredEvent.event.imageUrls,
           coverImageUrl: scoredEvent.event.coverImageUrl,
           organizer: {
@@ -42,6 +41,7 @@ export const getSuggestedEventsFromUser = protectedProcedure
             lng: scoredEvent.event.location.lng,
           },
           maxAttendees: scoredEvent.event.maxAttendees,
+          minAttendees: scoredEvent.event.minAttendees,
           currentAttendees: scoredEvent.event.regs?.length ?? 0,
           isFull: scoredEvent.event.isFull,
           snapshot: scoredEvent.event.snapshot
@@ -49,13 +49,11 @@ export const getSuggestedEventsFromUser = protectedProcedure
                 hostUserId: scoredEvent.event.snapshot.hostUserId,
                 hostGivenName: scoredEvent.event.snapshot.hostGivenName,
                 interestIds: scoredEvent.event.snapshot.interestIds,
-                traitScores: scoredEvent.event.snapshot.traitScores as Record<
-                  string,
-                  number
-                > | null,
+                traitScores: scoredEvent.event.snapshot.traitScores,
               }
             : null,
           createdAt: scoredEvent.event.createdAt,
+          updatedAt: scoredEvent.event.updatedAt,
         },
         score: scoredEvent.score,
       };

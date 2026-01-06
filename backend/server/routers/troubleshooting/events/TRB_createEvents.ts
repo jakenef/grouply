@@ -89,11 +89,11 @@ export const TRB_createEvents = adminProcedure
       // Prepare snapshot data from organizer's profile
       const interestIds = organizer.interests.map((ui) => ui.interestId);
 
-      // Build traitScores object using trait slugs as keys
-      const traitScores: Record<string, number> = {};
-      for (const ts of organizer.traitScores) {
-        traitScores[ts.trait.slug] = ts.score;
-      }
+      // Build traitScores array for EventSnapshotTraitScore records
+      const traitScores = organizer.traitScores.map((ts) => ({
+        traitSlug: ts.trait.slug,
+        score: ts.score,
+      }));
 
       // Create the event with snapshot
       const event = await ctx.prisma.event.create({
@@ -123,7 +123,9 @@ export const TRB_createEvents = adminProcedure
               hostUserId: organizer.id,
               hostGivenName: organizer.givenName,
               interestIds: interestIds,
-              traitScores: traitScores,
+              traitScores: {
+                create: traitScores,
+              },
             },
           },
         },
