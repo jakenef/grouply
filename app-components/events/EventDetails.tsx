@@ -60,7 +60,7 @@ export default function EventDetails(props: EventDetailsProps) {
   const fractionAttendees =
     props.event.numRegistered / props.event.maxAttendees;
   const isUserAttending = !!user && props.event.attendeeIds.includes(user.id);
-  const { data: host } = trpc.users.getPublicProfileById.useQuery({
+  const { data: host } = trpc.users.getPublicUserInfoById.useQuery({
     id: props.event.hostId,
   });
   const isPast = new Date(props.event.startTime) < new Date();

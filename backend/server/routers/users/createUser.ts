@@ -3,7 +3,7 @@ import { z } from "zod";
 import { genderEnum, locationDataSchema } from "../../schemas";
 import { authProcedure } from "../../trpc";
 
-export const createUserAndUserProfile = authProcedure
+export const createUser = authProcedure
   .input(
     z.object({
       givenName: z.string().trim().min(1),

@@ -136,7 +136,7 @@ const PreferencesSetup = () => {
 
   // Set up tRPC mutation
   const savePreferencesMutation =
-    trpc.users.saveUserAndUserProfilePreferences.useMutation();
+    trpc.users.setupUserAndPreferences.useMutation();
 
   // If user is not authenticated, redirect to login
   useEffect(() => {

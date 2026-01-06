@@ -36,7 +36,7 @@ const Profile = () => {
   const traits =
     user?.traitScores?.map((t: any) => t.trait?.name).filter(Boolean) || [];
 
-  const age = calculateAge(new Date(user?.profile?.birthday ?? 0));
+  const age = calculateAge(new Date(user?.birthday ?? 0));
   const joinedDate = formatJoinedDate(new Date(user?.joinedAt ?? 0));
 
   return (
@@ -60,10 +60,8 @@ const Profile = () => {
         <Text className="py-3 text-2xl font-semibold">
           {user?.givenName} {user?.familyName || ""}
         </Text>
-        {user?.profile?.bio && (
-          <Text className="text-muted text-center px-4">
-            {user.profile.bio}
-          </Text>
+        {user?.bio && (
+          <Text className="text-muted text-center px-4">{user.bio}</Text>
         )}
       </View>
 
@@ -85,7 +83,7 @@ const Profile = () => {
           <View className="py-2">
             <Text className="text-muted text-sm">Max Travel Distance</Text>
             <Text className="text-base">
-              {kmToMiles(user?.profile?.maxTravelKm ?? 0)} mi
+              {kmToMiles(user?.maxTravelKm ?? 0)} mi
             </Text>
           </View>
           <View className="py-2">
@@ -93,14 +91,13 @@ const Profile = () => {
               Preferred Age Range At Events
             </Text>
             <Text className="text-base">
-              {user?.profile?.minAgePref} - {user?.profile?.maxAgePref}
+              {user?.minAgePreference} - {user?.maxAgePreference}
             </Text>
           </View>
           <View className="py-2">
             <Text className="text-muted text-sm">Preferred Group Size</Text>
             <Text className="text-base">
-              {user?.profile?.preferredGroupSizeMin} -{" "}
-              {user?.profile?.preferredGroupSizeMax}
+              {user?.minGroupSize} - {user?.maxGroupSize}
             </Text>
           </View>
         </View>

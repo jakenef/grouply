@@ -61,7 +61,7 @@ const AboutYouSetup = () => {
   }, [session]);
 
   // Set up tRPC mutation
-  const createUserMutation = trpc.users.createUserAndUserProfile.useMutation();
+  const createUserMutation = trpc.users.createUser.useMutation();
 
   const onBirthdayChange = (event: any, selectedDate?: Date) => {
     // If user canceled the picker on iOS
@@ -187,7 +187,7 @@ const AboutYouSetup = () => {
         givenName: givenName,
         familyName: familyName,
         birthday: date, // Send the actual Date object, not the formatted string
-        gender: gender as "Male" | "Female" | "Other", // Type assertion since we validated gender is not null
+        gender: gender as "MALE" | "FEMALE" | "OTHER", // Type assertion since we validated gender is not null
         location: location as LocationData, // Type assertion since we validated location is not null
         bio: bio || undefined, // Only send if not empty
         avatarUrl: avatarUrlToSend,

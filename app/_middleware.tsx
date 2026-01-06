@@ -7,7 +7,7 @@ export default function AuthMiddleware() {
   const pathname = usePathname();
   const router = useRouter();
   const { session } = useAuth();
-  const { data: profile } = trpc.users.getMyProfile.useQuery(undefined, {
+  const { data: profile } = trpc.users.getMyUser.useQuery(undefined, {
     enabled: !!session,
   });
 

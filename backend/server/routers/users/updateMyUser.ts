@@ -2,7 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { protectedProcedure } from "../../trpc";
 
-export const updateMyUserAndProfile = protectedProcedure
+export const updateMyUser = protectedProcedure
   .input(
     z.object({
       avatarUrl: z.string().optional(),

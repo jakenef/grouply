@@ -2,7 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { protectedProcedure } from "../../trpc";
 
-export const  = protectedProcedure
+export const setupUserAndPreferences = protectedProcedure
   .input(
     z.object({
       interests: z.array(z.string()),
