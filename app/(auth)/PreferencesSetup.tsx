@@ -41,7 +41,7 @@ const PreferencesSetup = () => {
   const [customInterests, setCustomInterests] = useState<CustomOption[]>([]);
   const [customTraits, setCustomTraits] = useState<CustomOption[]>([]);
 
-  // State for group size preferences
+  // State for group size preferences TODO: might be bugged
   const [groupSizeRange, setGroupSizeRange] = useState<[number, number]>([
     3, 6,
   ]);
@@ -135,8 +135,7 @@ const PreferencesSetup = () => {
   }>({});
 
   // Set up tRPC mutation
-  const savePreferencesMutation =
-    trpc.users.setupUserAndPreferences.useMutation();
+  const savePreferencesMutation = trpc.users.saveUserPreferences.useMutation();
 
   // If user is not authenticated, redirect to login
   useEffect(() => {

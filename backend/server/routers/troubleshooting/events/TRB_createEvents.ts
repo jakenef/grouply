@@ -52,11 +52,14 @@ export const TRB_createEvents = adminProcedure
       // Create a random number of attendees (not always maxAttendees)
       const numAttendeesToCreate = faker.number.int({
         min: 0,
-        max: maxAttendees,
+        max: maxAttendees - 1,
       });
       const attendees = faker.helpers
         .shuffle(users)
         .slice(0, numAttendeesToCreate);
+      if (!attendees.some((u) => u.id === organizer.id)) {
+        attendees.push(organizer);
+      }
 
       const location = faker.helpers.arrayElement(locations);
       const activity = faker.helpers.arrayElement(activities);
@@ -67,8 +70,8 @@ export const TRB_createEvents = adminProcedure
         location.city
       }! ${faker.lorem.sentences({ min: 2, max: 4 })}`;
       const startsAt = faker.date.between({
-        from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-        to: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        from: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
+        to: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
       });
       const endsAt = new Date(
         startsAt.getTime() +

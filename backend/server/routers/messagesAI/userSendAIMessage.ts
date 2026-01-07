@@ -1,4 +1,3 @@
-import { ChatMessageRole } from "@/backend/generated/prisma/client";
 import z from "zod";
 import { prisma } from "../../prisma";
 import { scoredEventSchema } from "../../schemas";
@@ -15,7 +14,7 @@ export const userSendAIMessage = protectedProcedure
   .output(
     z.object({
       id: z.string(),
-      role: z.enum(ChatMessageRole),
+      role: z.enum(["USER", "ASSISTANT", "SYSTEM", "TOOL"]),
       channelId: z.string(),
       authorId: z.string(),
       body: z.string(),
@@ -93,18 +92,18 @@ export const userSendAIMessage = protectedProcedure
       data: {
         body: aiChatMessageResponse.body,
         authorId: aiChatMessageResponse.authorId,
-        role: aiChatMessageResponse.role as any,
+        role: aiChatMessageResponse.role,
         channelId: channel.id,
       },
     });
-
+    // TODO: fix this nonsense to have typesafety
     const fixedRefresh = latestRefresh?.map(({ event, score }) => ({
       event: {
         ...event,
         startsAt: new Date(event.startsAt),
         endsAt: new Date(event.endsAt),
         createdAt: new Date(event.createdAt),
-        currentAttendees: event.regs ? event.regs.length : 0,
+        currentAttendees: event.registrations ? event.registrations.length : 0,
       },
       score,
     }));

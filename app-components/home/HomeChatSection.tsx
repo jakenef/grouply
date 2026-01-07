@@ -187,13 +187,13 @@ export default function HomeChatSection({
             renderItem={({ item, index }) => (
               <View
                 className={`mb-2 flex-row items-end gap-2 ${
-                  item.role === ChatMessageRole.user
+                  item.role === ChatMessageRole.USER
                     ? "self-end flex-row-reverse"
                     : "self-start"
                 }`}
               >
                 {/* AI Avatar - only show for assistant messages */}
-                {item.role === ChatMessageRole.assistant && (
+                {item.role === ChatMessageRole.ASSISTANT && (
                   <View
                     style={{
                       width: 32,
@@ -221,7 +221,7 @@ export default function HomeChatSection({
                 <Animated.View
                   entering={FadeInDown.delay(Math.min(index, 4) * 40)}
                   className={`py-2.5 px-3 rounded-2xl max-w-[80%] ${
-                    item.role === ChatMessageRole.user
+                    item.role === ChatMessageRole.USER
                       ? "bg-accent"
                       : "bg-background-darker"
                   }`}

@@ -2,7 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { protectedProcedure } from "../../trpc";
 
-export const setupUserAndPreferences = protectedProcedure
+export const saveUserPreferences = protectedProcedure
   .input(
     z.object({
       interests: z.array(z.string()),
@@ -31,6 +31,13 @@ export const setupUserAndPreferences = protectedProcedure
     })
   )
   .mutation(async ({ ctx, input }) => {
+    if (input.preferredGroupSizeMax < input.preferredGroupSizeMin) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message:
+          "Preferred group size max is smaller than preferred group size min",
+      });
+    }
     try {
       const result = await ctx.prisma.$transaction(async (tx) => {
         const updatedProfile = await tx.user.update({
