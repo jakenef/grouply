@@ -41,7 +41,7 @@ const PreferencesSetup = () => {
   const [customInterests, setCustomInterests] = useState<CustomOption[]>([]);
   const [customTraits, setCustomTraits] = useState<CustomOption[]>([]);
 
-  // State for group size preferences TODO: might be bugged
+  // State for group size preferences (if this is bugged, past jake told you so)
   const [groupSizeRange, setGroupSizeRange] = useState<[number, number]>([
     3, 6,
   ]);
