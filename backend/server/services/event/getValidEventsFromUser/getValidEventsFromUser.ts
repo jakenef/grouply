@@ -27,10 +27,10 @@ export async function getValidEventsFromUser(user: UserWithTraitsAndInterests) {
       },
       AND: [
         {
-          OR: [{ lowerAgeLimit: null }, { lowerAgeLimit: { lte: userAge } }],
+          OR: [{ minAgeLimit: null }, { minAgeLimit: { lte: userAge } }],
         },
         {
-          OR: [{ upperAgeLimit: null }, { upperAgeLimit: { gte: userAge } }],
+          OR: [{ maxAgeLimit: null }, { maxAgeLimit: { gte: userAge } }],
         },
       ],
       location: {
@@ -38,15 +38,15 @@ export async function getValidEventsFromUser(user: UserWithTraitsAndInterests) {
         lng: { gte: minLng, lte: maxLng },
       },
       isFull: false,
-      isCancelled: false,
-      regs: { none: { userId: user.id } },
+      isCanceled: false,
+      registrations: { none: { userId: user.id } },
     },
     include: {
-      snapshot: true,
+      snapshot: { include: { traitScores: true } },
       organizer: true,
       activity: true,
       location: true,
-      regs: true,
+      registrations: true,
     },
   });
 

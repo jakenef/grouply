@@ -8,6 +8,7 @@ interface EventCardProps {
 }
 
 export const EventCard: React.FC<EventCardProps> = ({ event, onJoin }) => {
+  // TODO: fix this nonsense for typesafety
   // Handle both the API structure (event.event) and direct event structure
   const eventData = event.event || event;
   const dateTime = eventData.startsAt || eventData.dateTime;
@@ -18,7 +19,10 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onJoin }) => {
     eventData.imageUrls?.[0] ||
     eventData.thumbnailUrl;
   const currentParticipants =
-    eventData.currentAttendees || eventData.currentParticipants || 0;
+    eventData.currentAttendees ||
+    eventData.currentParticipants ||
+    eventData.registrations?.length ||
+    0;
   const maxParticipants =
     eventData.maxAttendees || eventData.maxParticipants || 0;
 

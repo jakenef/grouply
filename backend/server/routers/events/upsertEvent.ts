@@ -33,7 +33,6 @@ export const upsertEvent = protectedProcedure
             trait: true,
           },
         },
-        profile: true,
       },
     });
 
@@ -45,7 +44,7 @@ export const upsertEvent = protectedProcedure
     }
 
     // Check if the age range is valid for the creator
-    const creatorAge = calculateAge(organizerUser.profile?.birthday);
+    const creatorAge = calculateAge(organizerUser.birthday);
     if (creatorAge !== null) {
       if (creatorAge < input.minAge || creatorAge > input.maxAge) {
         throw new TRPCError({
@@ -60,21 +59,16 @@ export const upsertEvent = protectedProcedure
       const registrations = await prisma.eventRegistration.findMany({
         where: {
           eventId: input.eventId,
-          canceledAt: null,
         },
         include: {
-          user: {
-            include: {
-              profile: true,
-            },
-          },
+          user: true,
         },
       });
 
       const usersOutsideRange: Array<{ name: string; age: number }> = [];
 
       for (const registration of registrations) {
-        const userAge = calculateAge(registration.user.profile?.birthday);
+        const userAge = calculateAge(registration.user.birthday);
         if (
           userAge !== null &&
           (userAge < input.minAge || userAge > input.maxAge)
@@ -124,7 +118,6 @@ export const upsertEvent = protectedProcedure
       const currentRegistrations = await prisma.eventRegistration.count({
         where: {
           eventId: input.eventId,
-          canceledAt: null,
         },
       });
 
@@ -164,7 +157,7 @@ export const upsertEvent = protectedProcedure
         formatted: input.locationData.formatted,
         lat: input.locationData.lat,
         lng: input.locationData.lng,
-        precision: "point",
+        precision: "POINT",
       },
       create: {
         id: input.locationData.placeId,
@@ -174,7 +167,7 @@ export const upsertEvent = protectedProcedure
         formatted: input.locationData.formatted,
         lat: input.locationData.lat,
         lng: input.locationData.lng,
-        precision: "point",
+        precision: "POINT",
       },
     });
 
@@ -208,6 +201,7 @@ export const upsertEvent = protectedProcedure
             snapshot: {
               create: {
                 hostUserId: ctx.user.id,
+                hostGivenName: ctx.user.givenName,
                 interestIds: organizerUser.interests.map(
                   (interest) => interest.interestId
                 ),

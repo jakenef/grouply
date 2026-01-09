@@ -23,7 +23,9 @@ import {
 } from "react-native";
 import GrouplyButton from "../../app-components/shared/GrouplyButton";
 
-type Gender = "Male" | "Female" | "Other" | null;
+type Gender = "MALE" | "FEMALE" | "OTHER" | null;
+
+// TODO: they have to be at least 18
 
 const AboutYouSetup = () => {
   const { user, session } = useAuth(); // Get authentication context
@@ -61,7 +63,7 @@ const AboutYouSetup = () => {
   }, [session]);
 
   // Set up tRPC mutation
-  const createUserMutation = trpc.users.createUserAndUserProfile.useMutation();
+  const createUserMutation = trpc.users.createUser.useMutation();
 
   const onBirthdayChange = (event: any, selectedDate?: Date) => {
     // If user canceled the picker on iOS
@@ -92,7 +94,6 @@ const AboutYouSetup = () => {
     if (locationData) {
       // Set the formatted location name to the state
       setLocation(locationData);
-      console.log("Selected location:", locationData);
     } else {
       // Clear the location if null is passed
       setLocation(null);
@@ -187,7 +188,7 @@ const AboutYouSetup = () => {
         givenName: givenName,
         familyName: familyName,
         birthday: date, // Send the actual Date object, not the formatted string
-        gender: gender as "Male" | "Female" | "Other", // Type assertion since we validated gender is not null
+        gender: gender as "MALE" | "FEMALE" | "OTHER", // Type assertion since we validated gender is not null
         location: location as LocationData, // Type assertion since we validated location is not null
         bio: bio || undefined, // Only send if not empty
         avatarUrl: avatarUrlToSend,
@@ -221,7 +222,7 @@ const AboutYouSetup = () => {
       setIsSubmitting(false);
     }
   };
-  const genderOptions: Gender[] = ["Male", "Female", "Other"];
+  const genderOptions: Gender[] = ["MALE", "FEMALE", "OTHER"];
 
   // Handle outside touch to dismiss date picker
   const handleOutsideTouch = () => {
@@ -337,7 +338,7 @@ const AboutYouSetup = () => {
                       gender === option ? "text-white" : "text-foreground"
                     }`}
                   >
-                    {option}
+                    {option?.charAt(0)! + option?.slice(1).toLowerCase()}
                   </Text>
                 </Pressable>
               ))}

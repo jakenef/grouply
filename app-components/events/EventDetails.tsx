@@ -60,12 +60,12 @@ export default function EventDetails(props: EventDetailsProps) {
   const fractionAttendees =
     props.event.numRegistered / props.event.maxAttendees;
   const isUserAttending = !!user && props.event.attendeeIds.includes(user.id);
-  const { data: host } = trpc.users.getPublicProfileById.useQuery({
+  const { data: host } = trpc.users.getPublicUserInfoById.useQuery({
     id: props.event.hostId,
   });
   const isPast = new Date(props.event.startTime) < new Date();
   const isFull = props.event.attendeeIds.length >= props.event.maxAttendees;
-  const userAge = calculateAge(new Date(user?.profile?.birthday!)) ?? 18;
+  const userAge = calculateAge(new Date(user?.birthday!)) ?? 18;
   const isUserInAgeRange =
     userAge <= props.event.maxAge && userAge >= props.event.minAge;
   const isUserHost = user?.id == props.event.hostId;

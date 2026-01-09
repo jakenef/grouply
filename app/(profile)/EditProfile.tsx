@@ -51,7 +51,7 @@ const kmToMiles = (km: number): number => {
 
 const EditProfile = () => {
   const { user } = useCurrentUser();
-  const [bio, setBio] = useState(user?.profile?.bio ?? "");
+  const [bio, setBio] = useState(user?.bio ?? "");
   const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl ?? null);
   const initialLocation: LocationData | null = user?.location
     ? {
@@ -72,15 +72,15 @@ const EditProfile = () => {
   // const [customInterests, setCustomInterests] = useState<CustomOption[]>([]);
   // const [customTraits, setCustomTraits] = useState<CustomOption[]>([]);
   const [travelDistance, setTravelDistance] = useState<number>(
-    kmToMiles(user?.profile?.maxTravelKm ?? 0)
+    kmToMiles(user?.maxTravelKm ?? 0)
   );
   const [ageRange, setAgeRange] = useState<[number, number]>([
-    user?.profile?.minAgePref ?? 18,
-    user?.profile?.maxAgePref ?? 25,
+    user?.minAgePreference ?? 18,
+    user?.maxAgePreference ?? 25,
   ]);
   const [groupSizeRange, setGroupSizeRange] = useState<[number, number]>([
-    user?.profile?.preferredGroupSizeMin ?? 3,
-    user?.profile?.preferredGroupSizeMax ?? 6,
+    user?.maxGroupSize ?? 3,
+    user?.minGroupSize ?? 6,
   ]);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -92,14 +92,14 @@ const EditProfile = () => {
   }>({});
 
   const utils = trpc.useUtils();
-  const updateUserMutation = trpc.users.updateMyUserAndProfile.useMutation({
+  const updateUserMutation = trpc.users.updateMyUser.useMutation({
     onSuccess: () => {
-      utils.users.getMyProfile.invalidate();
+      utils.users.getMyUser.invalidate();
     },
   });
   const interestsQuery = trpc.interests.getAllApprovedInterests.useQuery();
   const traitsQuery = trpc.traits.getAllApprovedTraits.useQuery();
-  const userAge = calculateAge(new Date(user?.profile?.birthday!)) ?? 18;
+  const userAge = calculateAge(new Date(user?.birthday!)) ?? 18;
 
   const validateForm = (): boolean => {
     const newErrors: {
@@ -283,8 +283,8 @@ const EditProfile = () => {
         {/* Group Size Range */}
         <RangeSlider
           label="What is your preferred group size?"
-          minValue={user?.profile?.preferredGroupSizeMin ?? 3}
-          maxValue={user?.profile?.preferredGroupSizeMax ?? 6}
+          minValue={user?.minGroupSize ?? 3}
+          maxValue={user?.maxGroupSize ?? 6}
           minLimit={2}
           maxLimit={12}
           step={1}
@@ -306,8 +306,8 @@ const EditProfile = () => {
         {/* Age Range */}
         <RangeSlider
           label="What is your preferred age range of other attendees?"
-          minValue={user?.profile?.minAgePref ?? 18}
-          maxValue={user?.profile?.maxAgePref ?? 25}
+          minValue={user?.minAgePreference ?? 18}
+          maxValue={user?.maxAgePreference ?? 25}
           minLimit={18}
           maxLimit={60}
           step={1}

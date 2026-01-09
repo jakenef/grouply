@@ -32,7 +32,7 @@ const Home = () => {
   const handleSendMessage = async (text: string) => {
     const newMessage: ChatMessage = {
       id: Date.now().toString(),
-      role: ChatMessageRole.user,
+      role: ChatMessageRole.USER,
       body: text,
       authorId: user!.id,
       channelId: channelId,

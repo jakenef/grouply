@@ -9,8 +9,8 @@ export type ChatMessage = {
 };
 
 export enum ChatMessageRole {
-  assistant = "assistant",
-  user = "user",
-  system = "system",
-  tool = "tool",
+  ASSISTANT = "ASSISTANT",
+  USER = "USER",
+  SYSTEM = "SYSTEM",
+  TOOL = "TOOL",
 }

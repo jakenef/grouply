@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { publicProcedure } from "../../trpc";
 
-export const getPublicProfileById = publicProcedure
+export const getPublicUserInfoById = publicProcedure
   .input(
     z.object({
       id: z.string(),

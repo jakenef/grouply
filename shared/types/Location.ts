@@ -1,4 +1,4 @@
-export type LocationPrecision = "city" | "point";
+export type LocationPrecision = "CITY" | "POINT";
 
 export type Location = {
   id: string;

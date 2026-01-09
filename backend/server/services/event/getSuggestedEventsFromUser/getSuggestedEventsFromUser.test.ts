@@ -31,7 +31,7 @@ describe("getSuggestedEventsFromUser integration", () => {
       data: {
         lat: 40.7,
         lng: -74.0,
-        precision: "city",
+        precision: "CITY",
         city: "New York",
         countryCode: "US",
       },
@@ -45,12 +45,8 @@ describe("getSuggestedEventsFromUser integration", () => {
         email: "test@example.com",
         givenName: "Test User",
         locationId: testLocationId,
-        profile: {
-          create: {
-            birthday: new Date("1990-01-01"), // 35 years old
-            maxTravelKm: 50,
-          },
-        },
+        birthday: new Date("1990-01-01"), // 35 years old
+        maxTravelKm: 50,
         interests: {
           create: [{ interestId: testInterestId, weight: 1 }],
         },
@@ -68,14 +64,13 @@ describe("getSuggestedEventsFromUser integration", () => {
         desc: "A wonderful hiking experience",
         startsAt: new Date("2025-12-01T10:00:00Z"),
         endsAt: new Date("2025-12-01T16:00:00Z"),
-        eventUrl: "https://example.com/hiking",
         imageUrls: ["https://example.com/image.jpg"],
         minAttendees: 2,
         organizerId: testUserId,
         activityId: testActivityId,
         locationId: testLocationId,
-        lowerAgeLimit: 18,
-        upperAgeLimit: 50,
+        minAgeLimit: 18,
+        maxAgeLimit: 50,
         maxAttendees: 20,
         coverImageUrl: "test",
         snapshot: {
@@ -97,13 +92,12 @@ describe("getSuggestedEventsFromUser integration", () => {
         desc: "An event with no overlap",
         startsAt: new Date("2025-12-15T10:00:00Z"),
         endsAt: new Date("2025-12-15T16:00:00Z"),
-        eventUrl: "https://example.com/other",
         imageUrls: [],
         organizerId: testUserId,
         activityId: testActivityId,
         locationId: testLocationId,
-        lowerAgeLimit: 18,
-        upperAgeLimit: 50,
+        minAgeLimit: 18,
+        maxAgeLimit: 50,
         minAttendees: 2,
         maxAttendees: 20,
         coverImageUrl: "test",
@@ -150,9 +144,6 @@ describe("getSuggestedEventsFromUser integration", () => {
       where: { userId: testUserId },
     });
     await prisma.userInterest.deleteMany({
-      where: { userId: testUserId },
-    });
-    await prisma.userProfile.deleteMany({
       where: { userId: testUserId },
     });
     await prisma.user.deleteMany({

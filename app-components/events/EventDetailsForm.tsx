@@ -177,7 +177,7 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSave = async () => {
-    const userAge = calculateAge(new Date(user?.profile?.birthday!));
+    const userAge = calculateAge(new Date(user?.birthday!));
     const validationErrors = validateEventForm({
       name,
       description,

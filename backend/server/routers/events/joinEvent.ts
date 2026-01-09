@@ -12,14 +12,14 @@ const joinEvent = protectedProcedure
   .mutation(async ({ ctx, input }) => {
     const event = await ctx.prisma.event.findUnique({
       where: { id: input.eventId },
-      include: { regs: true },
+      include: { registrations: true },
     });
 
     if (!event) {
       throw new TRPCError({ message: "Event not found", code: "NOT_FOUND" });
     }
 
-    if (event.isCancelled) {
+    if (event.isCanceled) {
       throw new TRPCError({
         code: "BAD_REQUEST",
         message: "Cannot join a cancelled event",
@@ -33,7 +33,7 @@ const joinEvent = protectedProcedure
       });
     }
 
-    const currentRegsCount = event.regs.length;
+    const currentRegsCount = event.registrations.length;
 
     if (event.isFull || currentRegsCount + 1 > event.maxAttendees) {
       throw new TRPCError({
@@ -44,13 +44,12 @@ const joinEvent = protectedProcedure
 
     const user = await ctx.prisma.user.findUnique({
       where: { id: ctx.user.id },
-      include: { profile: true },
     });
 
-    const userAge = calculateAge(user?.profile?.birthday) ?? 18;
+    const userAge = calculateAge(user?.birthday) ?? 18;
     if (
-      (event.lowerAgeLimit && event.lowerAgeLimit > userAge) ||
-      (event.upperAgeLimit && event.upperAgeLimit < userAge)
+      (event.minAgeLimit && event.minAgeLimit > userAge) ||
+      (event.maxAgeLimit && event.maxAgeLimit < userAge)
     ) {
       throw new TRPCError({
         code: "BAD_REQUEST",
@@ -76,10 +75,10 @@ const joinEvent = protectedProcedure
       // Re-check capacity inside transaction
       const eventCheck = await tx.event.findUnique({
         where: { id: input.eventId },
-        include: { regs: true },
+        include: { registrations: true },
       });
 
-      const activeRegs = eventCheck!.regs.length;
+      const activeRegs = eventCheck!.registrations.length;
 
       if (activeRegs >= eventCheck!.maxAttendees) {
         throw new TRPCError({
