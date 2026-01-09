@@ -1,3 +1,4 @@
+import calculateAge from "@/shared/utils/calculateAge";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { genderEnum, locationDataSchema } from "../../schemas";
@@ -31,6 +32,14 @@ export const createUser = authProcedure
       throw new TRPCError({
         code: "CONFLICT",
         message: "A user with this ID already exists",
+      });
+    }
+
+    const userAge = calculateAge(input.birthday);
+    if ((userAge ?? 0) < 18) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "User must be at least 18",
       });
     }
 

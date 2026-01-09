@@ -12,6 +12,8 @@ const Login = () => {
     router.replace("/(auth)/AboutYouSetup");
   };
 
+  // TODO: should login or error for users who already exist
+
   return (
     <SafeAreaView className="flex-1 bg-background">
       <View className="flex-1 px-8">

@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth";
 import uploadImageUri from "@/lib/storage";
 import { colors } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";
+import calculateAge from "@/shared/utils/calculateAge";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { format } from "date-fns";
@@ -25,10 +26,8 @@ import GrouplyButton from "../../app-components/shared/GrouplyButton";
 
 type Gender = "MALE" | "FEMALE" | "OTHER" | null;
 
-// TODO: they have to be at least 18
-
 const AboutYouSetup = () => {
-  const { user, session } = useAuth(); // Get authentication context
+  const { user: authUser, session } = useAuth(); // Get authentication context
   const [givenName, setGivenName] = useState("");
   const [familyName, setFamilyName] = useState("");
   const [bio, setBio] = useState("");
@@ -120,6 +119,8 @@ const AboutYouSetup = () => {
 
     if (!birthday) {
       newErrors.birthday = "Birthday is required";
+    } else if ((calculateAge(date) ?? 0) < 18) {
+      newErrors.birthday = "User must be at least 18 to use Grouply";
     }
 
     if (!gender) {
@@ -136,7 +137,7 @@ const AboutYouSetup = () => {
 
   const handleSaveAndContinue = async () => {
     // Check if user is authenticated
-    if (!session || !user) {
+    if (!session || !authUser) {
       Alert.alert(
         "Authentication Required",
         "You must be logged in to complete your profile.",
@@ -168,7 +169,7 @@ const AboutYouSetup = () => {
         try {
           const { publicUrl } = await uploadImageUri(avatarUri, {
             bucket: "avatars",
-            userId: user?.id,
+            userId: authUser?.id,
             maxSizeBytes: 1.5 * 1024 * 1024,
           });
           avatarUrlToSend = publicUrl;
