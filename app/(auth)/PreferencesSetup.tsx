@@ -181,11 +181,14 @@ const PreferencesSetup = () => {
       traits?: string;
     } = {};
 
-    if (selectedInterests.length < 3) {
+    if (
+      (interestsQuery.data?.length ?? 0) > 0 &&
+      selectedInterests.length < 3
+    ) {
       newErrors.interests = "Please select at least 3 interests";
     }
 
-    if (selectedTraits.length < 3) {
+    if ((traitsQuery.data?.length ?? 0) > 0 && selectedTraits.length < 3) {
       newErrors.traits = "Please select at least 3 traits";
     }
 
@@ -307,7 +310,7 @@ const PreferencesSetup = () => {
           }
           selectedOptions={selectedInterests}
           onSelectionChange={setSelectedInterests}
-          minRequired={3}
+          minRequired={interestsQuery.data?.length! > 0 ? 3 : undefined}
           allowOther={false}
           error={errors.interests}
           onCustomOptionAdded={(customOption) => {
@@ -326,7 +329,7 @@ const PreferencesSetup = () => {
           }
           selectedOptions={selectedTraits}
           onSelectionChange={setSelectedTraits}
-          minRequired={3}
+          minRequired={traitsQuery.data?.length! > 0 ? 3 : undefined}
           allowOther={false}
           error={errors.traits}
           onCustomOptionAdded={(customOption) => {
