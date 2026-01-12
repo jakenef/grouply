@@ -184,8 +184,8 @@ model Event {
   isCanceled   Boolean  @default(false) @map("isCancelled")
   maxAgeLimit   Int?
   minAgeLimit   Int?
-  imageUrls     String[] // TODO: should this be otherImageUrls? not including cover?
   coverImageUrl String
+  additionalImageUrls String[]
 
   // Organizer
   organizerId String

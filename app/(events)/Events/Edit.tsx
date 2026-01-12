@@ -61,14 +61,8 @@ export default function EventDetailsEdit() {
         endTime: new Date(eventFields.endTime),
         isCanceled: existingEvent?.isCanceled ?? false, // Only from existing events
         currentAttendees: existingEvent?.attendeeIds?.length, // Only populate for existing events
-        imgUrls: existingEvent?.coverImageUrl
-          ? [
-              existingEvent?.coverImageUrl,
-              ...existingEvent?.imageUrls.filter(
-                (url) => url !== existingEvent.coverImageUrl
-              ),
-            ]
-          : existingEvent?.imageUrls,
+        coverImageUrl: existingEvent?.coverImageUrl ?? "",
+        additionalImageUrls: existingEvent?.additionalImageUrls,
       }
     : undefined;
 

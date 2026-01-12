@@ -124,7 +124,8 @@ interface EventDetails {
   startTime: Date;
   endTime: Date;
   activityId: string | null;
-  imgUrls?: string[];
+  additionalImageUrls?: string[];
+  coverImageUrl: string;
   locationId?: string;
 }
 
@@ -171,7 +172,11 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
   const [minAge, setMinAge] = useState(props.event?.minAge?.toString() || "");
   const [maxAge, setMaxAge] = useState(props.event?.maxAge?.toString() || "");
 
-  const [imgUrls, setImgUrls] = useState(props.event?.imgUrls);
+  const [imgUrls, setImgUrls] = useState(
+    props.event?.coverImageUrl 
+      ? [props.event.coverImageUrl, ...(props.event.additionalImageUrls || [])]
+      : []
+  );
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [isLoading, setIsLoading] = useState(false);

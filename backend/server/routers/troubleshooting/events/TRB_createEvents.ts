@@ -87,7 +87,7 @@ export const TRB_createEvents = adminProcedure
         pictureUrls.push(faker.image.url());
       }
 
-      const coverImageUrl = pictureUrls[0];
+      const coverImageUrl = faker.image.url();
 
       // Prepare snapshot data from organizer's profile
       const interestIds = organizer.interests.map((ui) => ui.interestId);
@@ -111,7 +111,7 @@ export const TRB_createEvents = adminProcedure
           activityId: activity.id,
           minAgeLimit: minAgePref,
           maxAgeLimit: maxAgePref,
-          imageUrls: pictureUrls,
+          additionalImageUrls: pictureUrls,
           coverImageUrl: coverImageUrl,
           registrations: {
             create: attendees.map((u) => ({

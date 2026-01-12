@@ -35,7 +35,7 @@ interface EventDetailsObject {
   endTime: string;
   numRegistered: number;
   attendeeIds: string[];
-  imageUrls: string[];
+  additionalImageUrls: string[];
   coverImageUrl: string;
   hostId: string;
   isCanceled: boolean;
@@ -247,7 +247,7 @@ export default function EventDetails(props: EventDetailsProps) {
           {/* Pictures */}
           <View className="py-3">
             <ImageCarousel
-              imageUrls={props.event.imageUrls}
+              additionalImageUrls={props.event.additionalImageUrls}
               coverImageUrl={props.event.coverImageUrl}
             />
           </View>

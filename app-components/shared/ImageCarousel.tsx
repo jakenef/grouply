@@ -12,20 +12,20 @@ import {
 const SCREEN_WIDTH = Dimensions.get("window").width;
 
 interface ImageCarouselProps {
-  imageUrls: string[];
-  coverImageUrl?: string;
+  additionalImageUrls?: string[];
+  coverImageUrl: string;
   aspectRatio?: "square" | "wide";
 }
 
 export default function ImageCarousel({
-  imageUrls,
+  additionalImageUrls,
   coverImageUrl,
   aspectRatio = "wide",
 }: ImageCarouselProps) {
   // Ensure coverImageUrl is first in the array
   const orderedImages = coverImageUrl
-    ? [coverImageUrl, ...imageUrls.filter((url) => url !== coverImageUrl)]
-    : imageUrls;
+    ? [coverImageUrl, ...(additionalImageUrls || [])]
+    : additionalImageUrls || [];
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
