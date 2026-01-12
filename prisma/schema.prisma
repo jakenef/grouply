@@ -178,7 +178,7 @@ model Activity {
 model Event {
   id            String   @id @default(uuid())
   name          String
-  desc          String?
+  desc          String? // TODO: rename to description
   startsAt      DateTime
   endsAt        DateTime
   isCanceled   Boolean  @default(false) @map("isCancelled")

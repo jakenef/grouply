@@ -1,14 +1,3 @@
-export interface Event {
-  id: string;
-  title: string;
-  description: string;
-  location: string;
-  dateTime: Date;
-  thumbnailUrl: string;
-  maxParticipants: number;
-  currentParticipants: number;
-}
-
 export interface EventWithSnapshotData {
   id: string;
   interests: string[];

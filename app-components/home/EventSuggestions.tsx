@@ -4,7 +4,7 @@ import React from "react";
 import { FlatList, Text, View } from "react-native";
 import SkeletonLoadingEvents from "../events/SkeletonLoadingEvents";
 import CreateEventCard from "../shared/CreateEventCard";
-import { EventCard } from "../shared/EventCard";
+import { EventCard, EventCardEvent } from "../shared/EventCard";
 
 const EventSuggestions = () => {
   const {
@@ -39,17 +39,27 @@ const EventSuggestions = () => {
         data={events}
         refreshing={isRefetching}
         onRefresh={refetch}
-        renderItem={({ item }) => (
-          <EventCard
-            event={item}
-            onJoin={() =>
-              router.push({
-                pathname: `/(events)/Events/[id]`,
-                params: { id: item.event.id },
-              })
-            }
-          />
-        )}
+        renderItem={({ item }) => {
+          const eventCardData: EventCardEvent = {
+            startsAt: new Date(item.event.startsAt),
+            name: item.event.name,
+            formattedLocation: item.event.location.formatted ?? "",
+            coverImageUrl: item.event.coverImageUrl,
+            numCurrentParticipants: item.event.registrations.length,
+            maxAttendees: item.event.maxAttendees,
+          };
+          return (
+            <EventCard
+              event={eventCardData}
+              onJoin={() =>
+                router.push({
+                  pathname: `/(events)/Events/[id]`,
+                  params: { id: item.event.id },
+                })
+              }
+            />
+          );
+        }}
         ListEmptyComponent={<Text>No events found.</Text>}
         ListFooterComponent={
           <CreateEventCard

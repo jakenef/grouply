@@ -14,7 +14,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import CreateEventCard from "../shared/CreateEventCard";
-import { EventCard } from "../shared/EventCard";
+import { EventCard, EventCardEvent } from "../shared/EventCard";
 import GrouplyButton from "../shared/GrouplyButton";
 
 // Customize the AI avatar here:
@@ -96,9 +96,13 @@ const TypingIndicator = () => {
   );
 };
 
+export interface ChatEventSuggestion extends EventCardEvent {
+  id: string;
+}
+
 type HomeChatSectionProps = {
   messages: ChatMessage[];
-  eventSuggestions: any[] | undefined;
+  eventSuggestions: ChatEventSuggestion[] | undefined;
   onSend: (text: string) => void;
   placeholder?: string;
   isExpanded?: boolean;
@@ -292,7 +296,7 @@ export default function HomeChatSection({
                   onJoin={() =>
                     router.push({
                       pathname: `/(events)/Events/[id]`,
-                      params: { id: item.event.id },
+                      params: { id: item.id },
                     })
                   }
                 />

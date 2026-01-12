@@ -1,5 +1,7 @@
 import EventSuggestions from "@/app-components/home/EventSuggestions";
-import HomeChatSection from "@/app-components/home/HomeChatSection";
+import HomeChatSection, {
+  ChatEventSuggestion,
+} from "@/app-components/home/HomeChatSection";
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";
@@ -17,9 +19,9 @@ import Animated, {
 
 const Home = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [eventSuggestions, setEventSuggestions] = useState<any[] | undefined>(
-    undefined
-  );
+  const [eventSuggestions, setEventSuggestions] = useState<
+    ChatEventSuggestion[] | undefined
+  >(undefined);
   const [isChatExpanded, setIsChatExpanded] = useState(false);
   const [channelId, setChannelId] = useState("");
   const { user } = useAuth();
@@ -52,7 +54,20 @@ const Home = () => {
       toolName: response.toolName,
       createdAt: response.createdAt,
     };
-    setEventSuggestions(response.refreshedEvents);
+    setEventSuggestions(
+      response.refreshedEvents?.map((event) => {
+        const chatEventSuggestion: ChatEventSuggestion = {
+          id: event.event.id,
+          startsAt: new Date(event.event.startsAt),
+          name: event.event.name,
+          formattedLocation: event.event.location.formatted ?? "",
+          coverImageUrl: event.event.coverImageUrl,
+          numCurrentParticipants: event.event.currentAttendees,
+          maxAttendees: event.event.maxAttendees,
+        };
+        return chatEventSuggestion;
+      })
+    );
     setMessages((prev) => [...prev, assistantMessage]);
   };
 
