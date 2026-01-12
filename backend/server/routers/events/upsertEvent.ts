@@ -1,4 +1,5 @@
 import { TRPCError } from "@trpc/server";
+import { Filter } from "bad-words";
 import z from "zod";
 import calculateAge from "../../../../shared/utils/calculateAge";
 import { prisma } from "../../prisma";
@@ -142,6 +143,23 @@ export const upsertEvent = protectedProcedure
     if (input.endTime <= input.startTime) {
       throw new TRPCError({
         message: "Event end time must be after start time",
+        code: "BAD_REQUEST",
+      });
+    }
+
+    // Validate event name and description for profanity
+    const filter = new Filter();
+
+    if (filter.isProfane(input.name)) {
+      throw new TRPCError({
+        message: "Event name contains inappropriate language",
+        code: "BAD_REQUEST",
+      });
+    }
+
+    if (filter.isProfane(input.description)) {
+      throw new TRPCError({
+        message: "Event description contains inappropriate language",
         code: "BAD_REQUEST",
       });
     }

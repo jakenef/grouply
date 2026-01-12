@@ -32,6 +32,7 @@
     "@trpc/react-query": "^11.6.0",
     "@trpc/server": "^11.6.0",
     "@types/date-fns": "^2.5.3",
+    "bad-words": "^4.0.0",
     "cors": "^2.8.5",
     "date-fns": "^4.1.0",
     "expo": "~54.0.30",

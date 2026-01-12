@@ -1,4 +1,5 @@
 import { TRPCError } from "@trpc/server";
+import { Filter } from "bad-words";
 import { z } from "zod";
 import { protectedProcedure } from "../../trpc";
 
@@ -18,6 +19,16 @@ export const updateMyUser = protectedProcedure
     })
   )
   .mutation(async ({ ctx, input }) => {
+    // Validate event name and description for profanity
+    const filter = new Filter();
+
+    if (filter.isProfane(input.bio ?? "")) {
+      throw new TRPCError({
+        message: "User bio contains inappropriate language",
+        code: "BAD_REQUEST",
+      });
+    }
+
     try {
       const result = ctx.prisma.$transaction(async (tx) => {
         const updatedProfile = await tx.user.update({
