@@ -104,7 +104,10 @@ export async function generateAIResponse(params: {
   }
 
   // 3) Handle tooling
-  let latestRefresh = undefined;
+  type SuggestedEventsResult = Awaited<
+    ReturnType<typeof getSuggestedEventsFromActivityDesc>
+  >;
+  let latestRefresh: SuggestedEventsResult | undefined = undefined;
   let iterations = 0;
   const MAX_ITERS = 4;
 

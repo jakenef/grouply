@@ -65,7 +65,7 @@ export const eventSchema = z.object({
   isCanceled: z.boolean(),
   maxAgeLimit: z.number().nullable(),
   minAgeLimit: z.number().nullable(),
-  imageUrls: z.array(z.string()),
+  additionalImageUrls: z.array(z.string()),
   coverImageUrl: z.string(),
 
   // Organizer info

@@ -97,7 +97,6 @@ export const userSendAIMessage = protectedProcedure
       },
     });
 
-    // TODO: fix this nonsense to have typesafety
     const fixedRefresh = latestRefresh?.map(({ event, score }) => ({
       event: {
         ...event,
