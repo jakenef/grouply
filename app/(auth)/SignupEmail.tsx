@@ -1,5 +1,6 @@
 import ConfirmEmail from "@/app-components/onboarding/ConfirmEmail";
 import { useAuth } from "@/lib/auth";
+import { trpc } from "@/lib/trpc";
 import { router } from "expo-router";
 import React from "react";
 import { Text, View } from "react-native";
@@ -9,10 +10,14 @@ const Login = () => {
   const { sendSignUpOTP, verifyOTP } = useAuth();
 
   const handleSuccess = () => {
-    router.replace("/(auth)/AboutYouSetup");
+    const checkUserQuery = trpc.users.checkUserExists.useQuery();
+    const userExists = checkUserQuery.data?.exists;
+    if (userExists) {
+      router.replace("/(app)/Home");
+    } else {
+      router.replace("/(auth)/AboutYouSetup");
+    }
   };
-
-  // TODO: should login or error for users who already exist
 
   return (
     <SafeAreaView className="flex-1 bg-background">
