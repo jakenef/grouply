@@ -1,4 +1,5 @@
 import { ChatMessage, ChatMessageRole } from "@/shared/types/Chat";
+import { ChatEventSuggestion } from "@/shared/types/Event";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
@@ -14,7 +15,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import CreateEventCard from "../shared/CreateEventCard";
-import { EventCard, EventCardEvent } from "../shared/EventCard";
+import { EventCard } from "../shared/EventCard";
 import GrouplyButton from "../shared/GrouplyButton";
 
 // Customize the AI avatar here:
@@ -95,10 +96,6 @@ const TypingIndicator = () => {
     </View>
   );
 };
-
-export interface ChatEventSuggestion extends EventCardEvent {
-  id: string;
-}
 
 type HomeChatSectionProps = {
   messages: ChatMessage[];

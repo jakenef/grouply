@@ -1,10 +1,11 @@
 import { trpc } from "@/lib/trpc";
+import { EventCardEvent } from "@/shared/types/Event";
 import { router } from "expo-router";
 import React from "react";
 import { FlatList, Text, View } from "react-native";
 import SkeletonLoadingEvents from "../events/SkeletonLoadingEvents";
 import CreateEventCard from "../shared/CreateEventCard";
-import { EventCard, EventCardEvent } from "../shared/EventCard";
+import { EventCard } from "../shared/EventCard";
 
 const EventSuggestions = () => {
   const {

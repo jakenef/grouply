@@ -1,11 +1,10 @@
 import EventSuggestions from "@/app-components/home/EventSuggestions";
-import HomeChatSection, {
-  ChatEventSuggestion,
-} from "@/app-components/home/HomeChatSection";
+import HomeChatSection from "@/app-components/home/HomeChatSection";
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";
 import { ChatMessage, ChatMessageRole } from "@/shared/types/Chat";
+import { ChatEventSuggestion } from "@/shared/types/Event";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";

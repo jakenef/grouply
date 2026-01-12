@@ -1,3 +1,4 @@
+import { EventCardEvent } from "@/shared/types/Event";
 import { format } from "date-fns";
 import React from "react";
 import { Image, Pressable, Text, View } from "react-native";
@@ -5,15 +6,6 @@ import { Image, Pressable, Text, View } from "react-native";
 interface EventCardProps {
   event: EventCardEvent;
   onJoin?: () => void;
-}
-
-export interface EventCardEvent {
-  startsAt: Date;
-  name: string;
-  formattedLocation: string;
-  coverImageUrl: string;
-  numCurrentParticipants: number;
-  maxAttendees: number;
 }
 
 export const EventCard: React.FC<EventCardProps> = ({ event, onJoin }) => {

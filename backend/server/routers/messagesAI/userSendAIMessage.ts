@@ -49,7 +49,7 @@ export const userSendAIMessage = protectedProcedure
       });
     }
 
-    const newMessage = await prisma.chatMessage.create({
+    await prisma.chatMessage.create({
       data: {
         body: input.text,
         channelId: channel.id,
@@ -96,6 +96,7 @@ export const userSendAIMessage = protectedProcedure
         channelId: channel.id,
       },
     });
+
     // TODO: fix this nonsense to have typesafety
     const fixedRefresh = latestRefresh?.map(({ event, score }) => ({
       event: {
