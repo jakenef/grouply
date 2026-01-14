@@ -2,6 +2,7 @@ import EventCardRegistered, {
   EventCardRegisteredEvent,
 } from "@/app-components/events/EventCardRegistered";
 import SkeletonLoadingEvents from "@/app-components/events/SkeletonLoadingEvents";
+import GrouplyButton from "@/app-components/shared/GrouplyButton";
 import { colors } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";
 import { useCurrentUser } from "@/lib/useCurrentUserHook";
@@ -120,9 +121,24 @@ const Events = () => {
             return <EventCardRegistered event={event} />;
           }}
           ListEmptyComponent={
-            <Text className="text-2xl text-muted-darker text-center">
-              No events found.
-            </Text>
+            <View className="flex-1 p-3">
+              {isRefetching ? (
+                <SkeletonLoadingEvents />
+              ) : (
+                <>
+                  <Text className="text-2xl text-muted-darker text-center">
+                    You aren't registered for any events yet. Go to the Home tab
+                    to join or host one!
+                  </Text>
+                  <GrouplyButton
+                    variant="text"
+                    color={colors.primary}
+                    label="Reload"
+                    onPress={() => refetch()}
+                  />
+                </>
+              )}
+            </View>
           }
         ></FlatList>
       )}

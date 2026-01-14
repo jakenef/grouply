@@ -1,11 +1,13 @@
+import { colors } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";
 import { EventCardEvent } from "@/shared/types/Event";
 import { router } from "expo-router";
 import React from "react";
-import { FlatList, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, Text, View } from "react-native";
 import SkeletonLoadingEvents from "../events/SkeletonLoadingEvents";
 import CreateEventCard from "../shared/CreateEventCard";
 import { EventCard } from "../shared/EventCard";
+import GrouplyButton from "../shared/GrouplyButton";
 
 const EventSuggestions = () => {
   const {
@@ -27,9 +29,25 @@ const EventSuggestions = () => {
 
   if (error) {
     return (
-      <Text className="text-danger p-5">
-        Error loading events! {error.message}
-      </Text>
+      <View className="flex-1 p-5 pb-0">
+        <Text className="text-xl font-bold py-3">Event Suggestions</Text>
+
+        {isRefetching ? (
+          <ActivityIndicator size="large" color={colors.primary} />
+        ) : (
+          <>
+            <Text className="text-danger text-center p-5">
+              Error loading events! {error?.message}
+            </Text>
+            <GrouplyButton
+              variant="text"
+              color={colors.danger.DEFAULT}
+              label="Retry"
+              onPress={() => refetch()}
+            />
+          </>
+        )}
+      </View>
     );
   }
 
@@ -61,7 +79,14 @@ const EventSuggestions = () => {
             />
           );
         }}
-        ListEmptyComponent={<Text>No events found.</Text>}
+        ListEmptyComponent={
+          <View className="flex-1 p-3">
+            <Text className="text-lg text-center">
+              No event suggestions are available in your area right now, click
+              below to create one!
+            </Text>
+          </View>
+        }
         ListFooterComponent={
           <CreateEventCard
             buttonText="Create Event"
