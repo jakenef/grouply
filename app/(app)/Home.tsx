@@ -14,8 +14,6 @@ import Animated, {
   LinearTransition,
 } from "react-native-reanimated";
 
-// TODO: bad word filter
-
 const Home = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [eventSuggestions, setEventSuggestions] = useState<

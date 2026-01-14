@@ -239,7 +239,10 @@ export default function EventDetails(props: EventDetailsProps) {
               size={15}
               className="pr-2"
             />
-            <Text className="text-lg text-muted" style={{ flexShrink: 1 }}>
+            <Text
+              className="text-lg text-muted underline"
+              style={{ flexShrink: 1 }}
+            >
               {props.event.locationString}
             </Text>
           </Pressable>

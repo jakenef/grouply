@@ -1,6 +1,7 @@
 import { router } from "../../trpc";
 import { checkUserExists } from "./checkUserExists";
 import { createUser } from "./createUser";
+import { deleteMyUser } from "./deleteMyUser";
 import { getAvatarUrlsFromIds } from "./getAvatarUrlsFromIds";
 import { getMyUser } from "./getMyUser";
 import { getPublicUserInfoById } from "./getPublicUserInfoById";
@@ -16,4 +17,5 @@ export const usersRouter = router({
   getMyUser,
   updateMyUser,
   getAvatarUrlsFromIds,
+  deleteMyUser,
 });

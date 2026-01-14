@@ -8,13 +8,20 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const Login = () => {
   const { sendSignUpOTP, verifyOTP } = useAuth();
+  const utils = trpc.useUtils();
 
-  const handleSuccess = () => {
-    const checkUserQuery = trpc.users.checkUserExists.useQuery();
-    const userExists = checkUserQuery.data?.exists;
-    if (userExists) {
-      router.replace("/(app)/Home");
-    } else {
+  const handleSuccess = async () => {
+    // After OTP is verified, check if user exists in database
+    try {
+      const result = await utils.client.users.checkUserExists.query();
+      if (result.exists) {
+        router.replace("/(app)/Home");
+      } else {
+        router.replace("/(auth)/AboutYouSetup");
+      }
+    } catch (error) {
+      console.error("Error checking user:", error);
+      // Default to setup if we can't check
       router.replace("/(auth)/AboutYouSetup");
     }
   };
