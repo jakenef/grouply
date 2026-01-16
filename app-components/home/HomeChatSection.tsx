@@ -1,4 +1,5 @@
-import { ChatMessage, ChatMessageRole } from "@/types/Chat";
+import { ChatMessage, ChatMessageRole } from "@/shared/types/Chat";
+import { ChatEventSuggestion } from "@/shared/types/Event";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
@@ -98,7 +99,7 @@ const TypingIndicator = () => {
 
 type HomeChatSectionProps = {
   messages: ChatMessage[];
-  eventSuggestions: any[] | undefined;
+  eventSuggestions: ChatEventSuggestion[] | undefined;
   onSend: (text: string) => void;
   placeholder?: string;
   isExpanded?: boolean;
@@ -187,13 +188,13 @@ export default function HomeChatSection({
             renderItem={({ item, index }) => (
               <View
                 className={`mb-2 flex-row items-end gap-2 ${
-                  item.role === ChatMessageRole.user
+                  item.role === ChatMessageRole.USER
                     ? "self-end flex-row-reverse"
                     : "self-start"
                 }`}
               >
                 {/* AI Avatar - only show for assistant messages */}
-                {item.role === ChatMessageRole.assistant && (
+                {item.role === ChatMessageRole.ASSISTANT && (
                   <View
                     style={{
                       width: 32,
@@ -221,7 +222,7 @@ export default function HomeChatSection({
                 <Animated.View
                   entering={FadeInDown.delay(Math.min(index, 4) * 40)}
                   className={`py-2.5 px-3 rounded-2xl max-w-[80%] ${
-                    item.role === ChatMessageRole.user
+                    item.role === ChatMessageRole.USER
                       ? "bg-accent"
                       : "bg-background-darker"
                   }`}
@@ -292,7 +293,7 @@ export default function HomeChatSection({
                   onJoin={() =>
                     router.push({
                       pathname: `/(events)/Events/[id]`,
-                      params: { id: item.event.id },
+                      params: { id: item.id },
                     })
                   }
                 />
@@ -317,8 +318,8 @@ export default function HomeChatSection({
       )}
 
       {/* Input bar - always visible */}
-      <View className="border-border px-3 py-2">
-        <View className="flex-row items-end gap-2">
+      <View className="px-3 py-2 h-20 ">
+        <View className="flex-row items-center gap-2">
           <TextInput
             ref={inputRef}
             value={text}
@@ -328,8 +329,9 @@ export default function HomeChatSection({
             returnKeyType="send"
             onSubmitEditing={handleSend}
             multiline
-            textAlignVertical="center"
-            className="flex-1 min-h-[40px] max-h-[100px] px-3.5 py-2 border border-border rounded-[20px] text-foreground"
+            scrollEnabled
+            textAlignVertical="top"
+            className="flex-1 px-3.5 py-2 border border-border rounded-[20px] text-foreground"
           />
           <GrouplyButton
             onPress={handleSend}

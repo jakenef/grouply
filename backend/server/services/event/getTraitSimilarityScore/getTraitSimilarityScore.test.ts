@@ -60,7 +60,6 @@ describe("getTraitSimilarityScore", () => {
     expect(score2).toBeGreaterThan(score3);
   });
 
-  // TODO: do we want this as well?
   it("should prefer users with dominant matching traits over balanced traits", () => {
     const eventTraits = { sporty: 1, artistic: 0, intellectual: 0 };
 
@@ -76,7 +75,6 @@ describe("getTraitSimilarityScore", () => {
     expect(focusedScore).toBeGreaterThan(balancedScore);
   });
 
-  // TODO: do we want this?
   it("should match users with similar trait patterns regardless of scale", () => {
     const eventTraits = { trait1: 0.6, trait2: 0.4, trait3: 0.2 };
 

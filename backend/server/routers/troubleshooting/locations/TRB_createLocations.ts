@@ -1,5 +1,5 @@
 import { adminProcedure } from "@/backend/server/trpc";
-import { Location } from "@/types/Location";
+import { Location } from "@/shared/types/Location";
 import { TRPCError } from "@trpc/server";
 
 // Test locations with varying detail levels
@@ -13,7 +13,7 @@ const testLocations: Location[] = [
     countryCode: "US",
     lat: 40.2518,
     lng: -111.6493,
-    precision: "point",
+    precision: "POINT",
   },
   {
     id: "TRB_loc_provo_mall",
@@ -23,7 +23,7 @@ const testLocations: Location[] = [
     countryCode: "US",
     lat: 40.2177,
     lng: -111.6596,
-    precision: "point",
+    precision: "POINT",
   },
   {
     id: "TRB_loc_orem",
@@ -33,7 +33,7 @@ const testLocations: Location[] = [
     countryCode: "US",
     lat: 40.2969,
     lng: -111.6946,
-    precision: "city",
+    precision: "CITY",
   },
 
   // Distant locations with varying detail
@@ -45,7 +45,7 @@ const testLocations: Location[] = [
     countryCode: "US",
     lat: 40.758,
     lng: -73.9855,
-    precision: "point",
+    precision: "POINT",
   },
   {
     id: "TRB_loc_london",
@@ -54,7 +54,7 @@ const testLocations: Location[] = [
     countryCode: "GB",
     lat: 51.5074,
     lng: -0.1278,
-    precision: "city",
+    precision: "CITY",
     region: null,
   },
   {
@@ -64,7 +64,7 @@ const testLocations: Location[] = [
     countryCode: "JP",
     lat: 35.6762,
     lng: 139.6503,
-    precision: "city",
+    precision: "CITY",
     region: null,
   },
   {
@@ -75,7 +75,7 @@ const testLocations: Location[] = [
     countryCode: "AU",
     lat: -33.8568,
     lng: 151.2153,
-    precision: "point",
+    precision: "POINT",
   },
 ];
 

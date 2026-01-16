@@ -27,7 +27,7 @@ export const getEventDetailsFromId = protectedProcedure
         minAge: z.number(),
         maxAge: z.number(),
         attendeeIds: z.array(z.string()),
-        imageUrls: z.array(z.string()),
+        additionalImageUrls: z.array(z.string()),
         coverImageUrl: z.string(),
         hostId: z.string(),
         isCanceled: z.boolean(),
@@ -37,12 +37,14 @@ export const getEventDetailsFromId = protectedProcedure
   .query(async ({ ctx, input }) => {
     const event = await prisma.event.findUnique({
       where: { id: input.id },
-      include: { regs: true, location: true },
+      include: { registrations: true, location: true },
     });
 
     if (event) {
-      const numRegs = event.regs.length;
-      const attendeeIds = event.regs.map((registration) => registration.userId);
+      const numRegs = event.registrations.length;
+      const attendeeIds = event.registrations.map(
+        (registration) => registration.userId
+      );
       return {
         id: event.id,
         name: event.name,
@@ -57,13 +59,13 @@ export const getEventDetailsFromId = protectedProcedure
         numRegistered: numRegs,
         maxAttendees: event.maxAttendees ?? 0,
         minAttendees: event.minAttendees ?? 1,
-        minAge: event.lowerAgeLimit ?? 0,
-        maxAge: event.upperAgeLimit ?? 0,
+        minAge: event.minAgeLimit ?? 0,
+        maxAge: event.maxAgeLimit ?? 0,
         attendeeIds: attendeeIds,
-        imageUrls: event.imageUrls,
+        additionalImageUrls: event.additionalImageUrls,
         coverImageUrl: event.coverImageUrl,
         hostId: event.organizerId,
-        isCanceled: event.isCancelled,
+        isCanceled: event.isCanceled,
       };
     } else {
       return undefined;

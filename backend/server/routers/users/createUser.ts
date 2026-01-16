@@ -1,9 +1,11 @@
+import calculateAge from "@/shared/utils/calculateAge";
 import { TRPCError } from "@trpc/server";
+import { Filter } from "bad-words";
 import { z } from "zod";
 import { genderEnum, locationDataSchema } from "../../schemas";
 import { authProcedure } from "../../trpc";
 
-export const createUserAndUserProfile = authProcedure
+export const createUser = authProcedure
   .input(
     z.object({
       givenName: z.string().trim().min(1),
@@ -34,6 +36,38 @@ export const createUserAndUserProfile = authProcedure
       });
     }
 
+    const userAge = calculateAge(input.birthday);
+    if ((userAge ?? 0) < 18) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "User must be at least 18",
+      });
+    }
+
+    // Validate user info for profanity
+    const filter = new Filter();
+
+    if (filter.isProfane(input.givenName)) {
+      throw new TRPCError({
+        message: "User given name contains inappropriate language",
+        code: "BAD_REQUEST",
+      });
+    }
+
+    if (filter.isProfane(input.familyName)) {
+      throw new TRPCError({
+        message: "User family name contains inappropriate language",
+        code: "BAD_REQUEST",
+      });
+    }
+
+    if (filter.isProfane(input.bio ?? "")) {
+      throw new TRPCError({
+        message: "User bio contains inappropriate language",
+        code: "BAD_REQUEST",
+      });
+    }
+
     let locationId: string;
     if (input.location) {
       const existingLocation = await ctx.prisma.location.findUnique({
@@ -52,7 +86,7 @@ export const createUserAndUserProfile = authProcedure
             formatted: input.location.formatted,
             lat: input.location.lat,
             lng: input.location.lng,
-            precision: "city",
+            precision: "CITY",
           },
         });
         locationId = newLocation.id;
@@ -69,19 +103,13 @@ export const createUserAndUserProfile = authProcedure
             familyName: input.familyName,
             locationId: locationId,
             avatarUrl: input.avatarUrl,
-          },
-        });
-
-        const profile = await tx.userProfile.create({
-          data: {
-            userId: user.id,
             birthday: input.birthday,
             gender: input.gender,
             bio: input.bio,
           },
         });
 
-        return { user, profile };
+        return { user };
       });
 
       return result;

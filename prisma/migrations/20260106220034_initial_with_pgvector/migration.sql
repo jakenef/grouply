@@ -1,14 +1,17 @@
+CREATE EXTENSION IF NOT EXISTS vector;
+
+
 -- CreateEnum
 CREATE TYPE "public"."UserRole" AS ENUM ('USER', 'ADMIN');
 
 -- CreateEnum
-CREATE TYPE "public"."LocationPrecision" AS ENUM ('city', 'point');
+CREATE TYPE "public"."LocationPrecision" AS ENUM ('CITY', 'POINT');
 
 -- CreateEnum
-CREATE TYPE "public"."Gender" AS ENUM ('Male', 'Female', 'Other');
+CREATE TYPE "public"."Gender" AS ENUM ('MALE', 'FEMALE', 'OTHER');
 
 -- CreateEnum
-CREATE TYPE "public"."ChatMessageRole" AS ENUM ('user', 'assistant', 'system', 'tool');
+CREATE TYPE "public"."ChatMessageRole" AS ENUM ('USER', 'ASSISTANT', 'SYSTEM', 'TOOL');
 
 -- CreateTable
 CREATE TABLE "public"."User" (
@@ -16,30 +19,22 @@ CREATE TABLE "public"."User" (
     "authUserId" TEXT NOT NULL,
     "role" "public"."UserRole" NOT NULL DEFAULT 'USER',
     "email" TEXT NOT NULL,
-    "displayName" TEXT NOT NULL,
+    "givenName" TEXT NOT NULL,
+    "familyName" TEXT,
     "avatarUrl" TEXT,
-    "joinedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-    "locationId" TEXT,
-
-    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "public"."UserProfile" (
-    "userId" TEXT NOT NULL,
     "birthday" TIMESTAMP(3),
     "gender" "public"."Gender",
     "bio" TEXT,
-    "preferredGroupSizeMin" INTEGER,
-    "preferredGroupSizeMax" INTEGER,
+    "minGroupSize" INTEGER,
+    "maxGroupSize" INTEGER,
     "maxTravelKm" INTEGER,
-    "minAgePref" INTEGER,
-    "maxAgePref" INTEGER,
-    "embedding" JSONB,
+    "minAgePreference" INTEGER,
+    "maxAgePreference" INTEGER,
+    "locationId" TEXT NOT NULL,
+    "joinedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "UserProfile_pkey" PRIMARY KEY ("userId")
+    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -76,6 +71,8 @@ CREATE TABLE "public"."UserTraitScore" (
     "userId" TEXT NOT NULL,
     "traitId" TEXT NOT NULL,
     "score" DOUBLE PRECISION NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "UserTraitScore_pkey" PRIMARY KEY ("userId","traitId")
 );
@@ -85,9 +82,9 @@ CREATE TABLE "public"."Interest" (
     "id" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
     "label" TEXT NOT NULL,
+    "isApproved" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "isApproved" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "Interest_pkey" PRIMARY KEY ("id")
 );
@@ -97,6 +94,8 @@ CREATE TABLE "public"."UserInterest" (
     "userId" TEXT NOT NULL,
     "interestId" TEXT NOT NULL,
     "weight" DOUBLE PRECISION NOT NULL DEFAULT 1,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "UserInterest_pkey" PRIMARY KEY ("userId","interestId")
 );
@@ -106,6 +105,8 @@ CREATE TABLE "public"."Activity" (
     "id" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
     "label" TEXT NOT NULL,
+    "description" TEXT,
+    "embedding" vector(1536),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -120,16 +121,18 @@ CREATE TABLE "public"."Event" (
     "startsAt" TIMESTAMP(3) NOT NULL,
     "endsAt" TIMESTAMP(3) NOT NULL,
     "isCancelled" BOOLEAN NOT NULL DEFAULT false,
-    "upperAgeLimit" INTEGER,
-    "lowerAgeLimit" INTEGER,
-    "eventUrl" TEXT NOT NULL,
+    "maxAgeLimit" INTEGER,
+    "minAgeLimit" INTEGER,
     "imageUrls" TEXT[],
+    "coverImageUrl" TEXT NOT NULL,
     "organizerId" TEXT NOT NULL,
     "activityId" TEXT NOT NULL,
     "locationId" TEXT NOT NULL,
-    "maxAttendees" INTEGER,
+    "maxAttendees" INTEGER NOT NULL,
+    "minAttendees" INTEGER NOT NULL,
     "isFull" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Event_pkey" PRIMARY KEY ("id")
 );
@@ -138,32 +141,20 @@ CREATE TABLE "public"."Event" (
 CREATE TABLE "public"."EventProfileSnapshot" (
     "eventId" TEXT NOT NULL,
     "hostUserId" TEXT NOT NULL,
-    "hostDisplayName" TEXT,
+    "hostGivenName" TEXT NOT NULL,
     "interestIds" TEXT[],
-    "traitScores" JSONB,
-    "embedding" JSONB,
-    "lowerAgeLimit" INTEGER,
-    "upperAgeLimit" INTEGER,
     "capturedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "EventProfileSnapshot_pkey" PRIMARY KEY ("eventId")
 );
 
 -- CreateTable
-CREATE TABLE "public"."EventTag" (
-    "id" TEXT NOT NULL,
-    "slug" TEXT NOT NULL,
-    "label" TEXT NOT NULL,
+CREATE TABLE "public"."EventSnapshotTraitScore" (
+    "snapshotId" TEXT NOT NULL,
+    "traitSlug" TEXT NOT NULL,
+    "score" DOUBLE PRECISION NOT NULL,
 
-    CONSTRAINT "EventTag_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "public"."EventTagOnEvent" (
-    "eventId" TEXT NOT NULL,
-    "tagId" TEXT NOT NULL,
-
-    CONSTRAINT "EventTagOnEvent_pkey" PRIMARY KEY ("eventId","tagId")
+    CONSTRAINT "EventSnapshotTraitScore_pkey" PRIMARY KEY ("snapshotId","traitSlug")
 );
 
 -- CreateTable
@@ -171,18 +162,8 @@ CREATE TABLE "public"."EventRegistration" (
     "userId" TEXT NOT NULL,
     "eventId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "canceledAt" TIMESTAMP(3),
 
     CONSTRAINT "EventRegistration_pkey" PRIMARY KEY ("userId","eventId")
-);
-
--- CreateTable
-CREATE TABLE "public"."SavedEvent" (
-    "userId" TEXT NOT NULL,
-    "eventId" TEXT NOT NULL,
-    "savedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "SavedEvent_pkey" PRIMARY KEY ("userId","eventId")
 );
 
 -- CreateTable
@@ -210,12 +191,12 @@ CREATE TABLE "public"."ChatMember" (
 -- CreateTable
 CREATE TABLE "public"."ChatMessage" (
     "id" TEXT NOT NULL,
-    "role" "public"."ChatMessageRole" NOT NULL DEFAULT 'user',
+    "role" "public"."ChatMessageRole" NOT NULL DEFAULT 'USER',
     "channelId" TEXT NOT NULL,
     "authorId" TEXT NOT NULL,
     "body" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "editedAt" TIMESTAMP(3),
+    "updatedAt" TIMESTAMP(3) NOT NULL,
     "deletedAt" TIMESTAMP(3),
     "toolName" TEXT,
     "toolArgs" JSONB,
@@ -270,19 +251,10 @@ CREATE INDEX "Event_isCancelled_startsAt_idx" ON "public"."Event"("isCancelled",
 CREATE INDEX "EventProfileSnapshot_capturedAt_idx" ON "public"."EventProfileSnapshot"("capturedAt");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "EventTag_slug_key" ON "public"."EventTag"("slug");
-
--- CreateIndex
-CREATE INDEX "EventTagOnEvent_tagId_idx" ON "public"."EventTagOnEvent"("tagId");
+CREATE INDEX "EventSnapshotTraitScore_traitSlug_idx" ON "public"."EventSnapshotTraitScore"("traitSlug");
 
 -- CreateIndex
 CREATE INDEX "EventRegistration_eventId_idx" ON "public"."EventRegistration"("eventId");
-
--- CreateIndex
-CREATE INDEX "SavedEvent_userId_idx" ON "public"."SavedEvent"("userId");
-
--- CreateIndex
-CREATE INDEX "SavedEvent_eventId_idx" ON "public"."SavedEvent"("eventId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "ChatChannel_eventId_key" ON "public"."ChatChannel"("eventId");
@@ -294,10 +266,7 @@ CREATE INDEX "ChatMember_userId_idx" ON "public"."ChatMember"("userId");
 CREATE INDEX "ChatMessage_channelId_createdAt_idx" ON "public"."ChatMessage"("channelId", "createdAt");
 
 -- AddForeignKey
-ALTER TABLE "public"."User" ADD CONSTRAINT "User_locationId_fkey" FOREIGN KEY ("locationId") REFERENCES "public"."Location"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "public"."UserProfile" ADD CONSTRAINT "UserProfile_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "public"."User" ADD CONSTRAINT "User_locationId_fkey" FOREIGN KEY ("locationId") REFERENCES "public"."Location"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."UserTraitScore" ADD CONSTRAINT "UserTraitScore_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -324,22 +293,13 @@ ALTER TABLE "public"."Event" ADD CONSTRAINT "Event_locationId_fkey" FOREIGN KEY 
 ALTER TABLE "public"."EventProfileSnapshot" ADD CONSTRAINT "EventProfileSnapshot_eventId_fkey" FOREIGN KEY ("eventId") REFERENCES "public"."Event"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "public"."EventTagOnEvent" ADD CONSTRAINT "EventTagOnEvent_eventId_fkey" FOREIGN KEY ("eventId") REFERENCES "public"."Event"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "public"."EventTagOnEvent" ADD CONSTRAINT "EventTagOnEvent_tagId_fkey" FOREIGN KEY ("tagId") REFERENCES "public"."EventTag"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "public"."EventSnapshotTraitScore" ADD CONSTRAINT "EventSnapshotTraitScore_snapshotId_fkey" FOREIGN KEY ("snapshotId") REFERENCES "public"."EventProfileSnapshot"("eventId") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."EventRegistration" ADD CONSTRAINT "EventRegistration_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "public"."EventRegistration" ADD CONSTRAINT "EventRegistration_eventId_fkey" FOREIGN KEY ("eventId") REFERENCES "public"."Event"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "public"."SavedEvent" ADD CONSTRAINT "SavedEvent_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "public"."SavedEvent" ADD CONSTRAINT "SavedEvent_eventId_fkey" FOREIGN KEY ("eventId") REFERENCES "public"."Event"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "public"."EventRegistration" ADD CONSTRAINT "EventRegistration_eventId_fkey" FOREIGN KEY ("eventId") REFERENCES "public"."Event"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."ChatChannel" ADD CONSTRAINT "ChatChannel_eventId_fkey" FOREIGN KEY ("eventId") REFERENCES "public"."Event"("id") ON DELETE SET NULL ON UPDATE CASCADE;

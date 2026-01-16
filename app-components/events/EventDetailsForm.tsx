@@ -8,6 +8,7 @@ import {
 import uploadImageUri from "@/lib/storage";
 import { trpc } from "@/lib/trpc";
 import { useCurrentUser } from "@/lib/useCurrentUserHook";
+import calculateAge from "@/shared/utils/calculateAge";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -20,21 +21,6 @@ import {
 } from "react-native";
 import { ActivityPicker } from "../shared/ActivityPicker";
 import UploadMultiplePictures from "../shared/UploadMultiplePictures";
-
-function calculateAge(birthday: Date | null | undefined): number | null {
-  if (!birthday) return null;
-  const today = new Date();
-  const birthDate = new Date(birthday);
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const monthDiff = today.getMonth() - birthDate.getMonth();
-  if (
-    monthDiff < 0 ||
-    (monthDiff === 0 && today.getDate() < birthDate.getDate())
-  ) {
-    age--;
-  }
-  return age;
-}
 
 function validateEventForm({
   name,
@@ -138,12 +124,12 @@ interface EventDetails {
   startTime: Date;
   endTime: Date;
   activityId: string | null;
-  imgUrls?: string[];
+  additionalImageUrls?: string[];
+  coverImageUrl: string;
   locationId?: string;
 }
 
 export const EventDetailsForm = (props: EventDetailsFormProps) => {
-  // TODO: check that edited max attendees isn't lower than current attendees
   const { user } = useCurrentUser();
   const utils = trpc.useUtils();
   const upsertEventMutation = trpc.events.upsertEvent.useMutation({
@@ -186,11 +172,17 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
   const [minAge, setMinAge] = useState(props.event?.minAge?.toString() || "");
   const [maxAge, setMaxAge] = useState(props.event?.maxAge?.toString() || "");
 
-  const [imgUrls, setImgUrls] = useState(props.event?.imgUrls);
+  const [imgUrls, setImgUrls] = useState(
+    props.event?.coverImageUrl 
+      ? [props.event.coverImageUrl, ...(props.event.additionalImageUrls || [])]
+      : []
+  );
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  const [isLoading, setIsLoading] = useState(false);
+
   const handleSave = async () => {
-    const userAge = calculateAge(new Date(user?.profile?.birthday!));
+    const userAge = calculateAge(new Date(user?.birthday!));
     const validationErrors = validateEventForm({
       name,
       description,
@@ -217,6 +209,7 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
     }
 
     setErrors({});
+    setIsLoading(true);
 
     try {
       // Upload all images
@@ -260,6 +253,7 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
     } catch (error) {
       console.error("Error saving event:", error);
       Alert.alert("Error", "Failed to save event. Please try again.");
+      setIsLoading(false);
     }
   };
 
@@ -414,13 +408,13 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
                 variant="outline"
                 onPress={handleCancel}
                 fullWidth
-                disabled={upsertEventMutation.isPending}
+                disabled={isLoading}
               />
             </View>
             <View className="flex-1">
               <GrouplyButton
                 label={
-                  upsertEventMutation.isPending
+                  isLoading
                     ? "Loading..."
                     : props.event?.id
                     ? "Save Event"
@@ -429,7 +423,7 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
                 variant="primary"
                 onPress={handleSave}
                 fullWidth
-                disabled={upsertEventMutation.isPending}
+                disabled={isLoading}
               />
             </View>
           </View>

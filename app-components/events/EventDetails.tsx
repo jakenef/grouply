@@ -2,6 +2,7 @@ import { openInMaps } from "@/lib/maps";
 import { colors } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";
 import { useCurrentUser } from "@/lib/useCurrentUserHook";
+import calculateAge from "@/shared/utils/calculateAge";
 import { Ionicons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import { router } from "expo-router";
@@ -34,7 +35,7 @@ interface EventDetailsObject {
   endTime: string;
   numRegistered: number;
   attendeeIds: string[];
-  imageUrls: string[];
+  additionalImageUrls: string[];
   coverImageUrl: string;
   hostId: string;
   isCanceled: boolean;
@@ -59,11 +60,14 @@ export default function EventDetails(props: EventDetailsProps) {
   const fractionAttendees =
     props.event.numRegistered / props.event.maxAttendees;
   const isUserAttending = !!user && props.event.attendeeIds.includes(user.id);
-  const { data: host } = trpc.users.getPublicProfileById.useQuery({
+  const { data: host } = trpc.users.getPublicUserInfoById.useQuery({
     id: props.event.hostId,
   });
   const isPast = new Date(props.event.startTime) < new Date();
   const isFull = props.event.attendeeIds.length >= props.event.maxAttendees;
+  const userAge = calculateAge(new Date(user?.birthday!)) ?? 18;
+  const isUserInAgeRange =
+    userAge <= props.event.maxAge && userAge >= props.event.minAge;
   const isUserHost = user?.id == props.event.hostId;
   const utils = trpc.useUtils();
   const joinMutation = trpc.events.joinEvent.useMutation({
@@ -90,16 +94,28 @@ export default function EventDetails(props: EventDetailsProps) {
 
   async function handleJoin() {
     setIsJoining(true);
-    await joinMutation.mutateAsync({
-      eventId: props.event.id,
-    });
+    try {
+      await joinMutation.mutateAsync({
+        eventId: props.event.id,
+      });
+    } catch (error: any) {
+      console.error(error);
+      Alert.alert("Error", "Failed to join event. Please try again.");
+      setIsJoining(false);
+    }
   }
 
   async function handleBackOut() {
     setIsLeaving(true);
-    await leaveEventMutation.mutateAsync({
-      eventId: props.event.id,
-    });
+    try {
+      await leaveEventMutation.mutateAsync({
+        eventId: props.event.id,
+      });
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error", "Failed to leave event. Please try again.");
+      setIsLeaving(false);
+    }
   }
 
   function handleCancel() {
@@ -117,7 +133,15 @@ export default function EventDetails(props: EventDetailsProps) {
           style: "destructive",
           onPress: async () => {
             setIsCanceling(true);
-            await cancelEventMutation.mutateAsync({ eventId: props.event.id });
+            try {
+              await cancelEventMutation.mutateAsync({
+                eventId: props.event.id,
+              });
+            } catch (error) {
+              console.error(error);
+              Alert.alert("Error", "Failed to cancel event. Please try again.");
+              setIsCanceling(false);
+            }
           },
         },
       ]
@@ -215,7 +239,10 @@ export default function EventDetails(props: EventDetailsProps) {
               size={15}
               className="pr-2"
             />
-            <Text className="text-lg text-muted" style={{ flexShrink: 1 }}>
+            <Text
+              className="text-lg text-muted underline"
+              style={{ flexShrink: 1 }}
+            >
               {props.event.locationString}
             </Text>
           </Pressable>
@@ -223,7 +250,7 @@ export default function EventDetails(props: EventDetailsProps) {
           {/* Pictures */}
           <View className="py-3">
             <ImageCarousel
-              imageUrls={props.event.imageUrls}
+              additionalImageUrls={props.event.additionalImageUrls}
               coverImageUrl={props.event.coverImageUrl}
             />
           </View>
@@ -306,6 +333,11 @@ export default function EventDetails(props: EventDetailsProps) {
               style={{ backgroundColor: colors.muted.DEFAULT, minHeight: 50 }}
               onPress={handleBackOut}
               disabled={isLeaving}
+            />
+          ) : !isUserInAgeRange ? (
+            <GrouplyButton
+              label="Sorry, you are outside the age range for this event"
+              style={{ backgroundColor: colors.muted.DEFAULT, minHeight: 50 }}
             />
           ) : isFull ? (
             <GrouplyButton

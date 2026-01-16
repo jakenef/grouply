@@ -8,14 +8,14 @@ const leaveEvent = protectedProcedure
     // check if event exists
     const event = await ctx.prisma.event.findUnique({
       where: { id: input.eventId },
-      include: { regs: true },
+      include: { registrations: true },
     });
     if (!event) {
       throw new TRPCError({ code: "NOT_FOUND", message: "Cannot find event" });
     }
 
     // check if user is registered
-    const regUserIds = event.regs.map((reg) => reg.userId);
+    const regUserIds = event.registrations.map((reg) => reg.userId);
     const isUserRegistered = regUserIds.includes(ctx.user.id);
     if (!isUserRegistered) {
       throw new TRPCError({
@@ -36,11 +36,11 @@ const leaveEvent = protectedProcedure
     await ctx.prisma.$transaction(async (tx) => {
       const updatedEvent = await tx.event.update({
         where: { id: input.eventId },
-        data: { regs: { deleteMany: { userId: ctx.user.id } } },
-        include: { regs: true },
+        data: { registrations: { deleteMany: { userId: ctx.user.id } } },
+        include: { registrations: true },
       });
 
-      const regCount = updatedEvent.regs.length;
+      const regCount = updatedEvent.registrations.length;
       if (updatedEvent.maxAttendees > regCount) {
         await tx.event.update({
           where: { id: input.eventId },

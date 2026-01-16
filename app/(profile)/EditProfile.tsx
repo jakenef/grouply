@@ -10,6 +10,7 @@ import uploadImageUri from "@/lib/storage";
 import { colors } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";
 import { useCurrentUser } from "@/lib/useCurrentUserHook";
+import calculateAge from "@/shared/utils/calculateAge";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useState } from "react";
@@ -50,7 +51,7 @@ const kmToMiles = (km: number): number => {
 
 const EditProfile = () => {
   const { user } = useCurrentUser();
-  const [bio, setBio] = useState(user?.profile?.bio ?? "");
+  const [bio, setBio] = useState(user?.bio ?? "");
   const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl ?? null);
   const initialLocation: LocationData | null = user?.location
     ? {
@@ -71,15 +72,15 @@ const EditProfile = () => {
   // const [customInterests, setCustomInterests] = useState<CustomOption[]>([]);
   // const [customTraits, setCustomTraits] = useState<CustomOption[]>([]);
   const [travelDistance, setTravelDistance] = useState<number>(
-    kmToMiles(user?.profile?.maxTravelKm ?? 0)
+    kmToMiles(user?.maxTravelKm ?? 0)
   );
   const [ageRange, setAgeRange] = useState<[number, number]>([
-    user?.profile?.minAgePref ?? 18,
-    user?.profile?.maxAgePref ?? 25,
+    user?.minAgePreference ?? 18,
+    user?.maxAgePreference ?? 25,
   ]);
   const [groupSizeRange, setGroupSizeRange] = useState<[number, number]>([
-    user?.profile?.preferredGroupSizeMin ?? 3,
-    user?.profile?.preferredGroupSizeMax ?? 6,
+    user?.maxGroupSize ?? 3,
+    user?.minGroupSize ?? 6,
   ]);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -87,22 +88,25 @@ const EditProfile = () => {
     location?: string;
     traits?: string;
     interests?: string;
+    ageRange?: string;
   }>({});
 
   const utils = trpc.useUtils();
-  const updateUserMutation = trpc.users.updateMyUserAndProfile.useMutation({
+  const updateUserMutation = trpc.users.updateMyUser.useMutation({
     onSuccess: () => {
-      utils.users.getMyProfile.invalidate();
+      utils.users.getMyUser.invalidate();
     },
   });
   const interestsQuery = trpc.interests.getAllApprovedInterests.useQuery();
   const traitsQuery = trpc.traits.getAllApprovedTraits.useQuery();
+  const userAge = calculateAge(new Date(user?.birthday!)) ?? 18;
 
   const validateForm = (): boolean => {
     const newErrors: {
       interests?: string;
       traits?: string;
       location?: string;
+      ageRange?: string;
     } = {};
 
     if (selectedInterests.length < 3) {
@@ -115,6 +119,10 @@ const EditProfile = () => {
 
     if (!location) {
       newErrors.location = "Please select a location";
+    }
+
+    if (userAge < ageRange[0] || userAge > ageRange[1]) {
+      newErrors.ageRange = "Your age is not in your preferred age range";
     }
 
     setErrors(newErrors);
@@ -169,6 +177,8 @@ const EditProfile = () => {
         minAgePref: ageRange[0],
         maxAgePref: ageRange[1],
         maxTravelKm,
+        avatarUrl: avatarUrlToSend,
+        bio,
       });
 
       router.back();
@@ -273,10 +283,10 @@ const EditProfile = () => {
         {/* Group Size Range */}
         <RangeSlider
           label="What is your preferred group size?"
-          minValue={3}
-          maxValue={6}
+          minValue={user?.minGroupSize ?? 3}
+          maxValue={user?.maxGroupSize ?? 6}
           minLimit={2}
-          maxLimit={9}
+          maxLimit={12}
           step={1}
           onValuesChange={(values) => setGroupSizeRange(values)}
           formatLabel={(value) => (value === 9 ? "9" : String(value))}
@@ -286,8 +296,8 @@ const EditProfile = () => {
         <SliderSingle
           label="How far are you willing to travel for an event?"
           value={travelDistance}
-          minLimit={1}
-          maxLimit={50}
+          minLimit={10}
+          maxLimit={100}
           step={1}
           onValueChange={(value) => setTravelDistance(value)}
           formatLabel={(value) => `${value} mi (${milesToKm(value)} km)`}
@@ -296,13 +306,14 @@ const EditProfile = () => {
         {/* Age Range */}
         <RangeSlider
           label="What is your preferred age range of other attendees?"
-          minValue={18}
-          maxValue={25}
+          minValue={user?.minAgePreference ?? 18}
+          maxValue={user?.maxAgePreference ?? 25}
           minLimit={18}
           maxLimit={60}
           step={1}
           onValuesChange={(values) => setAgeRange(values)}
           formatLabel={(value) => (value === 60 ? "60" : String(value))}
+          error={errors.ageRange}
         />
       </ScrollView>
     </View>

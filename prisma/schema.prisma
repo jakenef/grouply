@@ -21,21 +21,21 @@ enum UserRole {
 }
 
 enum LocationPrecision {
-  city
-  point
+  CITY
+  POINT
 }
 
 enum Gender {
-  Male
-  Female
-  Other
+  MALE
+  FEMALE
+  OTHER
 }
 
 enum ChatMessageRole {
-  user
-  assistant
-  system
-  tool
+  USER
+  ASSISTANT
+  SYSTEM
+  TOOL
 }
 
 // =======================
@@ -44,22 +44,34 @@ enum ChatMessageRole {
 
 // ---------- Core ----------
 model User {
+  // Identity
   id         String   @id @default(uuid())
   authUserId String   @unique
   role       UserRole @default(USER)
   email      String   @unique
+
+  // Personal Info
   givenName  String // first name
   familyName String? // last name
   avatarUrl  String?
-  joinedAt   DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  birthday   DateTime?
+  gender     Gender?
+  bio        String?
 
-  // Coarse location
+  // Preferences
+  minGroupSize     Int?
+  maxGroupSize     Int?
+  maxTravelKm      Int?
+  minAgePreference Int?
+  maxAgePreference Int?
+
+  // Location
   locationId String
   location   Location @relation(fields: [locationId], references: [id])
 
-  // 1:1 profile with matchable attributes
-  profile UserProfile?
+  // Timestamps
+  joinedAt  DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
   organizedEvents Event[]             @relation("EventOrganizer")
@@ -68,31 +80,8 @@ model User {
   registrations   EventRegistration[]
   chatMemberships ChatMember[]
   chatMessages    ChatMessage[]
-  savedEvents     SavedEvent[]
 
   @@index([locationId])
-}
-
-model UserProfile {
-  userId String @id
-  user   User   @relation(fields: [userId], references: [id])
-
-  // PII & demographics (optional)
-  birthday DateTime?
-  gender   Gender?
-  bio      String?
-
-  // Preferences that guide matching/search
-  preferredGroupSizeMin Int?
-  preferredGroupSizeMax Int?
-  maxTravelKm           Int? // radius filter
-  minAgePref            Int?
-  maxAgePref            Int?
-
-  // Future-proofing for semantic matching (MVP can ignore)
-  embedding Json?
-
-  updatedAt DateTime @updatedAt
 }
 
 // ---------- Location ----------
@@ -117,7 +106,7 @@ model Location {
   @@index([lat, lng])
 }
 
-// ---------- Traits (extensible personality dims) ----------
+// ---------- Traits ----------
 model Trait {
   id         String   @id @default(uuid())
   slug       String   @unique // e.g. "introversion", "risk-tolerance"
@@ -131,9 +120,11 @@ model Trait {
 }
 
 model UserTraitScore {
-  userId  String
-  traitId String
-  score   Float // e.g. 0..1 scale or -1..1 scale
+  userId    String
+  traitId   String
+  score     Float // e.g. 0..1 scale or -1..1 scale
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   trait Trait @relation(fields: [traitId], references: [id])
@@ -142,14 +133,15 @@ model UserTraitScore {
   @@index([traitId])
 }
 
-// ---------- Interests (user-side preferences) ----------
+// ---------- Interests ----------
 model Interest {
-  id         String   @id @default(uuid())
-  slug       String   @unique // "hiking"
+  id         String  @id @default(uuid())
+  slug       String  @unique // "hiking"
   label      String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  isApproved Boolean  @default(false)
+  isApproved Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   users UserInterest[]
 }
@@ -157,7 +149,9 @@ model Interest {
 model UserInterest {
   userId     String
   interestId String
-  weight     Float  @default(1)
+  weight     Float    @default(1)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   interest Interest @relation(fields: [interestId], references: [id])
@@ -166,7 +160,7 @@ model UserInterest {
   @@index([interestId])
 }
 
-// ---------- Activities (supply taxonomy) ----------
+// ---------- Activities ----------
 model Activity {
   id          String                       @id @default(uuid())
   slug        String                       @unique // canonical id: "pickup-basketball"
@@ -184,16 +178,14 @@ model Activity {
 model Event {
   id            String   @id @default(uuid())
   name          String
-  desc          String?
+  desc          String? // TODO: rename to description
   startsAt      DateTime
   endsAt        DateTime
-  isCancelled   Boolean  @default(false)
-  upperAgeLimit Int?
-  lowerAgeLimit Int?
-  eventUrl      String
-  imageUrls     String[]
+  isCanceled   Boolean  @default(false) @map("isCancelled")
+  maxAgeLimit   Int?
+  minAgeLimit   Int?
   coverImageUrl String
-
+  additionalImageUrls String[]
 
   // Organizer
   organizerId String
@@ -208,14 +200,10 @@ model Event {
   location   Location @relation(fields: [locationId], references: [id])
 
   // Attendees
-  maxAttendees Int
-  minAttendees Int
-  isFull       Boolean             @default(false)
-  regs         EventRegistration[]
-  savedByUsers SavedEvent[]
-
-  // Tags
-  tags EventTagOnEvent[]
+  maxAttendees  Int
+  minAttendees  Int
+  isFull        Boolean             @default(false)
+  registrations EventRegistration[]
 
   // Chat (one channel per event)
   chatChannel ChatChannel? @relation("EventChannel")
@@ -224,11 +212,12 @@ model Event {
   snapshot EventProfileSnapshot?
 
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([activityId])
   @@index([startsAt])
   @@index([locationId])
-  @@index([isCancelled, startsAt])
+  @@index([isCanceled, startsAt])
 }
 
 model EventProfileSnapshot {
@@ -238,16 +227,11 @@ model EventProfileSnapshot {
 
   // who we captured from (duplicate for audit even if organizer changes)
   hostUserId    String
-  hostGivenName String?
+  hostGivenName String
 
   // matchable signals (keep flexible)
-  interestIds String[] // e.g., top N of host's interests at creation
-  traitScores Json? // { "introversion": 0.7, "risk-tolerance": 0.3, ... }
-  embedding   Json? // optional: future vector (store as JSON for MVP)
-
-  // handy constraints copied for ranking/explanations
-  lowerAgeLimit Int?
-  upperAgeLimit Int?
+  interestIds String[]
+  traitScores EventSnapshotTraitScore[]
 
   // metadata
   capturedAt DateTime @default(now())
@@ -255,32 +239,22 @@ model EventProfileSnapshot {
   @@index([capturedAt])
 }
 
-// ---------- Event Tags (nuance & facets) ----------
-model EventTag {
-  id    String @id @default(uuid())
-  slug  String @unique // "beginner", "sunrise", "dog-friendly", "free", "indoors"
-  label String
+model EventSnapshotTraitScore {
+  snapshotId String
+  traitSlug  String
+  score      Float
 
-  events EventTagOnEvent[]
-}
+  snapshot EventProfileSnapshot @relation(fields: [snapshotId], references: [eventId], onDelete: Cascade)
 
-model EventTagOnEvent {
-  eventId String
-  tagId   String
-
-  event Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  tag   EventTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
-
-  @@id([eventId, tagId])
-  @@index([tagId])
+  @@id([snapshotId, traitSlug])
+  @@index([traitSlug])
 }
 
 // ---------- Participation & Saves ----------
 model EventRegistration {
-  userId     String
-  eventId    String
-  createdAt  DateTime  @default(now())
-  canceledAt DateTime?
+  userId    String
+  eventId   String
+  createdAt DateTime @default(now())
 
   user  User  @relation(fields: [userId], references: [id])
   event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
@@ -289,23 +263,10 @@ model EventRegistration {
   @@index([eventId])
 }
 
-model SavedEvent {
-  userId  String
-  eventId String
-  savedAt DateTime @default(now())
-
-  user  User  @relation(fields: [userId], references: [id])
-  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
-
-  @@id([userId, eventId])
-  @@index([userId])
-  @@index([eventId])
-}
-
-// ---------- Chat (lean) ----------
+// ---------- Chat ----------
 model ChatChannel {
   id        String   @id @default(uuid())
-  kind      String // "event" for now
+  kind      String // "event" / "ai"
   name      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -333,12 +294,12 @@ model ChatMember {
 
 model ChatMessage {
   id        String          @id @default(uuid())
-  role      ChatMessageRole @default(user)
+  role      ChatMessageRole @default(USER)
   channelId String
   authorId  String
   body      String
   createdAt DateTime        @default(now())
-  editedAt  DateTime?
+  updatedAt DateTime        @updatedAt
   deletedAt DateTime?
 
   // Optional: tool call/result for LLM integrations

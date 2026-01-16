@@ -1,5 +1,5 @@
-import { EventWithSnapshotData } from "@/types/Event";
-import { UserWithTraitsAndInterests } from "@/types/User";
+import { EventWithSnapshotData } from "@/shared/types/Event";
+import { UserWithTraitsAndInterests } from "@/shared/types/User";
 import { prisma } from "../../../prisma";
 import { getMatchScore } from "../getMatchScore/getMatchScore";
 import { getValidEventsFromUser } from "../getValidEventsFromUser/getValidEventsFromUser";
@@ -36,9 +36,6 @@ export async function getSuggestedEventsFromUser(userId: string) {
       location: true,
     },
   });
-  const userProfileFromDb = await prisma.userProfile.findUnique({
-    where: { userId },
-  });
 
   const userInterests: string[] =
     userFromDb?.interests.map((interest) => interest.interestId) ?? [];
@@ -50,11 +47,11 @@ export async function getSuggestedEventsFromUser(userId: string) {
 
   const user: UserWithTraitsAndInterests = {
     id: userId,
-    birthday: userProfileFromDb?.birthday ?? null,
+    birthday: userFromDb?.birthday ?? null,
     interests: userInterests,
     traits: userTraits,
     location: userFromDb?.location ?? (null as any),
-    maxTravelKm: userProfileFromDb?.maxTravelKm ?? null,
+    maxTravelKm: userFromDb?.maxTravelKm ?? null,
   };
 
   // get possible events
@@ -62,10 +59,16 @@ export async function getSuggestedEventsFromUser(userId: string) {
 
   // for each of those, getMatchScore()
   const scoredEvents = validEvents.map((event) => {
+    const eventTraits: Record<string, number> =
+      event.snapshot?.traitScores.reduce((acc, ts) => {
+        acc[ts.traitSlug] = ts.score;
+        return acc;
+      }, {} as Record<string, number>) ?? {};
+
     const eventWithSnapshotData: EventWithSnapshotData = {
       id: event.id,
       interests: event.snapshot?.interestIds ?? [],
-      traits: (event.snapshot?.traitScores as Record<string, number>) ?? {},
+      traits: eventTraits,
     };
     const score = getMatchScore(eventWithSnapshotData, user);
 

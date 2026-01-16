@@ -1,5 +1,7 @@
 import { TRPCError } from "@trpc/server";
+import { Filter } from "bad-words";
 import z from "zod";
+import calculateAge from "../../../../shared/utils/calculateAge";
 import { prisma } from "../../prisma";
 import { locationDataSchema } from "../../schemas";
 import { protectedProcedure } from "../../trpc";
@@ -32,7 +34,6 @@ export const upsertEvent = protectedProcedure
             trait: true,
           },
         },
-        profile: true,
       },
     });
 
@@ -43,24 +44,8 @@ export const upsertEvent = protectedProcedure
       });
     }
 
-    // Helper function to calculate age from birthday
-    const calculateAge = (birthday: Date | null | undefined): number | null => {
-      if (!birthday) return null;
-      const today = new Date();
-      const birthDate = new Date(birthday);
-      let age = today.getFullYear() - birthDate.getFullYear();
-      const monthDiff = today.getMonth() - birthDate.getMonth();
-      if (
-        monthDiff < 0 ||
-        (monthDiff === 0 && today.getDate() < birthDate.getDate())
-      ) {
-        age--;
-      }
-      return age;
-    };
-
     // Check if the age range is valid for the creator
-    const creatorAge = calculateAge(organizerUser.profile?.birthday);
+    const creatorAge = calculateAge(organizerUser.birthday);
     if (creatorAge !== null) {
       if (creatorAge < input.minAge || creatorAge > input.maxAge) {
         throw new TRPCError({
@@ -75,21 +60,16 @@ export const upsertEvent = protectedProcedure
       const registrations = await prisma.eventRegistration.findMany({
         where: {
           eventId: input.eventId,
-          canceledAt: null,
         },
         include: {
-          user: {
-            include: {
-              profile: true,
-            },
-          },
+          user: true,
         },
       });
 
       const usersOutsideRange: Array<{ name: string; age: number }> = [];
 
       for (const registration of registrations) {
-        const userAge = calculateAge(registration.user.profile?.birthday);
+        const userAge = calculateAge(registration.user.birthday);
         if (
           userAge !== null &&
           (userAge < input.minAge || userAge > input.maxAge)
@@ -139,7 +119,6 @@ export const upsertEvent = protectedProcedure
       const currentRegistrations = await prisma.eventRegistration.count({
         where: {
           eventId: input.eventId,
-          canceledAt: null,
         },
       });
 
@@ -168,6 +147,23 @@ export const upsertEvent = protectedProcedure
       });
     }
 
+    // Validate event name and description for profanity
+    const filter = new Filter();
+
+    if (filter.isProfane(input.name)) {
+      throw new TRPCError({
+        message: "Event name contains inappropriate language",
+        code: "BAD_REQUEST",
+      });
+    }
+
+    if (filter.isProfane(input.description)) {
+      throw new TRPCError({
+        message: "Event description contains inappropriate language",
+        code: "BAD_REQUEST",
+      });
+    }
+
     const location = await prisma.location.upsert({
       where: {
         id: input.locationData.placeId,
@@ -179,7 +175,7 @@ export const upsertEvent = protectedProcedure
         formatted: input.locationData.formatted,
         lat: input.locationData.lat,
         lng: input.locationData.lng,
-        precision: "point",
+        precision: "POINT",
       },
       create: {
         id: input.locationData.placeId,
@@ -189,7 +185,7 @@ export const upsertEvent = protectedProcedure
         formatted: input.locationData.formatted,
         lat: input.locationData.lat,
         lng: input.locationData.lng,
-        precision: "point",
+        precision: "POINT",
       },
     });
 
@@ -223,6 +219,7 @@ export const upsertEvent = protectedProcedure
             snapshot: {
               create: {
                 hostUserId: ctx.user.id,
+                hostGivenName: ctx.user.givenName,
                 interestIds: organizerUser.interests.map(
                   (interest) => interest.interestId
                 ),

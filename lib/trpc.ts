@@ -8,7 +8,7 @@ export const trpc = createTRPCReact<AppRouter>();
 export const trpcClient = trpc.createClient({
   links: [
     httpBatchLink({
-      url: "http://localhost:3001/trpc",
+      url: process.env.EXPO_PUBLIC_TRPC_URL || "http://localhost:3001/trpc",
       headers: async () => {
         const {
           data: { session },

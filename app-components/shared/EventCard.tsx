@@ -1,26 +1,20 @@
+import { EventCardEvent } from "@/shared/types/Event";
 import { format } from "date-fns";
 import React from "react";
 import { Image, Pressable, Text, View } from "react-native";
 
 interface EventCardProps {
-  event: any; // Using any for now since the API structure differs from Event type
+  event: EventCardEvent;
   onJoin?: () => void;
 }
 
 export const EventCard: React.FC<EventCardProps> = ({ event, onJoin }) => {
-  // Handle both the API structure (event.event) and direct event structure
-  const eventData = event.event || event;
-  const dateTime = eventData.startsAt || eventData.dateTime;
-  const title = eventData.name || eventData.title;
-  const location = eventData.location?.formatted || eventData.location;
-  const imageUrl =
-    eventData.coverImageUrl ||
-    eventData.imageUrls?.[0] ||
-    eventData.thumbnailUrl;
-  const currentParticipants =
-    eventData.currentAttendees || eventData.currentParticipants || 0;
-  const maxParticipants =
-    eventData.maxAttendees || eventData.maxParticipants || 0;
+  const startsAt = event.startsAt;
+  const name = event.name;
+  const location = event.formattedLocation;
+  const imageUrl = event.coverImageUrl;
+  const currentParticipants = event.numCurrentParticipants || 0;
+  const maxParticipants = event.maxAttendees || 0;
 
   return (
     <Pressable onPress={onJoin}>
@@ -36,7 +30,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onJoin }) => {
         <View className="flex-1 p-4 pt-2">
           {/* Title */}
           <Text className="text-lg font-semibold mb-1" numberOfLines={1}>
-            {title}
+            {name}
           </Text>
 
           {/* Location */}
@@ -46,8 +40,8 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onJoin }) => {
 
           {/* Date & Time */}
           <Text className="text-gray-600 mb-2">
-            {dateTime
-              ? format(new Date(dateTime), "MMM d, yyyy • h:mm a")
+            {startsAt
+              ? format(new Date(startsAt), "MMM d, yyyy • h:mm a")
               : "Date TBD"}
           </Text>
 

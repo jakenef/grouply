@@ -3,17 +3,6 @@ import { TRPCError } from "@trpc/server";
 
 export const TRB_deleteTestUsers = adminProcedure.mutation(async ({ ctx }) => {
   try {
-    // First delete all user profiles for test users
-    const deletedProfiles = await ctx.prisma.userProfile.deleteMany({
-      where: {
-        user: {
-          authUserId: {
-            startsWith: "TRB_",
-          },
-        },
-      },
-    });
-
     // Then delete all test users
     const deletedUsers = await ctx.prisma.user.deleteMany({
       where: {
@@ -27,7 +16,6 @@ export const TRB_deleteTestUsers = adminProcedure.mutation(async ({ ctx }) => {
       success: true,
       deletedCount: {
         users: deletedUsers.count,
-        profiles: deletedProfiles.count,
       },
     };
   } catch (error) {

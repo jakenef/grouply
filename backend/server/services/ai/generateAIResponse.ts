@@ -82,20 +82,32 @@ export async function generateAIResponse(params: {
   ];
 
   let input: any[] = contextMessages.map((m) => ({
-    role: m.role as any,
+    role: m.role.toLowerCase(),
     content: m.body,
   }));
 
   // 2) Call AI, decide if needs Tools
-  let aiResponse = await openai.responses.create({
-    model: "gpt-4o-mini",
-    input,
-    instructions,
-    tools: tools,
-  });
+  let aiResponse;
+  try {
+    aiResponse = await openai.responses.create({
+      model: "gpt-4o-mini",
+      input,
+      instructions,
+      tools: tools,
+    });
+  } catch (error) {
+    console.error("!!! Error calling OpenAI:", error);
+    console.error("!!! Input was:", JSON.stringify(input, null, 2));
+    console.error("!!! Instructions:", instructions);
+    console.error("!!! Tools:", JSON.stringify(tools, null, 2));
+    throw error;
+  }
 
   // 3) Handle tooling
-  let latestRefresh = undefined;
+  type SuggestedEventsResult = Awaited<
+    ReturnType<typeof getSuggestedEventsFromActivityDesc>
+  >;
+  let latestRefresh: SuggestedEventsResult | undefined = undefined;
   let iterations = 0;
   const MAX_ITERS = 4;
 
@@ -164,7 +176,7 @@ export async function generateAIResponse(params: {
     authorId: "ai-assistant",
     channelId: params.channelId,
     body: aiResponse.output_text,
-    role: ChatMessageRole.assistant,
+    role: ChatMessageRole.ASSISTANT,
     tools: aiResponse.tools,
   };
 

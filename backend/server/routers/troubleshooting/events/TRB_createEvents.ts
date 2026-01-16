@@ -52,11 +52,14 @@ export const TRB_createEvents = adminProcedure
       // Create a random number of attendees (not always maxAttendees)
       const numAttendeesToCreate = faker.number.int({
         min: 0,
-        max: maxAttendees,
+        max: maxAttendees - 1,
       });
       const attendees = faker.helpers
         .shuffle(users)
         .slice(0, numAttendeesToCreate);
+      if (!attendees.some((u) => u.id === organizer.id)) {
+        attendees.push(organizer);
+      }
 
       const location = faker.helpers.arrayElement(locations);
       const activity = faker.helpers.arrayElement(activities);
@@ -67,8 +70,8 @@ export const TRB_createEvents = adminProcedure
         location.city
       }! ${faker.lorem.sentences({ min: 2, max: 4 })}`;
       const startsAt = faker.date.between({
-        from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-        to: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        from: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
+        to: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
       });
       const endsAt = new Date(
         startsAt.getTime() +
@@ -84,16 +87,16 @@ export const TRB_createEvents = adminProcedure
         pictureUrls.push(faker.image.url());
       }
 
-      const coverImageUrl = pictureUrls[0];
+      const coverImageUrl = faker.image.url();
 
       // Prepare snapshot data from organizer's profile
       const interestIds = organizer.interests.map((ui) => ui.interestId);
 
-      // Build traitScores object using trait slugs as keys
-      const traitScores: Record<string, number> = {};
-      for (const ts of organizer.traitScores) {
-        traitScores[ts.trait.slug] = ts.score;
-      }
+      // Build traitScores array for EventSnapshotTraitScore records
+      const traitScores = organizer.traitScores.map((ts) => ({
+        traitSlug: ts.trait.slug,
+        score: ts.score,
+      }));
 
       // Create the event with snapshot
       const event = await ctx.prisma.event.create({
@@ -106,16 +109,15 @@ export const TRB_createEvents = adminProcedure
           organizerId: organizer.id,
           locationId: location.id,
           activityId: activity.id,
-          lowerAgeLimit: minAgePref,
-          upperAgeLimit: maxAgePref,
-          imageUrls: pictureUrls,
+          minAgeLimit: minAgePref,
+          maxAgeLimit: maxAgePref,
+          additionalImageUrls: pictureUrls,
           coverImageUrl: coverImageUrl,
-          regs: {
+          registrations: {
             create: attendees.map((u) => ({
               user: { connect: { id: u.id } },
             })),
           },
-          eventUrl: "fakeURL",
           minAttendees,
           maxAttendees,
           isFull: attendees.length >= maxAttendees,
@@ -124,9 +126,9 @@ export const TRB_createEvents = adminProcedure
               hostUserId: organizer.id,
               hostGivenName: organizer.givenName,
               interestIds: interestIds,
-              traitScores: traitScores,
-              lowerAgeLimit: minAgePref,
-              upperAgeLimit: maxAgePref,
+              traitScores: {
+                create: traitScores,
+              },
             },
           },
         },

@@ -2,7 +2,6 @@ import { useAuth } from "@/lib/auth";
 import { router } from "expo-router";
 import React from "react";
 import { Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import ConfirmEmail from "../../app-components/onboarding/ConfirmEmail";
 
 const Login = () => {
@@ -13,7 +12,7 @@ const Login = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <View className="flex-1 bg-background py-4">
       <View className="flex-1 px-8">
         <View className="items-center">
           <Text className="text-5xl font-bold text-primary mt-16">Grouply</Text>
@@ -47,7 +46,7 @@ const Login = () => {
           </Text>
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 

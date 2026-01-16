@@ -14,7 +14,7 @@ export const locationDataSchema = z.object({
 });
 
 // Gender enum validation
-export const genderEnum = z.enum(["Male", "Female", "Other"]);
+export const genderEnum = z.enum(["MALE", "FEMALE", "OTHER"]);
 
 // Event location schema (simplified for frontend)
 export const eventLocationSchema = z.object({
@@ -41,12 +41,18 @@ export const activitySchema = z.object({
   label: z.string(),
 });
 
+// Event snapshot trait score schema
+export const eventSnapshotTraitScoreSchema = z.object({
+  traitSlug: z.string(),
+  score: z.number(),
+});
+
 // Event snapshot schema (for matching data)
 export const eventSnapshotSchema = z.object({
   hostUserId: z.string(),
   hostGivenName: z.string().nullable(),
   interestIds: z.array(z.string()),
-  traitScores: z.record(z.string(), z.number()).nullable(),
+  traitScores: z.array(eventSnapshotTraitScoreSchema),
 });
 
 // Complete Event DTO for frontend
@@ -56,11 +62,11 @@ export const eventSchema = z.object({
   desc: z.string().nullable(),
   startsAt: z.date(),
   endsAt: z.date(),
-  isCancelled: z.boolean(),
-  upperAgeLimit: z.number().nullable(),
-  lowerAgeLimit: z.number().nullable(),
-  eventUrl: z.string(),
-  imageUrls: z.array(z.string()),
+  isCanceled: z.boolean(),
+  maxAgeLimit: z.number().nullable(),
+  minAgeLimit: z.number().nullable(),
+  additionalImageUrls: z.array(z.string()),
+  coverImageUrl: z.string(),
 
   // Organizer info
   organizer: eventOrganizerSchema,
@@ -72,7 +78,8 @@ export const eventSchema = z.object({
   location: eventLocationSchema,
 
   // Capacity
-  maxAttendees: z.number().nullable(),
+  maxAttendees: z.number(),
+  minAttendees: z.number(),
   currentAttendees: z.number(),
   isFull: z.boolean(),
 
@@ -81,6 +88,7 @@ export const eventSchema = z.object({
 
   // Metadata
   createdAt: z.date(),
+  updatedAt: z.date(),
 });
 
 // Scored event for recommendation endpoints
@@ -95,6 +103,9 @@ export type Gender = z.infer<typeof genderEnum>;
 export type EventLocation = z.infer<typeof eventLocationSchema>;
 export type EventOrganizer = z.infer<typeof eventOrganizerSchema>;
 export type Activity = z.infer<typeof activitySchema>;
+export type EventSnapshotTraitScore = z.infer<
+  typeof eventSnapshotTraitScoreSchema
+>;
 export type EventSnapshot = z.infer<typeof eventSnapshotSchema>;
 export type Event = z.infer<typeof eventSchema>;
 export type ScoredEvent = z.infer<typeof scoredEventSchema>;

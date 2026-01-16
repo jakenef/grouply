@@ -33,10 +33,9 @@ export const generateEventFromChannel = protectedProcedure
 
     const user = await prisma.user.findUnique({
       where: { id: ctx.user.id },
-      include: { profile: true },
     });
 
-    const birthday = user?.profile?.birthday;
+    const birthday = user?.birthday;
     if (!birthday) throw new Error("No birthday found for user");
 
     const today = new Date();

@@ -3,7 +3,8 @@ import HomeChatSection from "@/app-components/home/HomeChatSection";
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";
-import { ChatMessage, ChatMessageRole } from "@/types/Chat";
+import { ChatMessage, ChatMessageRole } from "@/shared/types/Chat";
+import { ChatEventSuggestion } from "@/shared/types/Event";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
@@ -15,9 +16,9 @@ import Animated, {
 
 const Home = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [eventSuggestions, setEventSuggestions] = useState<any[] | undefined>(
-    undefined
-  );
+  const [eventSuggestions, setEventSuggestions] = useState<
+    ChatEventSuggestion[] | undefined
+  >(undefined);
   const [isChatExpanded, setIsChatExpanded] = useState(false);
   const [channelId, setChannelId] = useState("");
   const { user } = useAuth();
@@ -30,7 +31,7 @@ const Home = () => {
   const handleSendMessage = async (text: string) => {
     const newMessage: ChatMessage = {
       id: Date.now().toString(),
-      role: ChatMessageRole.user,
+      role: ChatMessageRole.USER,
       body: text,
       authorId: user!.id,
       channelId: channelId,
@@ -50,7 +51,20 @@ const Home = () => {
       toolName: response.toolName,
       createdAt: response.createdAt,
     };
-    setEventSuggestions(response.refreshedEvents);
+    setEventSuggestions(
+      response.refreshedEvents?.map((event) => {
+        const chatEventSuggestion: ChatEventSuggestion = {
+          id: event.event.id,
+          startsAt: new Date(event.event.startsAt),
+          name: event.event.name,
+          formattedLocation: event.event.location.formatted ?? "",
+          coverImageUrl: event.event.coverImageUrl,
+          numCurrentParticipants: event.event.currentAttendees,
+          maxAttendees: event.event.maxAttendees,
+        };
+        return chatEventSuggestion;
+      })
+    );
     setMessages((prev) => [...prev, assistantMessage]);
   };
 

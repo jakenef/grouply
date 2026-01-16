@@ -41,7 +41,7 @@ const PreferencesSetup = () => {
   const [customInterests, setCustomInterests] = useState<CustomOption[]>([]);
   const [customTraits, setCustomTraits] = useState<CustomOption[]>([]);
 
-  // State for group size preferences
+  // State for group size preferences (if this is bugged, past jake told you so)
   const [groupSizeRange, setGroupSizeRange] = useState<[number, number]>([
     3, 6,
   ]);
@@ -123,7 +123,7 @@ const PreferencesSetup = () => {
   const [selectedTraits, setSelectedTraits] = useState<string[]>([]);
 
   // State for travel distance (single value)
-  const [travelDistance, setTravelDistance] = useState<number>(10);
+  const [travelDistance, setTravelDistance] = useState<number>(20);
 
   // State for age preferences
   const [ageRange, setAgeRange] = useState<[number, number]>([21, 35]);
@@ -135,8 +135,7 @@ const PreferencesSetup = () => {
   }>({});
 
   // Set up tRPC mutation
-  const savePreferencesMutation =
-    trpc.users.saveUserAndUserProfilePreferences.useMutation();
+  const savePreferencesMutation = trpc.users.saveUserPreferences.useMutation();
 
   // If user is not authenticated, redirect to login
   useEffect(() => {
@@ -182,11 +181,14 @@ const PreferencesSetup = () => {
       traits?: string;
     } = {};
 
-    if (selectedInterests.length < 3) {
+    if (
+      (interestsQuery.data?.length ?? 0) > 0 &&
+      selectedInterests.length < 3
+    ) {
       newErrors.interests = "Please select at least 3 interests";
     }
 
-    if (selectedTraits.length < 3) {
+    if ((traitsQuery.data?.length ?? 0) > 0 && selectedTraits.length < 3) {
       newErrors.traits = "Please select at least 3 traits";
     }
 
@@ -308,7 +310,7 @@ const PreferencesSetup = () => {
           }
           selectedOptions={selectedInterests}
           onSelectionChange={setSelectedInterests}
-          minRequired={3}
+          minRequired={interestsQuery.data?.length! > 0 ? 3 : undefined}
           allowOther={false}
           error={errors.interests}
           onCustomOptionAdded={(customOption) => {
@@ -327,7 +329,7 @@ const PreferencesSetup = () => {
           }
           selectedOptions={selectedTraits}
           onSelectionChange={setSelectedTraits}
-          minRequired={3}
+          minRequired={traitsQuery.data?.length! > 0 ? 3 : undefined}
           allowOther={false}
           error={errors.traits}
           onCustomOptionAdded={(customOption) => {
@@ -341,7 +343,7 @@ const PreferencesSetup = () => {
           minValue={3}
           maxValue={6}
           minLimit={2}
-          maxLimit={9}
+          maxLimit={12}
           step={1}
           onValuesChange={(values) => setGroupSizeRange(values)}
           formatLabel={(value) => (value === 9 ? "9" : String(value))}
@@ -351,9 +353,9 @@ const PreferencesSetup = () => {
         <SliderSingle
           label="How far are you willing to travel for an event?"
           value={travelDistance}
-          minLimit={1}
-          maxLimit={50}
-          step={1}
+          minLimit={10}
+          maxLimit={100}
+          step={5}
           onValueChange={(value) => setTravelDistance(value)}
           formatLabel={(value) => `${value} mi (${milesToKm(value)} km)`}
         />

@@ -3,11 +3,13 @@ import GrouplyButton from "@/app-components/shared/GrouplyButton";
 import ProfileImagePicker from "@/app-components/shared/ProfileImagePicker";
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/lib/theme";
+import { trpc } from "@/lib/trpc";
 import { useCurrentUser } from "@/lib/useCurrentUserHook";
+import calculateAge from "@/shared/utils/calculateAge";
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 const Profile = () => {
   const { user } = useCurrentUser();
@@ -15,22 +17,7 @@ const Profile = () => {
 
   const router = useRouter();
   const isAdmin = user?.role === "ADMIN";
-
-  // Calculate age from birthday
-  const calculateAge = (birthday: Date | null | undefined) => {
-    if (!birthday) return null;
-    const today = new Date();
-    const birthDate = new Date(birthday);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (
-      monthDiff < 0 ||
-      (monthDiff === 0 && today.getDate() < birthDate.getDate())
-    ) {
-      age--;
-    }
-    return age;
-  };
+  const deleteUserMutation = trpc.users.deleteMyUser.useMutation();
 
   // Format joined date
   const formatJoinedDate = (date: Date | null | undefined) => {
@@ -51,8 +38,37 @@ const Profile = () => {
   const traits =
     user?.traitScores?.map((t: any) => t.trait?.name).filter(Boolean) || [];
 
-  const age = calculateAge(new Date(user?.profile?.birthday ?? 0));
+  const age = calculateAge(new Date(user?.birthday ?? 0));
   const joinedDate = formatJoinedDate(new Date(user?.joinedAt ?? 0));
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      "Delete Account",
+      "Are you sure you want to delete your account? This action cannot be undone.",
+      [
+        {
+          text: "No, Keep Account",
+          style: "cancel",
+        },
+        {
+          text: "Yes, Delete Account",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteUserMutation.mutateAsync();
+              await signOut();
+            } catch (error) {
+              console.error(error);
+              Alert.alert(
+                "Error",
+                "Failed to delete account. Please try again."
+              );
+            }
+          },
+        },
+      ]
+    );
+  };
 
   return (
     <ScrollView className="flex-1 px-4 bg-background">
@@ -75,10 +91,8 @@ const Profile = () => {
         <Text className="py-3 text-2xl font-semibold">
           {user?.givenName} {user?.familyName || ""}
         </Text>
-        {user?.profile?.bio && (
-          <Text className="text-muted text-center px-4">
-            {user.profile.bio}
-          </Text>
+        {user?.bio && (
+          <Text className="text-muted text-center px-4">{user.bio}</Text>
         )}
       </View>
 
@@ -100,7 +114,7 @@ const Profile = () => {
           <View className="py-2">
             <Text className="text-muted text-sm">Max Travel Distance</Text>
             <Text className="text-base">
-              {kmToMiles(user?.profile?.maxTravelKm ?? 0)} mi
+              {kmToMiles(user?.maxTravelKm ?? 0)} mi
             </Text>
           </View>
           <View className="py-2">
@@ -108,14 +122,13 @@ const Profile = () => {
               Preferred Age Range At Events
             </Text>
             <Text className="text-base">
-              {user?.profile?.minAgePref} - {user?.profile?.maxAgePref}
+              {user?.minAgePreference} - {user?.maxAgePreference}
             </Text>
           </View>
           <View className="py-2">
             <Text className="text-muted text-sm">Preferred Group Size</Text>
             <Text className="text-base">
-              {user?.profile?.preferredGroupSizeMin} -{" "}
-              {user?.profile?.preferredGroupSizeMax}
+              {user?.minGroupSize} - {user?.maxGroupSize}
             </Text>
           </View>
         </View>
@@ -179,8 +192,16 @@ const Profile = () => {
         </TouchableOpacity>
       )}
 
-      <View className="pb-6">
+      <View className="py-2">
         <GrouplyButton label="Logout" onPress={signOut} />
+      </View>
+      <View className="pb-6 pt-2">
+        <GrouplyButton
+          variant="outline"
+          label="Delete My Account"
+          onPress={handleDeleteAccount}
+          color={colors.danger.DEFAULT}
+        />
       </View>
     </ScrollView>
   );

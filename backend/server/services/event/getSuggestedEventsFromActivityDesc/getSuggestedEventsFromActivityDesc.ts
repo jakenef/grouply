@@ -59,13 +59,16 @@ export async function getSuggestedEventsFromActivityDesc({
  * Returns events sorted by score descending.
  */
 export function filterAndSortEvents(
-  events: any[],
-  activity: any,
+  events: EventWithScore[],
+  activity: Awaited<ReturnType<typeof getActivityFromDesc>>,
   groupSize?: number,
   startTime?: Date,
   endTime?: Date
-) {
-  const matchesActivity = (eventWithScore: any, activity: any) => {
+): EventWithScore[] {
+  const matchesActivity = (
+    eventWithScore: EventWithScore,
+    activity: Awaited<ReturnType<typeof getActivityFromDesc>>
+  ) => {
     if (!activity || !eventWithScore.event.activity) {
       return false;
     } else if (activity.id != eventWithScore.event.activityId) {
@@ -75,7 +78,7 @@ export function filterAndSortEvents(
   };
 
   const fitsTimeWindow = (
-    eventWithScore: any,
+    eventWithScore: EventWithScore,
     windowStart: Date | undefined,
     windowEnd: Date | undefined
   ) => {
@@ -85,7 +88,10 @@ export function filterAndSortEvents(
     );
   };
 
-  const fitsGroupSize = (eventWithScore: any, groupSize?: number) => {
+  const fitsGroupSize = (
+    eventWithScore: EventWithScore,
+    groupSize?: number
+  ) => {
     if (!groupSize) return true;
     const min = eventWithScore.event.minAttendees ?? 1;
     const max = eventWithScore.event.maxAttendees ?? Number.POSITIVE_INFINITY;

@@ -8,7 +8,7 @@ const cancelEvent = protectedProcedure
     // check if event exists
     const event = await ctx.prisma.event.findUnique({
       where: { id: input.eventId },
-      include: { regs: true },
+      include: { registrations: true },
     });
     if (!event) {
       throw new TRPCError({ code: "NOT_FOUND", message: "Cannot find event" });
@@ -25,7 +25,7 @@ const cancelEvent = protectedProcedure
     // cancel
     await ctx.prisma.event.update({
       where: { id: input.eventId },
-      data: { isCancelled: true },
+      data: { isCanceled: true },
     });
   });
 export default cancelEvent;

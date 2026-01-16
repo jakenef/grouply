@@ -20,6 +20,7 @@ interface GrouplyButtonProps extends PressableProps {
   iconPosition?: IconPosition;
   fullWidth?: boolean;
   iconOnly?: boolean; // New prop for icon-only buttons
+  color?: string; // Optional custom color for the button
 }
 
 export default function GrouplyButton({
@@ -34,25 +35,38 @@ export default function GrouplyButton({
   disabled = false,
   style,
   className = "", // Support for additional className
+  color, // Custom color prop
   ...pressableProps
 }: GrouplyButtonProps) {
   // Base button styling
   let buttonClasses = "rounded-2xl flex-row justify-center items-center";
   let textClasses = "font-semibold text-center";
+  let customStyle: any = {};
 
   // Variant-specific styling
   switch (variant) {
     case "primary":
-      buttonClasses += " bg-primary";
-      textClasses += " text-white";
+      if (color) {
+        customStyle.backgroundColor = color;
+        textClasses += " text-white";
+      } else {
+        buttonClasses += " bg-primary";
+        textClasses += " text-white";
+      }
       break;
     case "outline":
-      buttonClasses += " bg-white border border-primary";
-      textClasses += " text-primary";
+      if (color) {
+        customStyle.borderColor = color;
+        customStyle.borderWidth = 1;
+        buttonClasses += " bg-white";
+      } else {
+        buttonClasses += " bg-white border border-primary";
+      }
+      textClasses += color ? "" : " text-primary";
       break;
     case "text":
       buttonClasses += " bg-transparent";
-      textClasses += " text-primary";
+      textClasses += color ? "" : " text-primary";
       break;
   }
 
@@ -98,21 +112,23 @@ export default function GrouplyButton({
 
   // Icon size based on button size
   const iconSize = size === "large" ? 24 : size === "medium" ? 20 : 16;
-  const iconColor = variant === "primary" ? "white" : "#4f47e5";
+  const iconColor = variant === "primary" ? "white" : color || "#4f47e5";
+
+  const loadingColor = variant === "primary" ? "white" : color || "#4f47e5";
+
+  // Combine custom styles with user-provided style
+  const combinedStyle = [customStyle, style];
 
   return (
     <Pressable
       className={buttonClasses}
       disabled={disabled || isLoading}
-      style={style}
+      style={combinedStyle}
       {...pressableProps}
     >
       {/* Show loading spinner */}
       {isLoading ? (
-        <ActivityIndicator
-          size="small"
-          color={variant === "primary" ? "white" : "#4f47e5"}
-        />
+        <ActivityIndicator size="small" color={loadingColor} />
       ) : (
         <>
           {/* Left icon */}
@@ -126,7 +142,18 @@ export default function GrouplyButton({
           )}
 
           {/* Button text */}
-          {label && !iconOnly && <Text className={textClasses}>{label}</Text>}
+          {label && !iconOnly && (
+            <Text
+              className={textClasses}
+              style={
+                color && (variant === "outline" || variant === "text")
+                  ? { color }
+                  : undefined
+              }
+            >
+              {label}
+            </Text>
+          )}
 
           {/* Right icon */}
           {iconName && iconPosition === "right" && !iconOnly && (

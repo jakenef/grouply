@@ -3,7 +3,7 @@ import { faker } from "@faker-js/faker";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
-const genderOptions = ["Male", "Female", "Other"] as const;
+const genderOptions = ["MALE", "FEMALE", "OTHER"] as const;
 
 // requires that locations exist in db
 
@@ -48,12 +48,6 @@ export const TRB_createUserProfiles = adminProcedure
               locationId: randomLocation.id,
               avatarUrl: faker.image.avatar(),
               role: "USER",
-            },
-          });
-
-          const profile = await tx.userProfile.create({
-            data: {
-              userId: user.id,
               birthday: faker.date.between({
                 from: "1980-01-01",
                 to: "2000-12-31",
@@ -121,7 +115,7 @@ export const TRB_createUserProfiles = adminProcedure
             }
           }
 
-          return { user, profile, userTraitScores, userInterests };
+          return { user, userTraitScores, userInterests };
         });
 
         createdUsers.push(result);

@@ -41,6 +41,16 @@ const LandingPage = () => {
               router.push("/SignupEmail");
             }}
           />
+
+          <GrouplyButton
+            label="Demo"
+            variant="text"
+            size="large"
+            fullWidth
+            onPress={() => {
+              router.push("/DemoLogin");
+            }}
+          />
         </View>
       </View>
     </SafeAreaView>

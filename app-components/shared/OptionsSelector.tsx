@@ -31,9 +31,7 @@ const OptionsSelector = ({
   error,
   onCustomOptionAdded,
 }: OptionsSelectorProps) => {
-  const [displayedOptions, setDisplayedOptions] = useState(
-    options.slice(0, 12)
-  );
+  const [displayCount, setDisplayCount] = useState(12);
   const [otherValue, setOtherValue] = useState("");
   const [otherSelected, setOtherSelected] = useState(false);
   const [customOptions, setCustomOptions] = useState<
@@ -41,10 +39,13 @@ const OptionsSelector = ({
   >([]);
   const otherInputRef = useRef<TextInput>(null);
 
-  // Update displayed options when options prop changes
+  // Only reset display count if the options array meaningfully changes
+  const optionsKey = options.map((o) => o.id).join(",");
   React.useEffect(() => {
-    setDisplayedOptions(options.slice(0, 12));
-  }, [options]);
+    setDisplayCount(12);
+  }, [optionsKey]);
+
+  const displayedOptions = options.slice(0, displayCount);
 
   // Focus the text input whenever "Other" is selected
   React.useEffect(() => {
@@ -69,8 +70,7 @@ const OptionsSelector = ({
 
   const handleLoadMore = () => {
     // Load more options (next 12)
-    const currentCount = displayedOptions.length;
-    setDisplayedOptions(options.slice(0, currentCount + 12));
+    setDisplayCount((prev) => Math.min(prev + 12, options.length));
   };
 
   const handleOtherToggle = () => {
@@ -228,7 +228,7 @@ const OptionsSelector = ({
         </View>
       )}
 
-      {displayedOptions.length < options.length && (
+      {displayCount < options.length && (
         <Pressable
           onPress={handleLoadMore}
           className="flex-row items-center mt-3"

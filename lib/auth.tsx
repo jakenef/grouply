@@ -102,6 +102,14 @@ interface AuthContextType {
     email: string,
     token: string
   ) => Promise<{ data?: any; error?: any }>;
+  signInWithPassword: (
+    email: string,
+    password: string
+  ) => Promise<{ data?: any; error?: any }>;
+  signUpWithPassword: (
+    email: string,
+    password: string
+  ) => Promise<{ data?: any; error?: any }>;
   signOut: () => Promise<void>;
 }
 
@@ -113,6 +121,8 @@ export const AuthContext = createContext<AuthContextType>({
   sendLoginOTP: async () => ({}),
   sendSignUpOTP: async () => ({}),
   verifyOTP: async () => ({}),
+  signInWithPassword: async () => ({}),
+  signUpWithPassword: async () => ({}),
   signOut: async () => {},
 });
 
@@ -181,6 +191,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return result;
   };
 
+  // sign in with password
+  const signInWithPassword = async (email: string, password: string) => {
+    return await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+  };
+
+  // Sign up with email and password
+  const signUpWithPassword = async (email: string, password: string) => {
+    return await supabase.auth.signUp({
+      email,
+      password,
+    });
+  };
+
   // Sign out
   const signOut = async () => {
     await supabase.auth.signOut();
@@ -193,6 +219,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     sendLoginOTP,
     sendSignUpOTP,
     verifyOTP,
+    signInWithPassword,
+    signUpWithPassword,
     signOut,
   };
 

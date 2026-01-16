@@ -7,10 +7,10 @@ export function useCurrentUser() {
     data: userData,
     isLoading: profileLoading,
     error,
-  } = trpc.users.getMyProfile.useQuery(
-    { authId: user?.id ?? "" },
-    { enabled: !!user, retry: false }
-  );
+  } = trpc.users.getMyUser.useQuery(undefined, {
+    enabled: !!user,
+    retry: false,
+  });
 
   if (!user) {
     return { user: null, isLoading: authLoading, error: null };

@@ -6,6 +6,7 @@ import { troubleshootingLocationRouter } from "./locations";
 import { troubleshootingTraitsRouter } from "./traits";
 import { troubleshootingUserRouter } from "./users";
 
+// TODO: remove endpoints and have scripts that i can just run... maybe
 export const troubleshootingRouter = router({
   troubleshootingLocationRouter,
   troubleshootingUserRouter,
