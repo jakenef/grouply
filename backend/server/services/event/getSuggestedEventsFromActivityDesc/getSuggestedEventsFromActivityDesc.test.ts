@@ -1,46 +1,100 @@
 import { filterAndSortEvents } from "./getSuggestedEventsFromActivityDesc";
 
 describe("filterAndSortEvents", () => {
-  const mockActivity = { id: "activity1", label: "Basketball" };
+  const mockActivity = {
+    id: "activity1",
+    name: "Basketball",
+    desc: "A team sport played with a ball",
+    similarity: 0.95,
+  };
+
+  // Helper to create a minimal mock event
+  const createMockEvent = (overrides: any = {}) => ({
+    id: overrides.id || "event1",
+    activityId: overrides.activityId || "activity1",
+    startsAt: overrides.startsAt || new Date("2025-12-01T18:00:00Z"),
+    minAttendees: overrides.minAttendees ?? 4,
+    maxAttendees: overrides.maxAttendees ?? 8,
+    activity: overrides.activity || { id: "activity1" },
+    location: {
+      id: "loc1",
+      city: "San Francisco",
+      region: "CA",
+      countryCode: "US",
+      lat: 37.7749,
+      lng: -122.4194,
+      formatted: "San Francisco, CA",
+      precision: "CITY" as any,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+    registrations: [],
+    organizer: {
+      id: "user1",
+      email: "test@example.com",
+      givenName: "Test",
+      familyName: "User",
+      birthday: new Date("1990-01-01"),
+      bio: null,
+      avatarUrl: null,
+      role: "USER" as any,
+      joinedAt: new Date(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      locationId: "loc1",
+      maxTravelKm: 50,
+    },
+    snapshot: {
+      id: "snap1",
+      eventId: "event1",
+      interestIds: [],
+      traitScores: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+    ...overrides,
+  });
+
   const mockEvents = [
     {
-      event: {
-        activity: { id: "activity1" },
+      event: createMockEvent({
+        id: "event1",
         activityId: "activity1",
         startsAt: new Date("2025-12-01T18:00:00Z"),
         minAttendees: 4,
         maxAttendees: 8,
-      },
+      }),
       score: 0.9,
     },
     {
-      event: {
-        activity: { id: "activity2" },
+      event: createMockEvent({
+        id: "event2",
         activityId: "activity2",
         startsAt: new Date("2025-12-01T18:00:00Z"),
+        activity: { id: "activity2" },
         minAttendees: 4,
         maxAttendees: 8,
-      },
+      }),
       score: 0.5,
     },
     {
-      event: {
-        activity: { id: "activity1" },
+      event: createMockEvent({
+        id: "event3",
         activityId: "activity1",
         startsAt: new Date("2025-12-02T18:00:00Z"),
         minAttendees: 4,
         maxAttendees: 8,
-      },
+      }),
       score: 0.7,
     },
     {
-      event: {
-        activity: { id: "activity1" },
+      event: createMockEvent({
+        id: "event4",
         activityId: "activity1",
         startsAt: new Date("2025-12-01T18:00:00Z"),
         minAttendees: 10,
         maxAttendees: 20,
-      },
+      }),
       score: 0.8,
     },
   ];
@@ -90,29 +144,27 @@ describe("filterAndSortEvents", () => {
     // Two events match, different scores
     const events = [
       {
-        event: {
-          activity: { id: "activity1" },
+        event: createMockEvent({
           activityId: "activity1",
           startsAt: new Date("2025-12-01T18:00:00Z"),
           minAttendees: 4,
           maxAttendees: 8,
-        },
+        }),
         score: 0.5,
       },
       {
-        event: {
-          activity: { id: "activity1" },
+        event: createMockEvent({
           activityId: "activity1",
           startsAt: new Date("2025-12-01T18:00:00Z"),
           minAttendees: 4,
           maxAttendees: 8,
-        },
+        }),
         score: 0.9,
       },
     ];
     const results = filterAndSortEvents(
       events,
-      { id: "activity1" },
+      mockActivity,
       groupSize,
       startTime,
       endTime
@@ -128,29 +180,27 @@ describe("filterAndSortEvents", () => {
     const endTime = new Date("2025-12-01T18:00:00Z");
     const events = [
       {
-        event: {
-          activity: { id: "activity1" },
+        event: createMockEvent({
           activityId: "activity1",
           startsAt: new Date("2025-12-01T18:00:00Z"),
           minAttendees: 4,
           maxAttendees: 8,
-        },
+        }),
         score: 0.7,
       },
       {
-        event: {
-          activity: { id: "activity1" },
+        event: createMockEvent({
           activityId: "activity1",
           startsAt: new Date("2025-12-01T17:59:59Z"),
           minAttendees: 4,
           maxAttendees: 8,
-        },
+        }),
         score: 0.6,
       },
     ];
     const results = filterAndSortEvents(
       events,
-      { id: "activity1" },
+      mockActivity,
       groupSize,
       startTime,
       endTime
@@ -164,30 +214,28 @@ describe("filterAndSortEvents", () => {
   it("returns all events if groupSize is null or undefined", () => {
     const events = [
       {
-        event: {
-          activity: { id: "activity1" },
+        event: createMockEvent({
           activityId: "activity1",
           startsAt: new Date("2025-12-01T18:00:00Z"),
           minAttendees: 1,
           maxAttendees: 10,
-        },
+        }),
         score: 0.8,
       },
       {
-        event: {
-          activity: { id: "activity1" },
+        event: createMockEvent({
           activityId: "activity1",
           startsAt: new Date("2025-12-01T18:00:00Z"),
           minAttendees: 1,
           maxAttendees: 10,
-        },
+        }),
         score: 0.7,
       },
     ];
     // groupSize undefined
     const results1 = filterAndSortEvents(
       events,
-      { id: "activity1" },
+      mockActivity,
       undefined,
       undefined,
       undefined
@@ -196,7 +244,7 @@ describe("filterAndSortEvents", () => {
     // groupSize null
     const results2 = filterAndSortEvents(
       events,
-      { id: "activity1" },
+      mockActivity,
       undefined,
       undefined,
       undefined
@@ -207,7 +255,7 @@ describe("filterAndSortEvents", () => {
   it("returns empty array if events is empty or null", () => {
     const results1 = filterAndSortEvents(
       [],
-      { id: "activity1" },
+      mockActivity,
       5,
       undefined,
       undefined
@@ -215,7 +263,7 @@ describe("filterAndSortEvents", () => {
     expect(results1.length).toBe(0);
     const results2 = filterAndSortEvents(
       [],
-      { id: "activity1" },
+      mockActivity,
       5,
       undefined,
       undefined

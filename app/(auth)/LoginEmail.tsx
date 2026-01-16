@@ -1,4 +1,5 @@
 import { useAuth } from "@/lib/auth";
+import { trpc } from "@/lib/trpc";
 import { router } from "expo-router";
 import React from "react";
 import { Text, View } from "react-native";
@@ -6,9 +7,22 @@ import ConfirmEmail from "../../app-components/onboarding/ConfirmEmail";
 
 const Login = () => {
   const { sendLoginOTP, verifyOTP } = useAuth();
+  const utils = trpc.useUtils();
 
-  const handleSuccess = () => {
-    router.replace("/(app)/Home");
+  const handleSuccess = async () => {
+    // After OTP is verified, check if user exists in database
+    try {
+      const result = await utils.client.users.checkUserExists.query();
+      if (result.exists) {
+        router.replace("/(app)/Home");
+      } else {
+        router.replace("/(auth)/AboutYouSetup");
+      }
+    } catch (error) {
+      console.error("Error checking user:", error);
+      // Default to setup if we can't check
+      router.replace("/(auth)/AboutYouSetup");
+    }
   };
 
   return (

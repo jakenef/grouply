@@ -1,4 +1,5 @@
 import { Session } from "@supabase/supabase-js";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   createContext,
   ReactNode,
@@ -143,6 +144,7 @@ interface AuthProviderProps {
 export function AuthProvider({ children }: AuthProviderProps) {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     // Get initial session
@@ -157,10 +159,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setIsLoading(false);
+
+      // Clear cache when user logs out
+      if (!session) {
+        queryClient.clear();
+      }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [queryClient]);
 
   // Send OTP to email
   const sendLoginOTP = async (email: string) => {
@@ -209,6 +216,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Sign out
   const signOut = async () => {
+    queryClient.clear();
     await supabase.auth.signOut();
   };
 
