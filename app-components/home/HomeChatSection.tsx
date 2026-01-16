@@ -318,8 +318,8 @@ export default function HomeChatSection({
       )}
 
       {/* Input bar - always visible */}
-      <View className="px-3 py-2 h-20">
-        <View className="flex-row items-end gap-2">
+      <View className="px-3 py-2 h-20 ">
+        <View className="flex-row items-center gap-2">
           <TextInput
             ref={inputRef}
             value={text}

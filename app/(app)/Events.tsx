@@ -8,7 +8,13 @@ import { trpc } from "@/lib/trpc";
 import { useCurrentUser } from "@/lib/useCurrentUserHook";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
-import { FlatList, Pressable, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  Text,
+  View,
+} from "react-native";
 
 const Events = () => {
   const { user } = useCurrentUser();
@@ -100,13 +106,32 @@ const Events = () => {
           </View>
         </Pressable>
       </View>
-      {isLoading ? (
+      {error ? (
+        <>
+          {isRefetching ? (
+            <ActivityIndicator size="large" color={colors.primary} />
+          ) : (
+            <>
+              <Text className="text-danger text-center p-5">
+                Error loading events! {error?.message}
+              </Text>
+              <GrouplyButton
+                variant="text"
+                color={colors.danger.DEFAULT}
+                label="Retry"
+                onPress={() => refetch()}
+              />
+            </>
+          )}
+        </>
+      ) : isLoading ? (
         <SkeletonLoadingEvents />
       ) : (
         <FlatList
           data={showUpcoming ? upcomingEvents : pastEvents}
           refreshing={isRefetching}
           onRefresh={refetch}
+          contentContainerStyle={{ flexGrow: 1 }}
           renderItem={({ item }) => {
             const event: EventCardRegisteredEvent = {
               id: item.id,
@@ -121,23 +146,17 @@ const Events = () => {
             return <EventCardRegistered event={event} />;
           }}
           ListEmptyComponent={
-            <View className="flex-1 p-3">
-              {isRefetching ? (
-                <SkeletonLoadingEvents />
-              ) : (
-                <>
-                  <Text className="text-2xl text-muted-darker text-center">
-                    You aren't registered for any events yet. Go to the Home tab
-                    to join or host one!
-                  </Text>
-                  <GrouplyButton
-                    variant="text"
-                    color={colors.primary}
-                    label="Reload"
-                    onPress={() => refetch()}
-                  />
-                </>
-              )}
+            <View className="flex-1 p-3 justify-center">
+              <Text className="text-2xl text-muted-darker text-center">
+                You aren't registered for any events yet. Go to the Home tab to
+                join or host one!
+              </Text>
+              <GrouplyButton
+                variant="text"
+                color={colors.primary}
+                label="Reload"
+                onPress={() => refetch()}
+              />
             </View>
           }
         ></FlatList>

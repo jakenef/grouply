@@ -1,11 +1,10 @@
 import { prisma } from "@/backend/server/prisma";
 import { UserWithTraitsAndInterests } from "@/shared/types/User";
+import calculateAge from "@/shared/utils/calculateAge";
 
 export async function getValidEventsFromUser(user: UserWithTraitsAndInterests) {
   const now = new Date();
-  const userAge =
-    now.getFullYear() - (user.birthday?.getFullYear() ?? now.getFullYear());
-
+  const userAge = calculateAge(user.birthday) ?? 0;
   if (!user.location) return [];
 
   const { lat, lng } = user.location;
