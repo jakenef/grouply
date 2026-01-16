@@ -1,16 +1,15 @@
-import ConfirmEmail from "@/app-components/onboarding/ConfirmEmail";
+import EmailAndPassword from "@/app-components/onboarding/EmailAndPassword";
 import { useAuth } from "@/lib/auth";
 import { trpc } from "@/lib/trpc";
 import { router } from "expo-router";
 import React from "react";
 import { Text, View } from "react-native";
 
-const Login = () => {
-  const { sendSignUpOTP, verifyOTP } = useAuth();
+const DemoLogin = () => {
+  const { signInWithPassword } = useAuth();
   const utils = trpc.useUtils();
 
   const handleSuccess = async () => {
-    // After OTP is verified, check if user exists in database
     try {
       const result = await utils.client.users.checkUserExists.query();
       if (result.exists) {
@@ -39,29 +38,18 @@ const Login = () => {
 
         {/* Login subheader */}
         <Text className="text-base text-muted mt-2">
-          Enter your email to discover events
+          Enter the provided demo login to continue
         </Text>
 
         {/* Email/OTP flow component */}
-        <ConfirmEmail
-          onSendOTP={sendSignUpOTP}
-          onVerifyOTP={verifyOTP}
+        <EmailAndPassword
+          buttonLabel="Login"
+          onButtonPress={signInWithPassword}
           onSuccess={handleSuccess}
-          sendButtonLabel="Verify Email"
         />
-
-        <View className="w-full mt-auto flex-row justify-center items-center">
-          <Text className="text-s text-muted">Already have an account? </Text>
-          <Text
-            className="text-s text-primary font-semibold"
-            onPress={() => router.replace("/(auth)/LoginEmail")}
-          >
-            Log In
-          </Text>
-        </View>
       </View>
     </View>
   );
 };
 
-export default Login;
+export default DemoLogin;
