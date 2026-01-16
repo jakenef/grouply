@@ -419,8 +419,9 @@ const PreferencesSetup = () => {
             onPress={handleSaveAndContinue}
             disabled={
               savePreferencesMutation.isPending ||
-              selectedInterests.length < 3 ||
-              selectedTraits.length < 3
+              ((interestsQuery.data?.length ?? 0) > 0 &&
+                selectedInterests.length < 3) ||
+              ((traitsQuery.data?.length ?? 0) > 0 && selectedTraits.length < 3)
             }
             isLoading={savePreferencesMutation.isPending}
           />
