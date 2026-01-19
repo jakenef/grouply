@@ -1,6 +1,6 @@
 import calculateAge from "@/shared/utils/calculateAge";
 import { TRPCError } from "@trpc/server";
-import { Filter } from "bad-words";
+import filter from "leo-profanity";
 import { z } from "zod";
 import { genderEnum, locationDataSchema } from "../../schemas";
 import { authProcedure } from "../../trpc";
@@ -45,23 +45,22 @@ export const createUser = authProcedure
     }
 
     // Validate user info for profanity
-    const filter = new Filter();
 
-    if (filter.isProfane(input.givenName)) {
+    if (filter.check(input.givenName)) {
       throw new TRPCError({
         message: "User given name contains inappropriate language",
         code: "BAD_REQUEST",
       });
     }
 
-    if (filter.isProfane(input.familyName)) {
+    if (filter.check(input.familyName)) {
       throw new TRPCError({
         message: "User family name contains inappropriate language",
         code: "BAD_REQUEST",
       });
     }
 
-    if (filter.isProfane(input.bio ?? "")) {
+    if (filter.check(input.bio ?? "")) {
       throw new TRPCError({
         message: "User bio contains inappropriate language",
         code: "BAD_REQUEST",

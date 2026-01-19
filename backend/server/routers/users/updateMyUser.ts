@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { Filter } from "bad-words";
+import filter from "leo-profanity";
 import { z } from "zod";
 import { protectedProcedure } from "../../trpc";
 
@@ -20,9 +20,8 @@ export const updateMyUser = protectedProcedure
   )
   .mutation(async ({ ctx, input }) => {
     // Validate event name and description for profanity
-    const filter = new Filter();
 
-    if (filter.isProfane(input.bio ?? "")) {
+    if (filter.check(input.bio ?? "")) {
       throw new TRPCError({
         message: "User bio contains inappropriate language",
         code: "BAD_REQUEST",

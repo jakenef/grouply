@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { Filter } from "bad-words";
+import filter from "leo-profanity";
 import z from "zod";
 import calculateAge from "../../../../shared/utils/calculateAge";
 import { prisma } from "../../prisma";
@@ -148,16 +148,15 @@ export const upsertEvent = protectedProcedure
     }
 
     // Validate event name and description for profanity
-    const filter = new Filter();
 
-    if (filter.isProfane(input.name)) {
+    if (filter.check(input.name)) {
       throw new TRPCError({
         message: "Event name contains inappropriate language",
         code: "BAD_REQUEST",
       });
     }
 
-    if (filter.isProfane(input.description)) {
+    if (filter.check(input.description)) {
       throw new TRPCError({
         message: "Event description contains inappropriate language",
         code: "BAD_REQUEST",
