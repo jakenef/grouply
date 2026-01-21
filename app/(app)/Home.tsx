@@ -7,7 +7,7 @@ import { ChatMessage, ChatMessageRole } from "@/shared/types/Chat";
 import { ChatEventSuggestion } from "@/shared/types/Event";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Alert, Pressable, Text, View } from "react-native";
 import Animated, {
   FadeIn,
   FadeOut,
@@ -40,32 +40,46 @@ const Home = () => {
     setMessages((prev) => [...prev, newMessage]);
     setIsChatExpanded(true);
 
-    const response = await sendMessageMutation.mutateAsync({ channelId, text });
-    setChannelId(response.channelId);
-    const assistantMessage: ChatMessage = {
-      id: response.id,
-      role: response.role as any,
-      body: response.body,
-      channelId: response.channelId,
-      authorId: response.authorId,
-      toolName: response.toolName,
-      createdAt: response.createdAt,
-    };
-    setEventSuggestions(
-      response.refreshedEvents?.map((event) => {
-        const chatEventSuggestion: ChatEventSuggestion = {
-          id: event.event.id,
-          startsAt: new Date(event.event.startsAt),
-          name: event.event.name,
-          formattedLocation: event.event.location.formatted ?? "",
-          coverImageUrl: event.event.coverImageUrl,
-          numCurrentParticipants: event.event.currentAttendees,
-          maxAttendees: event.event.maxAttendees,
-        };
-        return chatEventSuggestion;
-      })
-    );
-    setMessages((prev) => [...prev, assistantMessage]);
+    try {
+      const response = await sendMessageMutation.mutateAsync({
+        channelId,
+        text,
+      });
+      setChannelId(response.channelId);
+      const assistantMessage: ChatMessage = {
+        id: response.id,
+        role: response.role as any,
+        body: response.body,
+        channelId: response.channelId,
+        authorId: response.authorId,
+        toolName: response.toolName,
+        createdAt: response.createdAt,
+      };
+      setEventSuggestions(
+        response.refreshedEvents?.map((event) => {
+          const chatEventSuggestion: ChatEventSuggestion = {
+            id: event.event.id,
+            startsAt: new Date(event.event.startsAt),
+            name: event.event.name,
+            formattedLocation: event.event.location.formatted ?? "",
+            coverImageUrl: event.event.coverImageUrl,
+            numCurrentParticipants: event.event.currentAttendees,
+            maxAttendees: event.event.maxAttendees,
+          };
+          return chatEventSuggestion;
+        })
+      );
+      setMessages((prev) => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error("Error communicating with AI:", error);
+      Alert.alert(
+        "Something went wrong",
+        "We couldn't process your message. Please try again.",
+        [{ text: "OK" }]
+      );
+      // Remove the user message since we couldn't get a response
+      setMessages((prev) => prev.slice(0, -1));
+    }
   };
 
   const handleBack = () => {

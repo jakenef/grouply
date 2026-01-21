@@ -13,6 +13,7 @@
     "dev:server": "nodemon --exec tsx backend/server/index.ts",
     "build:server": "tsc backend/server/index.ts --outDir dist",
     "test": "jest",
+    "test:prod-build": "npm run build:server:prod && node dist/backend/server/index.js",
     "start:server:prod": "node dist/backend/server/index.js",
     "build:server:prod": "npx prisma generate && npx prisma migrate deploy && npx tsc --project tsconfig.server.json && cpy 'backend/generated/**' dist/backend/generated"
   },
