@@ -16,7 +16,7 @@ export async function generateEventFieldsFromContext(params: {
   activityId: string | null;
 }> {
   let input: any[] = params.messages.map((m) => ({
-    role: m.role as any,
+    role: m.role.toLowerCase() as any,
     content: m.body,
   }));
 
