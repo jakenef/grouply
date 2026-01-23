@@ -10,6 +10,8 @@ export default function EventDetailsEdit() {
     existingEventId?: string;
   }>();
 
+  //TODO: imageurls and additionaimageURLs, one cover image uploaded twice
+
   // Fetch existing event if existingEventId is provided
   const {
     data: existingEvent,

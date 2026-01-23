@@ -45,7 +45,7 @@ const AboutYouSetup = () => {
     location?: string;
   }>({});
 
-  // TODO: fix date picker android
+  // TODO: fix date picker android, keyboard blocks save and continue on bio
 
   // If user is not authenticated, redirect to login
   useEffect(() => {
