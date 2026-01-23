@@ -97,6 +97,8 @@ const TypingIndicator = () => {
   );
 };
 
+// TODO: make enter send the message, keep the message avoid keyboard,
+
 type HomeChatSectionProps = {
   messages: ChatMessage[];
   eventSuggestions: ChatEventSuggestion[] | undefined;
