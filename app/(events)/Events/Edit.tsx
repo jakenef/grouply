@@ -10,7 +10,7 @@ export default function EventDetailsEdit() {
     existingEventId?: string;
   }>();
 
-  //TODO: imageurls and additionaimageURLs, one cover image uploaded twice
+  //TODO: imageurls and additionaimageURLs, one cover image uploaded twice, ALSO location picker magnifying glass too low
 
   // Fetch existing event if existingEventId is provided
   const {

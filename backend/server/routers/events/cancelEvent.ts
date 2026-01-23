@@ -15,7 +15,7 @@ const cancelEvent = protectedProcedure
     }
 
     // check if user is host
-    if (ctx.user.id != event.organizerId) {
+    if (!event.organizerId || ctx.user.id != event.organizerId) {
       throw new TRPCError({
         code: "FORBIDDEN",
         message: "You are not hosting this event",
