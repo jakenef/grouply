@@ -15,6 +15,7 @@ import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   Alert,
+  KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
@@ -22,12 +23,14 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import GrouplyButton from "../../app-components/shared/GrouplyButton";
 
 type Gender = "MALE" | "FEMALE" | "OTHER" | null;
 
 const AboutYouSetup = () => {
   const { user: authUser, session } = useAuth(); // Get authentication context
+  const insets = useSafeAreaInsets();
   const [givenName, setGivenName] = useState("");
   const [familyName, setFamilyName] = useState("");
   const [bio, setBio] = useState("");
@@ -45,7 +48,7 @@ const AboutYouSetup = () => {
     location?: string;
   }>({});
 
-  // TODO: fix date picker android, keyboard blocks save and continue on bio
+  // TODO: fix date picker android
 
   // If user is not authenticated, redirect to login
   useEffect(() => {
@@ -58,7 +61,7 @@ const AboutYouSetup = () => {
             text: "OK",
             onPress: () => router.replace("/(auth)/LandingPage"),
           },
-        ]
+        ],
       );
     }
   }, [session]);
@@ -148,7 +151,7 @@ const AboutYouSetup = () => {
             text: "Go to Login",
             onPress: () => router.replace("/(auth)/LandingPage"),
           },
-        ]
+        ],
       );
       return;
     }
@@ -179,7 +182,7 @@ const AboutYouSetup = () => {
           console.error("Error uploading avatar:", err);
           Alert.alert(
             "Upload error",
-            err?.message || "Failed to upload avatar. Please try again."
+            err?.message || "Failed to upload avatar. Please try again.",
           );
           setIsSubmitting(false);
           return;
@@ -212,13 +215,13 @@ const AboutYouSetup = () => {
               text: "Go to Login",
               onPress: () => router.replace("/(auth)/LandingPage"),
             },
-          ]
+          ],
         );
       } else {
         // Generic error
         Alert.alert(
           "Error",
-          error.message || "Failed to create your profile. Please try again."
+          error.message || "Failed to create your profile. Please try again.",
         );
       }
     } finally {
@@ -237,156 +240,169 @@ const AboutYouSetup = () => {
   return (
     <View className="flex-1 bg-background">
       <Pressable onPress={() => router.push("/(app)/Home")} />
-      <TouchableWithoutFeedback onPress={handleOutsideTouch}>
-        <ScrollView
-          className="flex-1 px-8"
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Header */}
-          <View className="items-center mt-8 mb-8">
-            <Text className="text-4xl font-bold text-primary">About You</Text>
-            <Text className="text-base text-muted mt-2 text-center">
-              Tell us a bit about yourself to get started
-            </Text>
-          </View>
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}
+      >
+        <TouchableWithoutFeedback onPress={handleOutsideTouch}>
+          <ScrollView
+            className="flex-1 px-8"
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            {/* Header */}
+            <View className="items-center mt-8 mb-8">
+              <Text className="text-4xl font-bold text-primary">About You</Text>
+              <Text className="text-base text-muted mt-2 text-center">
+                Tell us a bit about yourself to get started
+              </Text>
+            </View>
 
-          {/* Avatar Upload */}
-          <View className="items-center mb-8">
-            <ProfileImagePicker value={avatarUri} onChange={setAvatarUri} />
-          </View>
+            {/* Avatar Upload */}
+            <View className="items-center mb-8">
+              <ProfileImagePicker value={avatarUri} onChange={setAvatarUri} />
+            </View>
 
-          {/* Given Name */}
-          <FormField
-            label="First Name"
-            value={givenName}
-            onChangeText={setGivenName}
-            placeholder="John"
-            error={errors.displayName}
-          />
+            {/* Given Name */}
+            <FormField
+              label="First Name"
+              value={givenName}
+              onChangeText={setGivenName}
+              placeholder="John"
+              error={errors.displayName}
+            />
 
-          {/* Family Name */}
-          <FormField
-            label="Last Name"
-            value={familyName}
-            onChangeText={setFamilyName}
-            placeholder="Doe"
-            error={errors.displayName}
-          />
+            {/* Family Name */}
+            <FormField
+              label="Last Name"
+              value={familyName}
+              onChangeText={setFamilyName}
+              placeholder="Doe"
+              error={errors.displayName}
+            />
 
-          {/* Birthday */}
-          <View className="mb-6 flex-col">
-            <Text className="text-base font-semibold text-foreground mb-2">
-              Birthday
-            </Text>
-            <Pressable
-              className={`bg-white border rounded-xl px-4 py-3 flex-row items-center justify-between ${
-                errors.birthday ? "border-danger" : "border-border"
-              }`}
-              onPress={toggleDatePicker}
-            >
-              <Text
-                className={`text-base ${
-                  birthday ? "text-foreground" : "text-muted"
+            {/* Birthday */}
+            <View className="mb-6 flex-col">
+              <Text className="text-base font-semibold text-foreground mb-2">
+                Birthday
+              </Text>
+              <Pressable
+                className={`bg-white border rounded-xl px-4 py-3 flex-row items-center justify-between ${
+                  errors.birthday ? "border-danger" : "border-border"
                 }`}
+                onPress={toggleDatePicker}
               >
-                {birthday || "Select your birthday"}
-              </Text>
-              <Ionicons
-                name="calendar-outline"
-                size={20}
-                color={colors.muted.DEFAULT}
-              />
-            </Pressable>
-
-            {showDatePicker && (
-              <DateTimePicker
-                testID="dateTimePicker"
-                value={date}
-                mode="date"
-                display={Platform.OS === "ios" ? "spinner" : "default"}
-                onChange={onBirthdayChange}
-                maximumDate={new Date()} // Can't select future dates
-                minimumDate={
-                  new Date(
-                    new Date().setFullYear(new Date().getFullYear() - 100)
-                  )
-                } // Can't select dates more than 100 years ago
-              />
-            )}
-            {errors.birthday && (
-              <Text className="text-sm text-danger mt-1">
-                {errors.birthday}
-              </Text>
-            )}
-          </View>
-
-          {/* Gender */}
-          <View className="mb-6">
-            <Text className="text-base font-semibold text-foreground mb-2">
-              Gender
-            </Text>
-            <View className="flex-row flex-wrap gap-3">
-              {genderOptions.map((option) => (
-                <Pressable
-                  key={option}
-                  onPress={() => setGender(option)}
-                  className={`px-4 py-2 rounded-full border ${
-                    gender === option
-                      ? "bg-primary border-primary"
-                      : "bg-white border-border"
+                <Text
+                  className={`text-base ${
+                    birthday ? "text-foreground" : "text-muted"
                   }`}
                 >
-                  <Text
-                    className={`text-base ${
-                      gender === option ? "text-white" : "text-foreground"
+                  {birthday || "Select your birthday"}
+                </Text>
+                <Ionicons
+                  name="calendar-outline"
+                  size={20}
+                  color={colors.muted.DEFAULT}
+                />
+              </Pressable>
+
+              {showDatePicker && (
+                <DateTimePicker
+                  testID="dateTimePicker"
+                  value={date}
+                  mode="date"
+                  display={Platform.OS === "ios" ? "spinner" : "default"}
+                  onChange={onBirthdayChange}
+                  maximumDate={new Date()} // Can't select future dates
+                  minimumDate={
+                    new Date(
+                      new Date().setFullYear(new Date().getFullYear() - 100),
+                    )
+                  } // Can't select dates more than 100 years ago
+                />
+              )}
+              {errors.birthday && (
+                <Text className="text-sm text-danger mt-1">
+                  {errors.birthday}
+                </Text>
+              )}
+            </View>
+
+            {/* Gender */}
+            <View className="mb-6">
+              <Text className="text-base font-semibold text-foreground mb-2">
+                Gender
+              </Text>
+              <View className="flex-row flex-wrap gap-3">
+                {genderOptions.map((option) => (
+                  <Pressable
+                    key={option}
+                    onPress={() => setGender(option)}
+                    className={`px-4 py-2 rounded-full border ${
+                      gender === option
+                        ? "bg-primary border-primary"
+                        : "bg-white border-border"
                     }`}
                   >
-                    {option?.charAt(0)! + option?.slice(1).toLowerCase()}
-                  </Text>
-                </Pressable>
-              ))}
+                    <Text
+                      className={`text-base ${
+                        gender === option ? "text-white" : "text-foreground"
+                      }`}
+                    >
+                      {option?.charAt(0)! + option?.slice(1).toLowerCase()}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+              {errors.gender && (
+                <Text className="text-sm text-danger mt-1">
+                  {errors.gender}
+                </Text>
+              )}
             </View>
-            {errors.gender && (
-              <Text className="text-sm text-danger mt-1">{errors.gender}</Text>
-            )}
-          </View>
 
-          {/* Location */}
-          <LocationPicker
-            mode="city"
-            onChange={handleLocationChange}
-            placeholder={location ? location.formatted : undefined}
-            error={errors.location}
-          />
-
-          {/* Bio (Optional) */}
-          <FormField
-            label="Bio (Optional)"
-            value={bio}
-            onChangeText={setBio}
-            placeholder="Tell people a bit about yourself..."
-            multiline
-            numberOfLines={4}
-            containerClassName="mb-8"
-            style={{ minHeight: 100 }}
-          />
-
-          {/* Save and Continue Button */}
-          <View className="mb-8">
-            <GrouplyButton
-              label={isSubmitting ? "Creating Profile..." : "Save & Continue"}
-              variant="primary"
-              size="large"
-              fullWidth
-              onPress={handleSaveAndContinue}
-              disabled={
-                !givenName || !birthday || !gender || !location || isSubmitting
-              }
-              isLoading={isSubmitting}
+            {/* Location */}
+            <LocationPicker
+              mode="city"
+              onChange={handleLocationChange}
+              placeholder={location ? location.formatted : undefined}
+              error={errors.location}
             />
-          </View>
-        </ScrollView>
-      </TouchableWithoutFeedback>
+
+            {/* Bio (Optional) */}
+            <FormField
+              label="Bio (Optional)"
+              value={bio}
+              onChangeText={setBio}
+              placeholder="Tell people a bit about yourself..."
+              multiline
+              numberOfLines={4}
+              containerClassName="mb-8"
+              style={{ minHeight: 100 }}
+            />
+
+            {/* Save and Continue Button */}
+            <View className="mb-8">
+              <GrouplyButton
+                label={isSubmitting ? "Creating Profile..." : "Save & Continue"}
+                variant="primary"
+                size="large"
+                fullWidth
+                onPress={handleSaveAndContinue}
+                disabled={
+                  !givenName ||
+                  !birthday ||
+                  !gender ||
+                  !location ||
+                  isSubmitting
+                }
+                isLoading={isSubmitting}
+              />
+            </View>
+          </ScrollView>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </View>
   );
 };

@@ -341,7 +341,7 @@ export default function HomeChatSection({
               placeholderTextColor="#6d7281"
               returnKeyType="send"
               onSubmitEditing={handleSend}
-              submitBehavior="blurAndSubmit"
+              submitBehavior="submit"
               multiline
               scrollEnabled
               textAlignVertical="top"
