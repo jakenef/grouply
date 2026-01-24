@@ -69,7 +69,7 @@ export const eventSchema = z.object({
   coverImageUrl: z.string(),
 
   // Organizer info
-  organizer: eventOrganizerSchema,
+  organizer: eventOrganizerSchema.nullable(),
 
   // Activity
   activity: activitySchema,

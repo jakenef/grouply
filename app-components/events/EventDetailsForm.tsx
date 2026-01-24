@@ -138,10 +138,10 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
   });
   const [name, setName] = useState(props.event?.name || "");
   const [description, setDescription] = useState(
-    props.event?.description || ""
+    props.event?.description || "",
   );
   const [activityId, setActivityId] = useState<string | null>(
-    props.event?.activityId || null
+    props.event?.activityId || null,
   );
 
   const [location, setLocation] = useState<LocationData | null>(null);
@@ -149,7 +149,7 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
   // Fetch location data if locationId is provided
   const { data: locationData } = trpc.locations.getLocationById.useQuery(
     { id: props.event?.locationId! },
-    { enabled: !!props.event?.locationId }
+    { enabled: !!props.event?.locationId },
   );
 
   // Set location when locationData is fetched
@@ -160,22 +160,22 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
   }, [locationData]);
 
   const [startTime, setStartTime] = useState(
-    props.event?.startTime || new Date()
+    props.event?.startTime || new Date(),
   );
   const [endTime, setEndTime] = useState(props.event?.endTime || new Date());
   const [maxAttendees, setMaxAttendees] = useState(
-    props.event?.maxAttendees?.toString() || ""
+    props.event?.maxAttendees?.toString() || "",
   );
   const [minAttendees, setMinAttendees] = useState(
-    props.event?.minAttendees?.toString() || ""
+    props.event?.minAttendees?.toString() || "",
   );
   const [minAge, setMinAge] = useState(props.event?.minAge?.toString() || "");
   const [maxAge, setMaxAge] = useState(props.event?.maxAge?.toString() || "");
 
   const [imgUrls, setImgUrls] = useState(
-    props.event?.coverImageUrl 
+    props.event?.coverImageUrl
       ? [props.event.coverImageUrl, ...(props.event.additionalImageUrls || [])]
-      : []
+      : [],
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -203,7 +203,7 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
       setErrors(validationErrors);
       Alert.alert(
         "Validation Error",
-        "Please fill out all required fields correctly."
+        "Please fill out all required fields correctly.",
       );
       return;
     }
@@ -218,12 +218,13 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
           uploadImageUri(uri, {
             bucket: "event-images",
             maxSizeBytes: 3 * 1024 * 1024,
-          })
-        )
+          }),
+        ),
       );
 
       // Use first image as cover
       const coverImageUrl = uploadedUrls[0];
+      const additionalImageUrls = uploadedUrls.slice(1);
 
       // Call upsert mutation
       await upsertEventMutation.mutateAsync({
@@ -234,7 +235,9 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
         startTime,
         endTime,
         locationData: location!,
-        imageUrls: uploadedUrls.map((uploadedObj) => uploadedObj.publicUrl),
+        additionalImageUrls: additionalImageUrls.map(
+          (uploadedObj) => uploadedObj.publicUrl,
+        ),
         coverImageUrl: coverImageUrl.publicUrl,
         maxAttendees: Number(maxAttendees),
         minAttendees: Number(minAttendees),
@@ -247,7 +250,7 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
         "Success",
         props.event?.id
           ? "Event updated successfully"
-          : "Event created successfully"
+          : "Event created successfully",
       );
       router.back();
     } catch (error) {
@@ -417,8 +420,8 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
                   isLoading
                     ? "Loading..."
                     : props.event?.id
-                    ? "Save Event"
-                    : "Create and Host Event"
+                      ? "Save Event"
+                      : "Create and Host Event"
                 }
                 variant="primary"
                 onPress={handleSave}

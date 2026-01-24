@@ -187,9 +187,9 @@ model Event {
   coverImageUrl String
   additionalImageUrls String[]
 
-  // Organizer
-  organizerId String
-  organizer   User   @relation("EventOrganizer", fields: [organizerId], references: [id])
+  // Organizer (nullable to handle deleted users)
+  organizerId String?
+  organizer   User?   @relation("EventOrganizer", fields: [organizerId], references: [id], onDelete: SetNull)
 
   // Primary activity
   activityId String
@@ -256,7 +256,7 @@ model EventRegistration {
   eventId   String
   createdAt DateTime @default(now())
 
-  user  User  @relation(fields: [userId], references: [id])
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   @@id([userId, eventId])
@@ -286,7 +286,7 @@ model ChatMember {
   joinedAt  DateTime @default(now())
 
   channel ChatChannel @relation(fields: [channelId], references: [id])
-  user    User        @relation(fields: [userId], references: [id])
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([channelId, userId])
   @@index([userId])
@@ -308,7 +308,7 @@ model ChatMessage {
   toolResult Json?
 
   channel ChatChannel @relation(fields: [channelId], references: [id])
-  author  User        @relation(fields: [authorId], references: [id])
+  author  User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
   @@index([channelId, createdAt])
 }

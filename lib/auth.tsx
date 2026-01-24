@@ -148,10 +148,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setIsLoading(false);
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        setSession(session);
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        console.error("Failed to get Supabase session:", error);
+        setSession(null);
+        setIsLoading(false);
+      });
 
     // Listen for auth state changes
     const {

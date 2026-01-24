@@ -37,7 +37,7 @@ interface EventDetailsObject {
   attendeeIds: string[];
   additionalImageUrls: string[];
   coverImageUrl: string;
-  hostId: string;
+  hostId: string | null;
   isCanceled: boolean;
 }
 
@@ -60,9 +60,14 @@ export default function EventDetails(props: EventDetailsProps) {
   const fractionAttendees =
     props.event.numRegistered / props.event.maxAttendees;
   const isUserAttending = !!user && props.event.attendeeIds.includes(user.id);
-  const { data: host } = trpc.users.getPublicUserInfoById.useQuery({
-    id: props.event.hostId,
-  });
+  const { data: host } = trpc.users.getPublicUserInfoById.useQuery(
+    {
+      id: props.event.hostId!,
+    },
+    {
+      enabled: !!props.event.hostId, // Only query if hostId exists
+    }
+  );
   const isPast = new Date(props.event.startTime) < new Date();
   const isFull = props.event.attendeeIds.length >= props.event.maxAttendees;
   const userAge = calculateAge(new Date(user?.birthday!)) ?? 18;
@@ -205,7 +210,9 @@ export default function EventDetails(props: EventDetailsProps) {
             <Text className="text-muted">
               Hosted by{" "}
               <Text className="font-semibold">
-                {host?.givenName} {host?.familyName}
+                {host?.givenName
+                  ? `${host.givenName}${host.familyName ? ` ${host.familyName}` : ""}`
+                  : "[Deleted User]"}
               </Text>
             </Text>
           </View>

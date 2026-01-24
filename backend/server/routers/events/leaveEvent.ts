@@ -24,8 +24,8 @@ const leaveEvent = protectedProcedure
       });
     }
 
-    // check if user is host
-    if (ctx.user.id == event.organizerId) {
+    // check if user is host (organizerId can be null if host deleted their account)
+    if (event.organizerId && ctx.user.id == event.organizerId) {
       throw new TRPCError({
         code: "BAD_REQUEST",
         message: "Host cannot leave their event",

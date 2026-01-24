@@ -17,7 +17,7 @@ export default function EventDetailsEdit() {
     error: existingError,
   } = trpc.events.getEventDetailsFromId.useQuery(
     { id: existingEventId! },
-    { enabled: !!existingEventId && existingEventId.length > 0 }
+    { enabled: !!existingEventId && existingEventId.length > 0 },
   );
 
   // Generate event from channel if existingEventId is not provided
@@ -27,7 +27,7 @@ export default function EventDetailsEdit() {
     error: generatedError,
   } = trpc.events.generateEventFromChannel.useQuery(
     { channelId: channelId! },
-    { enabled: !existingEventId && !!channelId && channelId.length > 0 }
+    { enabled: !existingEventId && !!channelId && channelId.length > 0 },
   );
 
   const isLoading = isLoadingExisting || isLoadingGenerated;

@@ -1,0 +1,73 @@
+import * as dotenv from "dotenv";
+import { ConfigContext, ExpoConfig } from "expo/config";
+
+// Load the appropriate .env file based on APP_VARIANT
+const envFile = process.env.APP_VARIANT === "staging" ? ".env.stg" : ".env.dev";
+
+dotenv.config({ path: envFile });
+
+export default ({ config }: ConfigContext): ExpoConfig => ({
+  ...config,
+  name: "Grouply",
+  slug: "grouply",
+  version: "1.0.0",
+  orientation: "portrait",
+  icon: "./assets/images/grouplyAppIcon.png",
+  scheme: "grouply",
+  userInterfaceStyle: "automatic",
+  newArchEnabled: true,
+  runtimeVersion: {
+    policy: "appVersion",
+  },
+  updates: {
+    url: "https://u.expo.dev/94502a26-4752-4105-b2b0-602ba67498ff",
+  },
+  ios: {
+    supportsTablet: true,
+    bundleIdentifier: "com.grouply.grouplyapp",
+    infoPlist: {
+      ITSAppUsesNonExemptEncryption: false,
+    },
+  },
+  android: {
+    adaptiveIcon: {
+      backgroundColor: "#E6F4FE",
+      foregroundImage: "./assets/images/android-icon-foreground.png",
+      backgroundImage: "./assets/images/android-icon-background.png",
+      monochromeImage: "./assets/images/android-icon-monochrome.png",
+    },
+    edgeToEdgeEnabled: true,
+    predictiveBackGestureEnabled: false,
+    package: "com.grouply.grouply",
+  },
+  web: {
+    output: "static",
+    favicon: "./assets/images/grouplyAppIcon.png",
+  },
+  plugins: [
+    "expo-router",
+    [
+      "expo-splash-screen",
+      {
+        image: "./assets/images/grouplyAppIcon.png",
+        imageWidth: 200,
+        resizeMode: "contain",
+        backgroundColor: "#4f47e5",
+        dark: {
+          backgroundColor: "#4f47e5",
+        },
+      },
+    ],
+    "expo-web-browser",
+  ],
+  experiments: {
+    typedRoutes: true,
+    reactCompiler: true,
+  },
+  extra: {
+    router: {},
+    eas: {
+      projectId: "94502a26-4752-4105-b2b0-602ba67498ff",
+    },
+  },
+});

@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 import filter from "leo-profanity";
 import z from "zod";
 import calculateAge from "../../../../shared/utils/calculateAge";
+import { Prisma } from "../../../generated/prisma";
 import { prisma } from "../../prisma";
 import { locationDataSchema } from "../../schemas";
 import { protectedProcedure } from "../../trpc";
@@ -16,13 +17,13 @@ export const upsertEvent = protectedProcedure
       startTime: z.coerce.date(),
       endTime: z.coerce.date(),
       locationData: locationDataSchema,
-      imageUrls: z.array(z.string().trim().min(0)),
+      additionalImageUrls: z.array(z.string().trim().min(0)),
       coverImageUrl: z.string().trim().min(0),
       maxAttendees: z.number(),
       minAttendees: z.number(),
       minAge: z.number(),
       maxAge: z.number(),
-    })
+    }),
   )
   .mutation(async ({ ctx, input }) => {
     const organizerUser = await prisma.user.findUnique({
@@ -188,48 +189,58 @@ export const upsertEvent = protectedProcedure
       },
     });
 
-    const eventData = {
+    const baseEventData = {
       name: input.name,
       desc: input.description,
-      activity: { connect: { id: input.activityId } },
-      organizer: { connect: { id: ctx.user.id } },
       startsAt: input.startTime,
       endsAt: input.endTime,
-      location: { connect: { id: input.locationData.placeId } },
-      imageUrls: input.imageUrls,
+      additionalImageUrls: input.additionalImageUrls,
       coverImageUrl: input.coverImageUrl,
       minAttendees: input.minAttendees,
       maxAttendees: input.maxAttendees,
-      eventUrl: "not_implemented.com",
-      lowerAgeLimit: input.minAge,
-      upperAgeLimit: input.maxAge,
+      minAgeLimit: input.minAge,
+      maxAgeLimit: input.maxAge,
     };
 
     if (input.eventId) {
+      const updateData: Prisma.EventUpdateInput = {
+        ...baseEventData,
+        activity: { connect: { id: input.activityId } },
+        organizer: { connect: { id: ctx.user.id } },
+        location: { connect: { id: input.locationData.placeId } },
+      };
+
       return prisma.event.update({
         where: { id: input.eventId },
-        data: eventData,
+        data: updateData,
       });
     } else {
+      const createData: Prisma.EventCreateInput = {
+        ...baseEventData,
+        activity: { connect: { id: input.activityId } },
+        organizer: { connect: { id: ctx.user.id } },
+        location: { connect: { id: input.locationData.placeId } },
+        snapshot: {
+          create: {
+            hostUserId: ctx.user.id,
+            hostGivenName: ctx.user.givenName,
+            interestIds: organizerUser.interests.map(
+              (interest) => interest.interestId,
+            ),
+            traitScores: {
+              create: organizerUser.traitScores.map((ts) => ({
+                traitSlug: ts.trait.slug,
+                score: ts.score,
+              })),
+            },
+            capturedAt: new Date(),
+          },
+        },
+      };
+
       return prisma.$transaction(async (tx) => {
         const event = await prisma.event.create({
-          data: {
-            ...eventData,
-            snapshot: {
-              create: {
-                hostUserId: ctx.user.id,
-                hostGivenName: ctx.user.givenName,
-                interestIds: organizerUser.interests.map(
-                  (interest) => interest.interestId
-                ),
-                traitScores: organizerUser.traitScores.reduce((acc, ts) => {
-                  acc[ts.trait.slug] = ts.score;
-                  return acc;
-                }, {} as Record<string, number>),
-                capturedAt: new Date(),
-              },
-            },
-          },
+          data: createData,
         });
 
         await tx.eventRegistration.create({

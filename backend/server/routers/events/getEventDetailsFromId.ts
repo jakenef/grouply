@@ -29,7 +29,7 @@ export const getEventDetailsFromId = protectedProcedure
         attendeeIds: z.array(z.string()),
         additionalImageUrls: z.array(z.string()),
         coverImageUrl: z.string(),
-        hostId: z.string(),
+        hostId: z.string().nullable(),
         isCanceled: z.boolean(),
       })
       .optional()
