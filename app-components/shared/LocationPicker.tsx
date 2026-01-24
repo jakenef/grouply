@@ -386,18 +386,18 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
 
             {/* Search input */}
             <View className="p-3 bg-background">
-              <View className="relative">
+              <View
+                className="flex-row items-center"
+                style={[
+                  textInputStyles.standard,
+                  { paddingHorizontal: 12 },
+                ]}
+              >
                 <Ionicons
                   name="search"
                   size={20}
                   color={colors.muted.DEFAULT}
-                  style={{
-                    position: "absolute",
-                    left: 12,
-                    top: "50%",
-                    transform: [{ translateY: -10 }],
-                    zIndex: 1,
-                  }}
+                  style={{ marginRight: 8 }}
                 />
                 <TextInput
                   ref={searchInputRef}
@@ -406,25 +406,17 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
                   value={searchQuery}
                   onChangeText={handleSearch}
                   autoCapitalize="none"
-                  style={[
-                    textInputStyles.standard,
-                    {
-                      paddingLeft: 40, // Make room for the search icon
-                      paddingRight: searchQuery.length > 0 ? 40 : 16, // Make room for clear button if text exists
-                    },
-                  ]}
+                  style={{
+                    fontSize: 16,
+                    color: colors.foreground,
+                    paddingVertical: 0,
+                  }}
                 />
                 {searchQuery.length > 0 && (
                   <TouchableOpacity
                     onPress={() => handleSearch("")}
                     hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
-                    style={{
-                      position: "absolute",
-                      right: 12,
-                      top: "50%",
-                      transform: [{ translateY: -10 }],
-                      zIndex: 1,
-                    }}
+                    style={{ marginLeft: 8 }}
                   >
                     <Ionicons
                       name="close"

@@ -17,13 +17,13 @@ export const upsertEvent = protectedProcedure
       startTime: z.coerce.date(),
       endTime: z.coerce.date(),
       locationData: locationDataSchema,
-      imageUrls: z.array(z.string().trim().min(0)),
+      additionalImageUrls: z.array(z.string().trim().min(0)),
       coverImageUrl: z.string().trim().min(0),
       maxAttendees: z.number(),
       minAttendees: z.number(),
       minAge: z.number(),
       maxAge: z.number(),
-    })
+    }),
   )
   .mutation(async ({ ctx, input }) => {
     const organizerUser = await prisma.user.findUnique({
@@ -194,7 +194,7 @@ export const upsertEvent = protectedProcedure
       desc: input.description,
       startsAt: input.startTime,
       endsAt: input.endTime,
-      additionalImageUrls: input.imageUrls,
+      additionalImageUrls: input.additionalImageUrls,
       coverImageUrl: input.coverImageUrl,
       minAttendees: input.minAttendees,
       maxAttendees: input.maxAttendees,
@@ -225,7 +225,7 @@ export const upsertEvent = protectedProcedure
             hostUserId: ctx.user.id,
             hostGivenName: ctx.user.givenName,
             interestIds: organizerUser.interests.map(
-              (interest) => interest.interestId
+              (interest) => interest.interestId,
             ),
             traitScores: {
               create: organizerUser.traitScores.map((ts) => ({
