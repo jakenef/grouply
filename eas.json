@@ -10,6 +10,7 @@
     },
     "preview": {
       "distribution": "internal",
+      "channel": "preview",
       "env": {
         "EXPO_PUBLIC_TRPC_URL": "https://grouply-fdpg.onrender.com/trpc",
         "EXPO_PUBLIC_SUPABASE_URL": "https://iccpjtanplfkzrovuvav.supabase.co",
@@ -17,7 +18,8 @@
       }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "channel": "production"
     }
   },
   "submit": {

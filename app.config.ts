@@ -16,6 +16,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   scheme: "grouply",
   userInterfaceStyle: "automatic",
   newArchEnabled: true,
+  runtimeVersion: {
+    policy: "appVersion",
+  },
+  updates: {
+    url: "https://u.expo.dev/94502a26-4752-4105-b2b0-602ba67498ff",
+  },
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.grouply.grouplyapp",
