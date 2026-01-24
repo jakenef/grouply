@@ -14,6 +14,7 @@
         "panel": "dedicated",
         "showReuseMessage": true,
         "clear": false,
+        "close": false,
         "group": "servers"
       },
       "isBackground": true,
@@ -25,8 +26,8 @@
     {
       "label": "Start Frontend (Expo)",
       "type": "shell",
-      "command": "npx",
-      "args": ["expo", "start"],
+      "command": "npm",
+      "args": ["run", "start"],
       "group": "build",
       "presentation": {
         "echo": true,
@@ -35,6 +36,7 @@
         "panel": "dedicated",
         "showReuseMessage": true,
         "clear": false,
+        "close": false,
         "group": "servers"
       },
       "isBackground": true,
@@ -44,9 +46,32 @@
       }
     },
     {
-      "label": "Start All Development Servers",
+      "label": "Open Working Terminal",
+      "type": "shell",
+      "command": "echo 'Working Terminal Ready' && $SHELL",
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": true,
+        "close": false
+      },
+      "isBackground": true,
+      "problemMatcher": [],
+      "runOptions": {
+        "instanceLimit": 1
+      }
+    },
+    {
+      "label": "Start Development",
       "dependsOrder": "parallel",
-      "dependsOn": ["Start Backend Server", "Start Frontend (Expo)"],
+      "dependsOn": [
+        "Start Backend Server",
+        "Start Frontend (Expo)",
+        "Open Working Terminal"
+      ],
       "group": {
         "kind": "build",
         "isDefault": true
