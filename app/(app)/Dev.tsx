@@ -1,6 +1,7 @@
 import { trpc } from "@/lib/trpc";
 import React from "react";
 import { ScrollView, View } from "react-native";
+import { EnvDebugger } from "../../app-components/shared/EnvDebugger";
 import TroubleshootItem from "../../app-components/shared/TroubleshootItem";
 
 const Dev = () => {
@@ -38,6 +39,9 @@ const Dev = () => {
     <View className="flex-1 bg-background">
       <ScrollView className="flex-1 bg-background">
         <View className="p-4">
+          {/* Environment Variables Debugger */}
+          <EnvDebugger />
+
           <TroubleshootItem
             title="Clear Test Users"
             description="Removes all test users from the database"

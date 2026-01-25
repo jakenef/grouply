@@ -87,7 +87,8 @@ const TypingIndicator = () => {
     opacity: 0.3 + dot3.value * 0.7,
     transform: [{ translateY: -dot3.value * 4 }],
   }));
-
+  // TODO: back button right after send message makes glitch
+  // TODO: local badge happens on staging
   return (
     <View className="flex-row items-center gap-1.5">
       <Animated.View

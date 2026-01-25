@@ -7,7 +7,7 @@ import { ChatMessage, ChatMessageRole } from "@/shared/types/Chat";
 import { ChatEventSuggestion } from "@/shared/types/Event";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
-import { Alert, Pressable, Text, View } from "react-native";
+import { Alert, Keyboard, Pressable, Text, View } from "react-native";
 import Animated, {
   FadeIn,
   FadeOut,
@@ -67,7 +67,7 @@ const Home = () => {
             maxAttendees: event.event.maxAttendees,
           };
           return chatEventSuggestion;
-        })
+        }),
       );
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
@@ -75,7 +75,7 @@ const Home = () => {
       Alert.alert(
         "Something went wrong",
         "We couldn't process your message. Please try again.",
-        [{ text: "OK" }]
+        [{ text: "OK" }],
       );
       // Remove the user message since we couldn't get a response
       setMessages((prev) => prev.slice(0, -1));
@@ -83,6 +83,7 @@ const Home = () => {
   };
 
   const handleBack = () => {
+    Keyboard.dismiss();
     setMessages([]);
     setEventSuggestions(undefined);
     setIsChatExpanded(false);

@@ -3,8 +3,8 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
-    "start": "APP_VARIANT=development expo start --clear",
-    "start:staging": "APP_VARIANT=staging expo start --clear",
+    "start": "cp .env.dev .env && APP_VARIANT=development expo start --clear",
+    "start:staging": "cp .env.stg .env && APP_VARIANT=staging expo start --clear",
     "expo-lint": "expo lint",
     "server-lint": "npx tsc --project tsconfig.server.json --noEmit",
     "dev:server": "cp .env.dev .env && nodemon --exec tsx backend/server/index.ts",
@@ -15,7 +15,8 @@
     "start:server:prod": "node dist/backend/server/index.js",
     "build:server:prod": "npx prisma generate && npx prisma migrate deploy && npx tsc --project tsconfig.server.json && cpy 'backend/generated/**' dist/backend/generated",
     "migrate:staging": "cp .env.stg .env && npx prisma migrate deploy",
-    "migrate:dev": "cp .env.dev .env && npx prisma migrate dev"
+    "migrate:dev": "cp .env.dev .env && npx prisma migrate dev",
+    "deploy:internal": "APP_VARIANT=staging eas update --channel preview --platform ios"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
