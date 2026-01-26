@@ -16,7 +16,8 @@
     "build:server:prod": "npx prisma generate && npx prisma migrate deploy && npx tsc --project tsconfig.server.json && cpy 'backend/generated/**' dist/backend/generated",
     "migrate:staging": "cp .env.stg .env && npx prisma migrate deploy",
     "migrate:dev": "cp .env.dev .env && npx prisma migrate dev",
-    "deploy:internal": "APP_VARIANT=staging eas update --channel preview --platform ios"
+    "deploy:internal": "APP_VARIANT=staging eas update --channel preview --platform ios",
+    "lint": "expo lint"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",

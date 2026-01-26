@@ -39,7 +39,7 @@ export default function RootLayout() {
         } else {
           console.error(
             "❌ Backend health check FAILED - Status:",
-            response.status
+            response.status,
           );
           Alert.alert("Connection Failed", `Unable to connect to server.`, [
             { text: "OK" },

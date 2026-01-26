@@ -23,8 +23,8 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import CreateEventCard from "../shared/CreateEventCard";
-import { EventCard } from "../shared/EventCard";
+import CreateEventCard from "../events/CreateEventCard";
+import { EventCard } from "../events/EventCard";
 import GrouplyButton from "../shared/GrouplyButton";
 
 // Customize the AI avatar here:

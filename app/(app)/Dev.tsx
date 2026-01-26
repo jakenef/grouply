@@ -1,8 +1,8 @@
 import { trpc } from "@/lib/trpc";
 import React from "react";
 import { ScrollView, View } from "react-native";
-import { EnvDebugger } from "../../app-components/shared/EnvDebugger";
-import TroubleshootItem from "../../app-components/shared/TroubleshootItem";
+import { EnvDebugger } from "../../app-components/dev/EnvDebugger";
+import TroubleshootItem from "../../app-components/dev/TroubleshootItem";
 
 const Dev = () => {
   const { mutateAsync: createLocations } =

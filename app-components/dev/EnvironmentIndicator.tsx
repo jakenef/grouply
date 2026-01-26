@@ -1,3 +1,4 @@
+import Constants from "expo-constants";
 import { Text, View } from "react-native";
 
 /**
@@ -6,7 +7,12 @@ import { Text, View } from "react-native";
  * Hidden in production.
  */
 export default function EnvironmentIndicator() {
-  const trpcUrl = process.env.EXPO_PUBLIC_TRPC_URL || "";
+  // Use Constants.expoConfig for runtime value (works with EAS updates)
+  // instead of process.env which is inlined at build time
+  const trpcUrl =
+    Constants.expoConfig?.extra?.env?.EXPO_PUBLIC_TRPC_URL ||
+    process.env.EXPO_PUBLIC_TRPC_URL ||
+    "";
 
   // Determine environment based on TRPC URL
   let environment: "LOCAL" | "STAGING" | "PRODUCTION" | null = null;

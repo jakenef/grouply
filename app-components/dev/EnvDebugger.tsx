@@ -22,7 +22,9 @@ export function EnvDebugger() {
   const configInfo = {
     "App Version": Constants.expoConfig?.version || "unknown",
     "Runtime Version":
-      Constants.expoConfig?.runtimeVersion?.policy || "unknown",
+      typeof Constants.expoConfig?.runtimeVersion === "string"
+        ? Constants.expoConfig.runtimeVersion
+        : Constants.expoConfig?.runtimeVersion?.policy || "unknown",
     "Updates URL": Constants.expoConfig?.updates?.url || "NOT SET",
     "EAS Project ID": Constants.expoConfig?.extra?.eas?.projectId || "NOT SET",
     __DEV__: String(__DEV__),
