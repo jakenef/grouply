@@ -32,9 +32,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   android: {
     adaptiveIcon: {
       backgroundColor: "#E6F4FE",
-      foregroundImage: "./assets/images/android-icon-foreground.png",
-      backgroundImage: "./assets/images/android-icon-background.png",
-      monochromeImage: "./assets/images/android-icon-monochrome.png",
+      foregroundImage: "./assets/images/grouplyAppIcon.png",
+      backgroundImage: "./assets/images/grouplyAppIcon.png",
+      monochromeImage: "./assets/images/grouplyAppIcon.png",
     },
     edgeToEdgeEnabled: true,
     predictiveBackGestureEnabled: false,
@@ -68,6 +68,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     router: {},
     eas: {
       projectId: "94502a26-4752-4105-b2b0-602ba67498ff",
+    },
+    // Bake environment variables into the app config
+    // These will be available via Constants.expoConfig.extra
+    env: {
+      EXPO_PUBLIC_TRPC_URL: process.env.EXPO_PUBLIC_TRPC_URL || "",
+      EXPO_PUBLIC_SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL || "",
+      EXPO_PUBLIC_SUPABASE_KEY: process.env.EXPO_PUBLIC_SUPABASE_KEY || "",
     },
   },
 });

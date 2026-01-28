@@ -23,8 +23,8 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import CreateEventCard from "../shared/CreateEventCard";
-import { EventCard } from "../shared/EventCard";
+import CreateEventCard from "../events/CreateEventCard";
+import { EventCard } from "../events/EventCard";
 import GrouplyButton from "../shared/GrouplyButton";
 
 // Customize the AI avatar here:
@@ -87,7 +87,8 @@ const TypingIndicator = () => {
     opacity: 0.3 + dot3.value * 0.7,
     transform: [{ translateY: -dot3.value * 4 }],
   }));
-
+  // TODO: back button right after send message makes glitch
+  // TODO: local badge happens on staging
   return (
     <View className="flex-row items-center gap-1.5">
       <Animated.View
@@ -341,7 +342,7 @@ export default function HomeChatSection({
               placeholderTextColor="#6d7281"
               returnKeyType="send"
               onSubmitEditing={handleSend}
-              submitBehavior="blurAndSubmit"
+              submitBehavior="submit"
               multiline
               scrollEnabled
               textAlignVertical="top"

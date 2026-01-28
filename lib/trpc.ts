@@ -9,26 +9,32 @@ export const trpc = createTRPCReact<AppRouter>();
 
 // Get API URL with proper handling for Android emulator
 const getApiUrl = () => {
-  // Production or explicit override
-  if (process.env.EXPO_PUBLIC_TRPC_URL) {
-    return process.env.EXPO_PUBLIC_TRPC_URL;
+  // First, try to get from baked-in app config (works with EAS updates)
+  const configUrl = Constants.expoConfig?.extra?.env?.EXPO_PUBLIC_TRPC_URL;
+  if (configUrl) {
+    console.log("[TRPC] Using URL from app config:", configUrl);
+    return configUrl;
   }
 
-  // Development mode
+  // Development mode fallbacks
   if (__DEV__) {
     // Android emulator: use special IP to reach host machine
     if (Platform.OS === "android") {
+      console.log("[TRPC] Android emulator detected, using 10.0.2.2:3001");
       return "http://10.0.2.2:3001/trpc";
     }
 
     // iOS/physical devices: use Expo dev server IP
     const host = Constants.expoConfig?.hostUri?.split(":")[0];
     if (host) {
-      return `http://${host}:3001/trpc`;
+      const url = `http://${host}:3001/trpc`;
+      console.log("[TRPC] Using Expo dev server host:", url);
+      return url;
     }
   }
 
   // Fallback
+  console.warn("[TRPC] No configured URL found, falling back to localhost");
   return "http://localhost:3001/trpc";
 };
 
@@ -58,4 +64,4 @@ export const trpcClient = trpc.createClient({
 });
 
 // Log the URL being used (only once)
-console.log("📡 tRPC Client URL:", getApiUrl());
+const API_URL = getApiUrl();

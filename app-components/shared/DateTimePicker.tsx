@@ -22,6 +22,12 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
 }) => {
   const [showPicker, setShowPicker] = useState(false);
 
+  // Ensure value is always a valid Date object (handles string values from API)
+  const dateValue =
+    value instanceof Date && !isNaN(value.getTime())
+      ? value
+      : new Date(value);
+
   const handleChange = (event: any, selectedDate?: Date) => {
     if (event.type === "dismissed") {
       setShowPicker(false);
@@ -41,11 +47,11 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
 
   const formatValue = () => {
     if (mode === "date") {
-      return format(value, "MMMM d, yyyy");
+      return format(dateValue, "MMMM d, yyyy");
     } else if (mode === "time") {
-      return format(value, "h:mm a");
+      return format(dateValue, "h:mm a");
     } else {
-      return format(value, "MMMM d, yyyy • h:mm a");
+      return format(dateValue, "MMMM d, yyyy • h:mm a");
     }
   };
 
@@ -63,7 +69,7 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
       </Pressable>
       {showPicker && (
         <RNDateTimePicker
-          value={value}
+          value={dateValue}
           mode={mode}
           display={Platform.OS === "ios" ? "spinner" : "default"}
           onChange={handleChange}

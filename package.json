@@ -3,8 +3,8 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
-    "start": "APP_VARIANT=development expo start --clear",
-    "start:staging": "APP_VARIANT=staging expo start --clear",
+    "start": "cp .env.dev .env && APP_VARIANT=development expo start --clear",
+    "start:staging": "cp .env.stg .env && APP_VARIANT=staging expo start --clear",
     "expo-lint": "expo lint",
     "server-lint": "npx tsc --project tsconfig.server.json --noEmit",
     "dev:server": "cp .env.dev .env && nodemon --exec tsx backend/server/index.ts",
@@ -15,7 +15,9 @@
     "start:server:prod": "node dist/backend/server/index.js",
     "build:server:prod": "npx prisma generate && npx prisma migrate deploy && npx tsc --project tsconfig.server.json && cpy 'backend/generated/**' dist/backend/generated",
     "migrate:staging": "cp .env.stg .env && npx prisma migrate deploy",
-    "migrate:dev": "cp .env.dev .env && npx prisma migrate dev"
+    "migrate:dev": "cp .env.dev .env && npx prisma migrate dev",
+    "deploy:internal": "APP_VARIANT=staging eas update --channel preview --platform ios",
+    "lint": "expo lint"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
@@ -37,6 +39,7 @@
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.3",
     "expo": "~54.0.30",
+    "expo-checkbox": "~5.0.8",
     "expo-constants": "~18.0.8",
     "expo-font": "~14.0.8",
     "expo-haptics": "~15.0.8",

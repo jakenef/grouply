@@ -1,4 +1,4 @@
-import EnvironmentIndicator from "@/app-components/shared/EnvironmentIndicator";
+import EnvironmentIndicator from "@/app-components/dev/EnvironmentIndicator";
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/lib/theme";
 import { useCurrentUser } from "@/lib/useCurrentUserHook";

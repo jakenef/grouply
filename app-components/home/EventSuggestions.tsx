@@ -4,9 +4,9 @@ import { EventCardEvent } from "@/shared/types/Event";
 import { router } from "expo-router";
 import React from "react";
 import { ActivityIndicator, FlatList, Text, View } from "react-native";
+import CreateEventCard from "../events/CreateEventCard";
+import { EventCard } from "../events/EventCard";
 import SkeletonLoadingEvents from "../events/SkeletonLoadingEvents";
-import CreateEventCard from "../shared/CreateEventCard";
-import { EventCard } from "../shared/EventCard";
 import GrouplyButton from "../shared/GrouplyButton";
 
 const EventSuggestions = () => {

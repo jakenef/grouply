@@ -50,23 +50,23 @@ const PreferencesSetup = () => {
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
 
   // State for personality preferences
-  const [eventEnergy, setEventEnergy] = useState("");
+  const [eventEnergy, setEventEnergy] = useState<string[]>([]);
   const [groupRole, setGroupRole] = useState("");
   const [preferredAtmosphere, setPreferredAtmosphere] = useState("");
   const [downtimePreference, setDowntimePreference] = useState("");
   const [peopleVibe, setPeopleVibe] = useState("");
 
-  // Personality questions data
+  // Personality questions data - values match trait map keys in onboardingTraitMap.ts
   const personalityQuestions = {
     eventEnergy: {
       question: "What kind of energy do you like at events?",
       options: [
         {
-          value: "high",
+          value: "high_energy",
           label: "High energy — music, games, lots of interaction",
         },
         {
-          value: "laid-back",
+          value: "laid_back",
           label: "Laid back — chill conversations, relaxed setting",
         },
         {
@@ -80,41 +80,41 @@ const PreferencesSetup = () => {
     groupRole: {
       question: "How do you usually show up in a group?",
       options: [
-        { value: "energizer", label: "The one hyping everyone up" },
-        { value: "observer", label: "The chill observer" },
-        { value: "organizer", label: "The planner or organizer" },
-        { value: "deep-talker", label: "The deep talker" },
-        { value: "entertainer", label: "The one who keeps it funny and light" },
+        { value: "hype_person", label: "The one hyping everyone up" },
+        { value: "chill_observer", label: "The chill observer" },
+        { value: "planner", label: "The planner or organizer" },
+        { value: "deep_talker", label: "The deep talker" },
+        { value: "funny_light", label: "The one who keeps it funny and light" },
       ],
     },
     preferredAtmosphere: {
       question: "What atmosphere makes you feel most alive?",
       options: [
-        { value: "energetic", label: "Loud and full of energy" },
-        { value: "cozy", label: "Relaxed and cozy" },
-        { value: "outdoors", label: "Outdoors and free" },
-        { value: "artsy", label: "Artsy and inspiring" },
-        { value: "focused", label: "Focused and purposeful" },
+        { value: "loud_energy", label: "Loud and full of energy" },
+        { value: "relaxed_cozy", label: "Relaxed and cozy" },
+        { value: "outdoors_free", label: "Outdoors and free" },
+        { value: "artsy_inspiring", label: "Artsy and inspiring" },
+        { value: "focused_purposeful", label: "Focused and purposeful" },
       ],
     },
     downtimePreference: {
       question: "How do you like to spend your downtime?",
       options: [
-        { value: "active", label: "Being active or outside" },
-        { value: "exploring", label: "Trying new food or places" },
-        { value: "creating", label: "Creating or learning something" },
-        { value: "social", label: "Hanging with close friends" },
-        { value: "solo", label: "Recharging solo" },
+        { value: "active_outside", label: "Being active or outside" },
+        { value: "new_food_places", label: "Trying new food or places" },
+        { value: "creating_learning", label: "Creating or learning something" },
+        { value: "close_friends", label: "Hanging with close friends" },
+        { value: "recharge_solo", label: "Recharging solo" },
       ],
     },
     peopleVibe: {
       question: "What kind of people do you vibe with most?",
       options: [
-        { value: "curious", label: "Curious and open-minded" },
-        { value: "chill", label: "Chill and down-to-earth" },
-        { value: "driven", label: "Driven and goal-oriented" },
-        { value: "playful", label: "Playful and spontaneous" },
-        { value: "empathetic", label: "Empathetic and genuine" },
+        { value: "curious_open", label: "Curious and open-minded" },
+        { value: "chill_grounded", label: "Chill and down-to-earth" },
+        { value: "driven_goal", label: "Driven and goal-oriented" },
+        { value: "playful_spontaneous", label: "Playful and spontaneous" },
+        { value: "empathetic_genuine", label: "Empathetic and genuine" },
       ],
     },
   };
@@ -148,7 +148,7 @@ const PreferencesSetup = () => {
             text: "OK",
             onPress: () => router.replace("/(auth)/LandingPage"),
           },
-        ]
+        ],
       );
     }
   }, [session]);
@@ -170,7 +170,7 @@ const PreferencesSetup = () => {
               traitsQuery.refetch();
             },
           },
-        ]
+        ],
       );
     }
   }, [interestsQuery.error, traitsQuery.error]);
@@ -213,7 +213,7 @@ const PreferencesSetup = () => {
             text: "Go to Login",
             onPress: () => router.replace("/(auth)/LandingPage"),
           },
-        ]
+        ],
       );
       return;
     }
@@ -232,7 +232,14 @@ const PreferencesSetup = () => {
         preferredGroupSizeMax: groupSizeRange[1],
         preferredAgeMin: ageRange[0],
         preferredAgeMax: ageRange[1],
-        maxTravelDist: maxTravelKm, // Store in km in the database
+        maxTravelDist: maxTravelKm,
+        personalityAnswers: {
+          eventEnergy,
+          groupRole,
+          preferredAtmosphere,
+          downtimePreference,
+          peopleVibe,
+        },
       });
 
       // Navigate to main app
@@ -241,7 +248,7 @@ const PreferencesSetup = () => {
       console.error("Error saving preferences:", error);
       Alert.alert(
         "Error",
-        error.message || "Failed to save preferences. Please try again."
+        error.message || "Failed to save preferences. Please try again.",
       );
     }
   };
@@ -376,8 +383,9 @@ const PreferencesSetup = () => {
         <View className="mt-6">
           <MultipleChoiceSelector
             {...personalityQuestions.eventEnergy}
-            selectedValue={eventEnergy}
-            onSelect={setEventEnergy}
+            multiSelect
+            selectedValues={eventEnergy}
+            onSelectMultiple={setEventEnergy}
           />
 
           <MultipleChoiceSelector

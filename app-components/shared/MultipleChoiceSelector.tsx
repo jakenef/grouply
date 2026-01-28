@@ -6,21 +6,51 @@ interface Option {
   value: string;
 }
 
-interface MultipleChoiceSelectorProps {
+interface SingleSelectProps {
   question: string;
   description?: string;
   options: Option[];
+  multiSelect?: false;
   selectedValue: string;
   onSelect: (value: string) => void;
 }
 
-export default function MultipleChoiceSelector({
-  question,
-  description,
-  options,
-  selectedValue,
-  onSelect,
-}: MultipleChoiceSelectorProps) {
+interface MultiSelectProps {
+  question: string;
+  description?: string;
+  options: Option[];
+  multiSelect: true;
+  selectedValues: string[];
+  onSelectMultiple: (values: string[]) => void;
+}
+
+type MultipleChoiceSelectorProps = SingleSelectProps | MultiSelectProps;
+
+export default function MultipleChoiceSelector(
+  props: MultipleChoiceSelectorProps,
+) {
+  const { question, description, options, multiSelect } = props;
+
+  const isSelected = (value: string) => {
+    if (multiSelect) {
+      return (props as MultiSelectProps).selectedValues.includes(value);
+    }
+    return (props as SingleSelectProps).selectedValue === value;
+  };
+
+  const handlePress = (value: string) => {
+    if (multiSelect) {
+      const { selectedValues, onSelectMultiple } = props as MultiSelectProps;
+      if (selectedValues.includes(value)) {
+        onSelectMultiple(selectedValues.filter((v) => v !== value));
+      } else {
+        onSelectMultiple([...selectedValues, value]);
+      }
+    } else {
+      (props as SingleSelectProps).onSelect(value);
+    }
+  };
+
   return (
     <View className="mb-6">
       <Text className="text-base font-semibold mb-2 text-foreground">
@@ -35,19 +65,21 @@ export default function MultipleChoiceSelector({
         {options.map((option) => (
           <Pressable
             key={option.value}
-            onPress={() => onSelect(option.value)}
+            onPress={() => handlePress(option.value)}
             className="flex-row items-center py-3"
           >
-            <View className="w-5 h-5 rounded-full border-2 border-muted mr-3 items-center justify-center">
-              {selectedValue === option.value && (
-                <View className="w-2.5 h-2.5 rounded-full bg-primary" />
+            <View
+              className={`w-5 h-5 ${multiSelect ? "rounded" : "rounded-full"} border-2 border-muted mr-3 items-center justify-center`}
+            >
+              {isSelected(option.value) && (
+                <View
+                  className={`${multiSelect ? "w-3 h-3 rounded-sm" : "w-2.5 h-2.5 rounded-full"} bg-primary`}
+                />
               )}
             </View>
             <Text
               className={
-                selectedValue === option.value
-                  ? "text-primary"
-                  : "text-foreground"
+                isSelected(option.value) ? "text-primary" : "text-foreground"
               }
             >
               {option.label}

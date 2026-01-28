@@ -6,7 +6,7 @@ import GrouplyButton from "@/app-components/shared/GrouplyButton";
 import { colors } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";
 import { useCurrentUser } from "@/lib/useCurrentUserHook";
-import { Ionicons } from "@expo/vector-icons";
+import { Checkbox } from "expo-checkbox";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
@@ -37,11 +37,11 @@ const Events = () => {
       : eventsArr;
 
   const pastEvents = filterByHost(
-    events.filter((event) => new Date(event.startsAt).getTime() <= now)
+    events.filter((event) => new Date(event.startsAt).getTime() <= now),
   ).reverse();
 
   const upcomingEvents = filterByHost(
-    events.filter((event) => new Date(event.startsAt).getTime() > now)
+    events.filter((event) => new Date(event.startsAt).getTime() > now),
   );
 
   return (
@@ -53,10 +53,10 @@ const Events = () => {
           onPress={() => setHostedByMe(!hostedByMe)}
         >
           <Text className="text-muted-darker pr-2">Hosted by me</Text>
-          <Ionicons
-            name={hostedByMe ? "checkbox" : "checkbox-outline"}
-            color={colors.primary}
-            size={30}
+          <Checkbox
+            value={hostedByMe}
+            onValueChange={setHostedByMe}
+            color={hostedByMe ? colors.primary : undefined}
           />
         </Pressable>
       </View>

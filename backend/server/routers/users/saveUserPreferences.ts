@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { protectedProcedure } from "../../trpc";
+import { ONBOARDING_TRAIT_MAPPINGS } from "../../utils/questionMapping/onboardingTraitMap";
 
 export const saveUserPreferences = protectedProcedure
   .input(
@@ -12,12 +13,21 @@ export const saveUserPreferences = protectedProcedure
       preferredAgeMin: z.number().min(18),
       preferredAgeMax: z.number().min(18),
       maxTravelDist: z.number().positive(),
+      personalityAnswers: z
+        .object({
+          eventEnergy: z.array(z.string()).optional(),
+          groupRole: z.string().optional(),
+          preferredAtmosphere: z.string().optional(),
+          downtimePreference: z.string().optional(),
+          peopleVibe: z.string().optional(),
+        })
+        .optional(),
       customInterests: z
         .array(
           z.object({
             label: z.string(),
             id: z.string(),
-          })
+          }),
         )
         .optional(),
       customTraits: z
@@ -25,10 +35,10 @@ export const saveUserPreferences = protectedProcedure
           z.object({
             label: z.string(),
             id: z.string(),
-          })
+          }),
         )
         .optional(),
-    })
+    }),
   )
   .mutation(async ({ ctx, input }) => {
     if (input.preferredGroupSizeMax < input.preferredGroupSizeMin) {
@@ -118,18 +128,80 @@ export const saveUserPreferences = protectedProcedure
           where: { userId: ctx.user.id },
         });
 
+        // Build trait scores from personality answers
+        const traitScoresBySlug: Record<string, number> = {};
+
+        if (input.personalityAnswers) {
+          // Flatten all answers (some may be arrays, some strings)
+          const answers: string[] = [];
+          for (const value of Object.values(input.personalityAnswers)) {
+            if (Array.isArray(value)) {
+              answers.push(...value);
+            } else if (value) {
+              answers.push(value);
+            }
+          }
+
+          for (const answerKey of answers) {
+            const traitMapping = ONBOARDING_TRAIT_MAPPINGS[answerKey];
+            if (traitMapping) {
+              for (const [traitSlug, weight] of Object.entries(traitMapping)) {
+                traitScoresBySlug[traitSlug] =
+                  (traitScoresBySlug[traitSlug] || 0) + weight;
+              }
+            }
+          }
+        }
+
+        // Look up trait IDs by slug
+        const traitSlugs = Object.keys(traitScoresBySlug);
+        const traitsFromPersonality =
+          traitSlugs.length > 0
+            ? await tx.trait.findMany({
+                where: { slug: { in: traitSlugs } },
+                select: { id: true, slug: true },
+              })
+            : [];
+
+        // Create map of slug -> id
+        const slugToId = new Map(
+          traitsFromPersonality.map((t) => [t.slug, t.id]),
+        );
+
+        // Combine manually selected traits with personality-derived traits
         const allTraitIds = [
           ...input.traits.filter((id) => !id.startsWith("custom-")),
           ...customTraitIds,
         ];
 
-        if (allTraitIds.length > 0) {
-          await tx.userTraitScore.createMany({
-            data: allTraitIds.map((traitId) => ({
+        // Build final trait scores: manually selected get score 1, personality-derived use accumulated weights
+        const traitScoreData: { userId: string; traitId: string; score: number }[] =
+          [];
+
+        // Add manually selected traits with score 1
+        for (const traitId of allTraitIds) {
+          traitScoreData.push({
+            userId: ctx.user.id,
+            traitId,
+            score: 1,
+          });
+        }
+
+        // Add personality-derived traits with accumulated scores
+        for (const [slug, score] of Object.entries(traitScoresBySlug)) {
+          const traitId = slugToId.get(slug);
+          if (traitId && !allTraitIds.includes(traitId)) {
+            traitScoreData.push({
               userId: ctx.user.id,
               traitId,
-              score: 1,
-            })),
+              score,
+            });
+          }
+        }
+
+        if (traitScoreData.length > 0) {
+          await tx.userTraitScore.createMany({
+            data: traitScoreData,
           });
         }
 
