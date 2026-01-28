@@ -33,7 +33,7 @@ export async function generateAIResponse(params: {
   
   If you receive events from the tool: Simply tell the user "I've refreshed your event suggestions below! Take a look and let me know if you'd like me to search for something different." IMPORTANT: Do not list the event details out.
   
-  If you receive no events from this function: Tell the user there were no events that matched their description and invite them to try again with a new activity or a different time.
+  If you receive no events from this function: Tell the user there were no events that matched their description and invite them to create an event with AI by clicking below or to try again with a new activity or a different time.
   
   IMPORTANT: Do not use any markdown formatting in your responses. No asterisks, no bold, no italics, no headers. Write in plain text only.`;
 
@@ -115,7 +115,7 @@ export async function generateAIResponse(params: {
     // collect function calls from the response output
     // Function calls are top-level items in the output array, not nested in messages
     const functionCalls = (aiResponse.output ?? []).filter(
-      (item: any) => item.type === "function_call"
+      (item: any) => item.type === "function_call",
     ) as any[];
 
     if (functionCalls.length === 0) break;
@@ -137,7 +137,7 @@ export async function generateAIResponse(params: {
             startTimeString: args.startTime,
             endTimeString: args.endTime,
             userId: params.userId,
-          }
+          },
         );
         latestRefresh = updatedSuggestedEvents;
 
