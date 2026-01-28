@@ -15,7 +15,7 @@ export const saveUserPreferences = protectedProcedure
       maxTravelDist: z.number().positive(),
       personalityAnswers: z
         .object({
-          eventEnergy: z.string().optional(),
+          eventEnergy: z.array(z.string()).optional(),
           groupRole: z.string().optional(),
           preferredAtmosphere: z.string().optional(),
           downtimePreference: z.string().optional(),
@@ -132,9 +132,15 @@ export const saveUserPreferences = protectedProcedure
         const traitScoresBySlug: Record<string, number> = {};
 
         if (input.personalityAnswers) {
-          const answers = Object.values(input.personalityAnswers).filter(
-            (v): v is string => !!v,
-          );
+          // Flatten all answers (some may be arrays, some strings)
+          const answers: string[] = [];
+          for (const value of Object.values(input.personalityAnswers)) {
+            if (Array.isArray(value)) {
+              answers.push(...value);
+            } else if (value) {
+              answers.push(value);
+            }
+          }
 
           for (const answerKey of answers) {
             const traitMapping = ONBOARDING_TRAIT_MAPPINGS[answerKey];

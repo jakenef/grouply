@@ -50,7 +50,7 @@ const PreferencesSetup = () => {
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
 
   // State for personality preferences
-  const [eventEnergy, setEventEnergy] = useState("");
+  const [eventEnergy, setEventEnergy] = useState<string[]>([]);
   const [groupRole, setGroupRole] = useState("");
   const [preferredAtmosphere, setPreferredAtmosphere] = useState("");
   const [downtimePreference, setDowntimePreference] = useState("");
@@ -383,8 +383,9 @@ const PreferencesSetup = () => {
         <View className="mt-6">
           <MultipleChoiceSelector
             {...personalityQuestions.eventEnergy}
-            selectedValue={eventEnergy}
-            onSelect={setEventEnergy}
+            multiSelect
+            selectedValues={eventEnergy}
+            onSelectMultiple={setEventEnergy}
           />
 
           <MultipleChoiceSelector
