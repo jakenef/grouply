@@ -8,6 +8,8 @@
 .env.production
 .env.*.local
 
+assets/data
+
 #prisma
 backend/generated/
 

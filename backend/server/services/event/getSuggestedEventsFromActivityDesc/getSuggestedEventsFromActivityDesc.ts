@@ -4,7 +4,7 @@ import { getSuggestedEventsFromUser } from "../getSuggestedEventsFromUser/getSug
 type EventWithScore = Awaited<
   ReturnType<typeof getSuggestedEventsFromUser>
 >[number];
-
+// TODO: fix the fact that it only uses top 10 events anywhere for ai search
 /**
  * Retrieves a list of suggested events based on the provided activity description, group size, time window, and user ID.
  *
@@ -50,7 +50,7 @@ export async function getSuggestedEventsFromActivityDesc({
     activity,
     groupSize ?? undefined,
     startTime,
-    endTime
+    endTime,
   );
 }
 
@@ -63,11 +63,11 @@ export function filterAndSortEvents(
   activity: Awaited<ReturnType<typeof getActivityFromDesc>>,
   groupSize?: number,
   startTime?: Date,
-  endTime?: Date
+  endTime?: Date,
 ): EventWithScore[] {
   const matchesActivity = (
     eventWithScore: EventWithScore,
-    activity: Awaited<ReturnType<typeof getActivityFromDesc>>
+    activity: Awaited<ReturnType<typeof getActivityFromDesc>>,
   ) => {
     if (!activity || !eventWithScore.event.activity) {
       return false;
@@ -80,7 +80,7 @@ export function filterAndSortEvents(
   const fitsTimeWindow = (
     eventWithScore: EventWithScore,
     windowStart: Date | undefined,
-    windowEnd: Date | undefined
+    windowEnd: Date | undefined,
   ) => {
     return (
       eventWithScore.event.startsAt >= (windowStart ?? 0) &&
@@ -90,7 +90,7 @@ export function filterAndSortEvents(
 
   const fitsGroupSize = (
     eventWithScore: EventWithScore,
-    groupSize?: number
+    groupSize?: number,
   ) => {
     if (!groupSize) return true;
     const min = eventWithScore.event.minAttendees ?? 1;
@@ -102,7 +102,7 @@ export function filterAndSortEvents(
     (event) =>
       matchesActivity(event, activity) &&
       fitsTimeWindow(event, startTime, endTime) &&
-      fitsGroupSize(event, groupSize)
+      fitsGroupSize(event, groupSize),
   );
 
   filteredEvents.sort((a, b) => {

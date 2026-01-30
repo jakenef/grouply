@@ -1,0 +1,237 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>User Compatibility Matrix</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    h1 {
+      color: #333;
+    }
+    .info {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    table {
+      border-collapse: collapse;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 12px 8px;
+      text-align: center;
+      min-width: 60px;
+      max-width: 120px;
+      word-break: break-all;
+      font-size: 11px;
+      line-height: 1.3;
+    }
+    th {
+      background-color: #4f47e5;
+      color: white;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    th.row-header {
+      background-color: #4f47e5;
+      color: white;
+      text-align: left;
+      position: sticky;
+      left: 0;
+      z-index: 11;
+      max-width: 150px;
+    }
+    td.row-header {
+      background-color: #f8f9fa;
+      font-weight: 600;
+      text-align: left;
+      max-width: 150px;
+      position: sticky;
+      left: 0;
+      z-index: 9;
+    }
+    .score-cell {
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .score-cell:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 8px rgba(79, 71, 229, 0.3);
+    }
+    .score-high { background-color: #22c55e; color: white; }
+    .score-med-high { background-color: #84cc16; color: white; }
+    .score-med { background-color: #eab308; color: white; }
+    .score-med-low { background-color: #f97316; color: white; }
+    .score-low { background-color: #ef4444; color: white; }
+    .score-self { background-color: #e5e7eb; color: #6b7280; }
+    .legend {
+      display: flex;
+      gap: 15px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .legend-color {
+      width: 30px;
+      height: 20px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🤝 User Compatibility Matrix</h1>
+  <div class="info">
+    <p><strong>Total Users:</strong> 19</p>
+    <p><strong>Score Range:</strong> 0.0 (no match) to 1.0 (perfect match)</p>
+    <p><strong>Algorithm:</strong> Average of interest overlap and trait similarity (cosine similarity)</p>
+    <p><strong>How to Read:</strong> Pick a ROW (you looking for events), then scan across COLUMNS (potential hosts). The score shows how much of YOUR interests each person covers. Higher = better match for you.</p>
+  </div>
+  
+  <table>
+    <thead>
+      <tr>
+        <th class="row-header">User</th>
+        <th>jacob@nef-family.net</th><th>Patasebastia @gmail.com</th><th>8016288907</th><th>5034981497</th><th>8016082595</th><th>Lerma. Terri 53@gmail.com</th><th>3852307269</th><th>5125690720</th><th>suzyqqcollins@hotmail.com</th><th>Lincoo00@outlook.com</th><th>zabrosonsito@gmail.com</th><th>801-259-4498</th><th>435 224 0452 lwlv@comcast.net</th><th>8014042487</th><th>kiahapearson@gmail.com</th><th>8018155763</th><th>385-335-6875</th><th>801-472-7511</th><th>8015645813</th>
+      </tr>
+    </thead>
+    <tbody>
+      
+        <tr>
+          <td class="row-header">jacob@nef-family.net</td>
+          <td class="score-cell score-self">1.00</td><td class="score-cell score-low">0.12</td><td class="score-cell score-med-low">0.29</td><td class="score-cell score-low">0.18</td><td class="score-cell score-med-low">0.30</td><td class="score-cell score-low">0.13</td><td class="score-cell score-med-low">0.37</td><td class="score-cell score-med-low">0.23</td><td class="score-cell score-med-low">0.28</td><td class="score-cell score-med-low">0.32</td><td class="score-cell score-med-low">0.29</td><td class="score-cell score-low">0.00</td><td class="score-cell score-med">0.45</td><td class="score-cell score-low">0.16</td><td class="score-cell score-med">0.48</td><td class="score-cell score-low">0.14</td><td class="score-cell score-med-low">0.32</td><td class="score-cell score-med-low">0.29</td><td class="score-cell score-med-low">0.24</td>
+        </tr>
+      
+        <tr>
+          <td class="row-header">Patasebastia @gmail.com</td>
+          <td class="score-cell score-low">0.12</td><td class="score-cell score-self">1.00</td><td class="score-cell score-med-low">0.28</td><td class="score-cell score-med-low">0.39</td><td class="score-cell score-med-low">0.26</td><td class="score-cell score-low">0.19</td><td class="score-cell score-med">0.41</td><td class="score-cell score-med">0.48</td><td class="score-cell score-med">0.42</td><td class="score-cell score-med">0.44</td><td class="score-cell score-med-low">0.30</td><td class="score-cell score-low">0.05</td><td class="score-cell score-med-high">0.62</td><td class="score-cell score-med-low">0.33</td><td class="score-cell score-med-low">0.36</td><td class="score-cell score-med-low">0.21</td><td class="score-cell score-med">0.48</td><td class="score-cell score-med-low">0.35</td><td class="score-cell score-med">0.49</td>
+        </tr>
+      
+        <tr>
+          <td class="row-header">8016288907</td>
+          <td class="score-cell score-med-low">0.28</td><td class="score-cell score-med-low">0.23</td><td class="score-cell score-self">1.00</td><td class="score-cell score-med">0.41</td><td class="score-cell score-med">0.41</td><td class="score-cell score-med-low">0.22</td><td class="score-cell score-med-low">0.38</td><td class="score-cell score-med-high">0.65</td><td class="score-cell score-med-low">0.21</td><td class="score-cell score-med-low">0.38</td><td class="score-cell score-med">0.47</td><td class="score-cell score-low">0.00</td><td class="score-cell score-med-high">0.63</td><td class="score-cell score-med">0.46</td><td class="score-cell score-med">0.48</td><td class="score-cell score-low">0.07</td><td class="score-cell score-med">0.40</td><td class="score-cell score-med-low">0.38</td><td class="score-cell score-med">0.49</td>
+        </tr>
+      
+        <tr>
+          <td class="row-header">5034981497</td>
+          <td class="score-cell score-low">0.11</td><td class="score-cell score-med-low">0.26</td><td class="score-cell score-med-low">0.31</td><td class="score-cell score-self">1.00</td><td class="score-cell score-med">0.40</td><td class="score-cell score-low">0.10</td><td class="score-cell score-med">0.42</td><td class="score-cell score-med">0.55</td><td class="score-cell score-med-low">0.23</td><td class="score-cell score-med-low">0.40</td><td class="score-cell score-med">0.41</td><td class="score-cell score-low">0.02</td><td class="score-cell score-med-high">0.72</td><td class="score-cell score-med-low">0.39</td><td class="score-cell score-med">0.51</td><td class="score-cell score-med-low">0.20</td><td class="score-cell score-med-low">0.30</td><td class="score-cell score-med-low">0.38</td><td class="score-cell score-med">0.49</td>
+        </tr>
+      
+        <tr>
+          <td class="row-header">8016082595</td>
+          <td class="score-cell score-med-low">0.25</td><td class="score-cell score-low">0.17</td><td class="score-cell score-med-low">0.39</td><td class="score-cell score-med">0.54</td><td class="score-cell score-self">1.00</td><td class="score-cell score-low">0.09</td><td class="score-cell score-med-low">0.40</td><td class="score-cell score-med-high">0.63</td><td class="score-cell score-med-low">0.24</td><td class="score-cell score-med">0.46</td><td class="score-cell score-med-low">0.30</td><td class="score-cell score-low">0.00</td><td class="score-cell score-med">0.57</td><td class="score-cell score-med-low">0.31</td><td class="score-cell score-med">0.51</td><td class="score-cell score-med-low">0.27</td><td class="score-cell score-med-low">0.29</td><td class="score-cell score-med-low">0.32</td><td class="score-cell score-med">0.48</td>
+        </tr>
+      
+        <tr>
+          <td class="row-header">Lerma. Terri 53@gmail.com</td>
+          <td class="score-cell score-low">0.14</td><td class="score-cell score-low">0.20</td><td class="score-cell score-med-low">0.29</td><td class="score-cell score-low">0.18</td><td class="score-cell score-low">0.17</td><td class="score-cell score-self">1.00</td><td class="score-cell score-med-low">0.32</td><td class="score-cell score-med-low">0.35</td><td class="score-cell score-low">0.11</td><td class="score-cell score-med-low">0.22</td><td class="score-cell score-med-low">0.31</td><td class="score-cell score-low">0.00</td><td class="score-cell score-med-low">0.34</td><td class="score-cell score-med-low">0.36</td><td class="score-cell score-med-low">0.37</td><td class="score-cell score-low">0.11</td><td class="score-cell score-med-low">0.36</td><td class="score-cell score-med">0.42</td><td class="score-cell score-med-low">0.25</td>
+        </tr>
+      
+        <tr>
+          <td class="row-header">3852307269</td>
+          <td class="score-cell score-med-low">0.31</td><td class="score-cell score-med-low">0.28</td><td class="score-cell score-med-low">0.29</td><td class="score-cell score-med">0.45</td><td class="score-cell score-med-low">0.33</td><td class="score-cell score-low">0.17</td><td class="score-cell score-self">1.00</td><td class="score-cell score-med">0.56</td><td class="score-cell score-med-low">0.39</td><td class="score-cell score-med-low">0.40</td><td class="score-cell score-med">0.43</td><td class="score-cell score-low">0.08</td><td class="score-cell score-med-high">0.77</td><td class="score-cell score-med">0.53</td><td class="score-cell score-med">0.55</td><td class="score-cell score-med-low">0.24</td><td class="score-cell score-med">0.50</td><td class="score-cell score-med">0.49</td><td class="score-cell score-med">0.49</td>
+        </tr>
+      
+        <tr>
+          <td class="row-header">5125690720</td>
+          <td class="score-cell score-low">0.18</td><td class="score-cell score-med-low">0.27</td><td class="score-cell score-med">0.48</td><td class="score-cell score-med">0.52</td><td class="score-cell score-med">0.45</td><td class="score-cell score-low">0.19</td><td class="score-cell score-med">0.50</td><td class="score-cell score-self">1.00</td><td class="score-cell score-med-low">0.33</td><td class="score-cell score-med-low">0.40</td><td class="score-cell score-med">0.55</td><td class="score-cell score-low">0.14</td><td class="score-cell score-med-high">0.77</td><td class="score-cell score-med">0.48</td><td class="score-cell score-med-high">0.62</td><td class="score-cell score-low">0.17</td><td class="score-cell score-med">0.55</td><td class="score-cell score-med">0.41</td><td class="score-cell score-med">0.55</td>
+        </tr>
+      
+        <tr>
+          <td class="row-header">suzyqqcollins@hotmail.com</td>
+          <td class="score-cell score-med-low">0.27</td><td class="score-cell score-med-low">0.33</td><td class="score-cell score-med-low">0.21</td><td class="score-cell score-med-low">0.34</td><td class="score-cell score-med-low">0.26</td><td class="score-cell score-low">0.07</td><td class="score-cell score-med">0.50</td><td class="score-cell score-med">0.47</td><td class="score-cell score-self">1.00</td><td class="score-cell score-med-low">0.27</td><td class="score-cell score-med-low">0.36</td><td class="score-cell score-low">0.03</td><td class="score-cell score-med">0.59</td><td class="score-cell score-med-low">0.32</td><td class="score-cell score-med">0.41</td><td class="score-cell score-low">0.13</td><td class="score-cell score-med">0.41</td><td class="score-cell score-med-low">0.27</td><td class="score-cell score-med">0.58</td>
+        </tr>
+      
+        <tr>
+          <td class="row-header">Lincoo00@outlook.com</td>
+          <td class="score-cell score-low">0.19</td><td class="score-cell score-med-low">0.20</td><td class="score-cell score-med-low">0.22</td><td class="score-cell score-med-low">0.37</td><td class="score-cell score-med-low">0.29</td><td class="score-cell score-low">0.06</td><td class="score-cell score-med-low">0.34</td><td class="score-cell score-med">0.41</td><td class="score-cell score-low">0.13</td><td class="score-cell score-self">1.00</td><td class="score-cell score-med-low">0.25</td><td class="score-cell score-low">0.03</td><td class="score-cell score-med">0.57</td><td class="score-cell score-med-low">0.26</td><td class="score-cell score-med-low">0.38</td><td class="score-cell score-med">0.46</td><td class="score-cell score-med-low">0.29</td><td class="score-cell score-med-low">0.22</td><td class="score-cell score-med-low">0.28</td>
+        </tr>
+      
+        <tr>
+          <td class="row-header">zabrosonsito@gmail.com</td>
+          <td class="score-cell score-low">0.18</td><td class="score-cell score-med-low">0.23</td><td class="score-cell score-med-low">0.34</td><td class="score-cell score-med-low">0.39</td><td class="score-cell score-med-low">0.23</td><td class="score-cell score-low">0.19</td><td class="score-cell score-med">0.40</td><td class="score-cell score-med">0.55</td><td class="score-cell score-med-low">0.26</td><td class="score-cell score-med-low">0.24</td><td class="score-cell score-self">1.00</td><td class="score-cell score-low">0.09</td><td class="score-cell score-med-high">0.71</td><td class="score-cell score-med">0.45</td><td class="score-cell score-med">0.43</td><td class="score-cell score-low">0.07</td><td class="score-cell score-med">0.59</td><td class="score-cell score-med-low">0.38</td><td class="score-cell score-med">0.55</td>
+        </tr>
+      
+        <tr>
+          <td class="row-header">801-259-4498</td>
+          <td class="score-cell score-low">0.00</td><td class="score-cell score-low">0.10</td><td class="score-cell score-low">0.00</td><td class="score-cell score-low">0.10</td><td class="score-cell score-low">0.00</td><td class="score-cell score-low">0.00</td><td class="score-cell score-low">0.16</td><td class="score-cell score-med-low">0.31</td><td class="score-cell score-low">0.10</td><td class="score-cell score-med-low">0.20</td><td class="score-cell score-med-low">0.26</td><td class="score-cell score-self">1.00</td><td class="score-cell score-med-low">0.25</td><td class="score-cell score-low">0.10</td><td class="score-cell score-med-low">0.26</td><td class="score-cell score-low">0.00</td><td class="score-cell score-med">0.42</td><td class="score-cell score-med">0.48</td><td class="score-cell score-med-low">0.26</td>
+        </tr>
+      
+        <tr>
+          <td class="row-header">435 224 0452 lwlv@comcast.net</td>
+          <td class="score-cell score-med-low">0.25</td><td class="score-cell score-med-low">0.29</td><td class="score-cell score-med-low">0.38</td><td class="score-cell score-med">0.51</td><td class="score-cell score-med-low">0.34</td><td class="score-cell score-low">0.15</td><td class="score-cell score-med">0.55</td><td class="score-cell score-med-high">0.62</td><td class="score-cell score-med-low">0.31</td><td class="score-cell score-med-low">0.39</td><td class="score-cell score-med">0.57</td><td class="score-cell score-low">0.07</td><td class="score-cell score-self">1.00</td><td class="score-cell score-med">0.51</td><td class="score-cell score-med">0.60</td><td class="score-cell score-med-low">0.20</td><td class="score-cell score-med">0.55</td><td class="score-cell score-med">0.44</td><td class="score-cell score-med">0.58</td>
+        </tr>
+      
+        <tr>
+          <td class="row-header">8014042487</td>
+          <td class="score-cell score-low">0.11</td><td class="score-cell score-med-low">0.27</td><td class="score-cell score-med-low">0.36</td><td class="score-cell score-med-low">0.39</td><td class="score-cell score-med-low">0.27</td><td class="score-cell score-med-low">0.21</td><td class="score-cell score-med">0.52</td><td class="score-cell score-med">0.52</td><td class="score-cell score-med-low">0.26</td><td class="score-cell score-med-low">0.29</td><td class="score-cell score-med">0.48</td><td class="score-cell score-low">0.02</td><td class="score-cell score-med-high">0.69</td><td class="score-cell score-self">1.00</td><td class="score-cell score-med">0.49</td><td class="score-cell score-low">0.10</td><td class="score-cell score-med">0.46</td><td class="score-cell score-med-low">0.34</td><td class="score-cell score-med-low">0.38</td>
+        </tr>
+      
+        <tr>
+          <td class="row-header">kiahapearson@gmail.com</td>
+          <td class="score-cell score-med-low">0.33</td><td class="score-cell score-med-low">0.22</td><td class="score-cell score-med-low">0.38</td><td class="score-cell score-med">0.50</td><td class="score-cell score-med-low">0.40</td><td class="score-cell score-low">0.17</td><td class="score-cell score-med">0.52</td><td class="score-cell score-med-high">0.65</td><td class="score-cell score-med-low">0.31</td><td class="score-cell score-med-low">0.40</td><td class="score-cell score-med">0.44</td><td class="score-cell score-low">0.09</td><td class="score-cell score-med-high">0.79</td><td class="score-cell score-med">0.48</td><td class="score-cell score-self">1.00</td><td class="score-cell score-med-low">0.20</td><td class="score-cell score-med">0.53</td><td class="score-cell score-med">0.45</td><td class="score-cell score-med">0.49</td>
+        </tr>
+      
+        <tr>
+          <td class="row-header">8018155763</td>
+          <td class="score-cell score-low">0.18</td><td class="score-cell score-med-low">0.24</td><td class="score-cell score-low">0.07</td><td class="score-cell score-med">0.40</td><td class="score-cell score-med">0.43</td><td class="score-cell score-low">0.17</td><td class="score-cell score-med">0.50</td><td class="score-cell score-med-low">0.31</td><td class="score-cell score-med-low">0.33</td><td class="score-cell score-med">0.60</td><td class="score-cell score-low">0.14</td><td class="score-cell score-low">0.00</td><td class="score-cell score-med">0.43</td><td class="score-cell score-low">0.10</td><td class="score-cell score-med">0.40</td><td class="score-cell score-self">1.00</td><td class="score-cell score-med-low">0.32</td><td class="score-cell score-med-low">0.25</td><td class="score-cell score-med">0.44</td>
+        </tr>
+      
+        <tr>
+          <td class="row-header">385-335-6875</td>
+          <td class="score-cell score-low">0.18</td><td class="score-cell score-med-low">0.29</td><td class="score-cell score-med-low">0.25</td><td class="score-cell score-med-low">0.24</td><td class="score-cell score-med-low">0.20</td><td class="score-cell score-low">0.18</td><td class="score-cell score-med">0.42</td><td class="score-cell score-med">0.50</td><td class="score-cell score-med-low">0.26</td><td class="score-cell score-med-low">0.25</td><td class="score-cell score-med">0.52</td><td class="score-cell score-low">0.15</td><td class="score-cell score-med-high">0.63</td><td class="score-cell score-med-low">0.40</td><td class="score-cell score-med">0.46</td><td class="score-cell score-low">0.18</td><td class="score-cell score-self">1.00</td><td class="score-cell score-med">0.43</td><td class="score-cell score-med">0.47</td>
+        </tr>
+      
+        <tr>
+          <td class="row-header">801-472-7511</td>
+          <td class="score-cell score-low">0.19</td><td class="score-cell score-low">0.18</td><td class="score-cell score-med-low">0.28</td><td class="score-cell score-med-low">0.38</td><td class="score-cell score-med-low">0.23</td><td class="score-cell score-med-low">0.22</td><td class="score-cell score-med">0.46</td><td class="score-cell score-med">0.43</td><td class="score-cell score-med-low">0.22</td><td class="score-cell score-med-low">0.23</td><td class="score-cell score-med">0.40</td><td class="score-cell score-med-low">0.23</td><td class="score-cell score-med-high">0.62</td><td class="score-cell score-med-low">0.33</td><td class="score-cell score-med">0.45</td><td class="score-cell score-low">0.05</td><td class="score-cell score-med">0.51</td><td class="score-cell score-self">1.00</td><td class="score-cell score-med-low">0.39</td>
+        </tr>
+      
+        <tr>
+          <td class="row-header">8015645813</td>
+          <td class="score-cell score-low">0.18</td><td class="score-cell score-med-low">0.27</td><td class="score-cell score-med-low">0.33</td><td class="score-cell score-med">0.43</td><td class="score-cell score-med-low">0.33</td><td class="score-cell score-low">0.16</td><td class="score-cell score-med">0.42</td><td class="score-cell score-med">0.52</td><td class="score-cell score-med-low">0.34</td><td class="score-cell score-med-low">0.24</td><td class="score-cell score-med">0.52</td><td class="score-cell score-low">0.09</td><td class="score-cell score-med-high">0.69</td><td class="score-cell score-med-low">0.35</td><td class="score-cell score-med">0.44</td><td class="score-cell score-low">0.15</td><td class="score-cell score-med">0.49</td><td class="score-cell score-med-low">0.35</td><td class="score-cell score-self">1.00</td>
+        </tr>
+      
+    </tbody>
+  </table>
+  
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-color score-high"></div>
+      <span>0.8 - 1.0 (Excellent Match)</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color score-med-high"></div>
+      <span>0.6 - 0.8 (Good Match)</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color score-med"></div>
+      <span>0.4 - 0.6 (Moderate Match)</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color score-med-low"></div>
+      <span>0.2 - 0.4 (Low Match)</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color score-low"></div>
+      <span>0.0 - 0.2 (Very Low Match)</span>
+    </div>
+  </div>
+</body>
+</html>
