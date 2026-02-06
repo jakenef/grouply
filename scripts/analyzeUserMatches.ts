@@ -113,15 +113,24 @@ function generateHTMLGrid(users: UserData[], scores: number[][]): string {
 <html>
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>User Compatibility Matrix</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      margin: 0;
       padding: 20px;
       background: #f5f5f5;
+      max-width: 100vw;
+      overflow-x: hidden;
     }
     h1 {
       color: #333;
+      margin-top: 0;
+      font-size: 24px;
     }
     .info {
       background: white;
@@ -129,23 +138,61 @@ function generateHTMLGrid(users: UserData[], scores: number[][]): string {
       border-radius: 8px;
       margin-bottom: 20px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      font-size: 14px;
+    }
+    .controls {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .controls button {
+      padding: 8px 16px;
+      background: #4f47e5;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .controls button:hover {
+      background: #3d37c7;
+    }
+    .zoom-level {
+      font-weight: 600;
+      color: #4f47e5;
+    }
+    .table-container {
+      background: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      overflow: auto;
+      max-height: calc(100vh - 300px);
+      max-width: calc(100vw - 40px);
     }
     table {
       border-collapse: collapse;
       background: white;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      border-radius: 8px;
-      overflow: hidden;
+      width: 100%;
     }
     th, td {
       border: 1px solid #ddd;
-      padding: 12px 8px;
+      padding: 8px 6px;
       text-align: center;
-      min-width: 60px;
-      max-width: 120px;
-      word-break: break-all;
+      min-width: 50px;
+      max-width: 100px;
+      word-break: break-word;
       font-size: 11px;
-      line-height: 1.3;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     th {
       background-color: #4f47e5;
@@ -162,13 +209,13 @@ function generateHTMLGrid(users: UserData[], scores: number[][]): string {
       position: sticky;
       left: 0;
       z-index: 11;
-      max-width: 150px;
+      max-width: 120px;
     }
     td.row-header {
       background-color: #f8f9fa;
       font-weight: 600;
       text-align: left;
-      max-width: 150px;
+      max-width: 120px;
       position: sticky;
       left: 0;
       z-index: 9;
@@ -208,12 +255,19 @@ function generateHTMLGrid(users: UserData[], scores: number[][]): string {
 <body>
   <h1>🤝 User Compatibility Matrix</h1>
   <div class="info">
-    <p><strong>Total Users:</strong> ${users.length}</p>
-    <p><strong>Score Range:</strong> 0.0 (no match) to 1.0 (perfect match)</p>
-    <p><strong>Algorithm:</strong> Average of interest overlap and trait similarity (cosine similarity)</p>
-    <p><strong>How to Read:</strong> Pick a ROW (you looking for events), then scan across COLUMNS (potential hosts). The score shows how much of YOUR interests each person covers. Higher = better match for you.</p>
+    <p style="margin: 5px 0;"><strong>Total Users:</strong> ${users.length}</p>
+    <p style="margin: 5px 0;"><strong>Score Range:</strong> 0.0 (no match) to 1.0 (perfect match)</p>
+    <p style="margin: 5px 0;"><strong>How to Read:</strong> Pick a ROW (you looking for events), then scan across COLUMNS (potential hosts). Higher score = better match for you.</p>
   </div>
   
+  <div class="controls">
+    <button onclick="zoomIn()">Zoom In (+)</button>
+    <button onclick="zoomOut()">Zoom Out (-)</button>
+    <button onclick="resetZoom()">Reset (100%)</button>
+    <span class="zoom-level">Zoom: <span id="zoom-display">100%</span></span>
+  </div>
+  
+  <div class="table-container">
   <table>
     <thead>
       <tr>
@@ -253,29 +307,74 @@ function generateHTMLGrid(users: UserData[], scores: number[][]): string {
         .join("")}
     </tbody>
   </table>
+  </div>
   
   <div class="legend">
     <div class="legend-item">
       <div class="legend-color score-high"></div>
-      <span>0.8 - 1.0 (Excellent Match)</span>
+      <span>0.8 - 1.0 (Excellent)</span>
     </div>
     <div class="legend-item">
       <div class="legend-color score-med-high"></div>
-      <span>0.6 - 0.8 (Good Match)</span>
+      <span>0.6 - 0.8 (Good)</span>
     </div>
     <div class="legend-item">
       <div class="legend-color score-med"></div>
-      <span>0.4 - 0.6 (Moderate Match)</span>
+      <span>0.4 - 0.6 (Moderate)</span>
     </div>
     <div class="legend-item">
       <div class="legend-color score-med-low"></div>
-      <span>0.2 - 0.4 (Low Match)</span>
+      <span>0.2 - 0.4 (Low)</span>
     </div>
     <div class="legend-item">
       <div class="legend-color score-low"></div>
-      <span>0.0 - 0.2 (Very Low Match)</span>
+      <span>0.0 - 0.2 (Very Low)</span>
     </div>
   </div>
+  
+  <script>
+    let currentZoom = 100;
+    
+    function updateZoom() {
+      const table = document.querySelector('table');
+      table.style.transform = \`scale(\${currentZoom / 100})\`;
+      table.style.transformOrigin = 'top left';
+      document.getElementById('zoom-display').textContent = currentZoom + '%';
+    }
+    
+    function zoomIn() {
+      if (currentZoom < 150) {
+        currentZoom += 10;
+        updateZoom();
+      }
+    }
+    
+    function zoomOut() {
+      if (currentZoom > 50) {
+        currentZoom -= 10;
+        updateZoom();
+      }
+    }
+    
+    function resetZoom() {
+      currentZoom = 100;
+      updateZoom();
+    }
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.key === '+' || e.key === '=') {
+        e.preventDefault();
+        zoomIn();
+      } else if (e.key === '-' || e.key === '_') {
+        e.preventDefault();
+        zoomOut();
+      } else if (e.key === '0') {
+        e.preventDefault();
+        resetZoom();
+      }
+    });
+  </script>
 </body>
 </html>
 `;
@@ -283,10 +382,17 @@ function generateHTMLGrid(users: UserData[], scores: number[][]): string {
 }
 
 function main() {
-  const csvPath = path.join(
-    __dirname,
-    "../assets/data/Characteristics and preferences_January 29, 2026_17.32.csv",
-  );
+  // Dynamically find the CSV file in the data directory
+  const dataDir = path.join(__dirname, "../assets/data");
+  const files = fs.readdirSync(dataDir);
+  const csvFile = files.find((file) => file.endsWith(".csv"));
+
+  if (!csvFile) {
+    console.error("❌ No CSV file found in assets/data directory");
+    return;
+  }
+
+  const csvPath = path.join(dataDir, csvFile);
 
   console.log("📊 Analyzing user compatibility...\n");
   console.log(`Reading CSV from: ${csvPath}\n`);
