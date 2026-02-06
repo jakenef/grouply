@@ -1,4 +1,4 @@
-import { getActivityFromDesc } from "../../activity/getActivityFromDesc";
+import { getActivitiesFromDesc } from "../../activity/getActivityFromDesc";
 import { getSuggestedEventsFromUser } from "../getSuggestedEventsFromUser/getSuggestedEventsFromUser";
 
 type EventWithScore = Awaited<
@@ -40,14 +40,14 @@ export async function getSuggestedEventsFromActivityDesc({
   const startTime = startTimeString ? new Date(startTimeString) : undefined;
   const endTime = endTimeString ? new Date(endTimeString) : undefined;
   const events = await getSuggestedEventsFromUser(userId);
-  const activity = await getActivityFromDesc(activityDescription);
+  const activities = await getActivitiesFromDesc(activityDescription);
 
-  type Activity = Awaited<ReturnType<typeof getActivityFromDesc>>;
+  type Activities = Awaited<ReturnType<typeof getActivitiesFromDesc>>;
 
   // Filtering logic extracted to helper
   return filterAndSortEvents(
     events,
-    activity,
+    activities,
     groupSize ?? undefined,
     startTime,
     endTime,
@@ -60,21 +60,21 @@ export async function getSuggestedEventsFromActivityDesc({
  */
 export function filterAndSortEvents(
   events: EventWithScore[],
-  activity: Awaited<ReturnType<typeof getActivityFromDesc>>,
+  activities: Awaited<ReturnType<typeof getActivitiesFromDesc>>,
   groupSize?: number,
   startTime?: Date,
   endTime?: Date,
 ): EventWithScore[] {
   const matchesActivity = (
     eventWithScore: EventWithScore,
-    activity: Awaited<ReturnType<typeof getActivityFromDesc>>,
+    activities: Awaited<ReturnType<typeof getActivitiesFromDesc>>,
   ) => {
-    if (!activity || !eventWithScore.event.activity) {
-      return false;
-    } else if (activity.id != eventWithScore.event.activityId) {
+    if (!activities.length || !eventWithScore.event.activity) {
       return false;
     }
-    return true;
+    return activities.some(
+      (activity) => activity.id === eventWithScore.event.activityId,
+    );
   };
 
   const fitsTimeWindow = (
@@ -100,7 +100,7 @@ export function filterAndSortEvents(
 
   const filteredEvents = events.filter(
     (event) =>
-      matchesActivity(event, activity) &&
+      matchesActivity(event, activities) &&
       fitsTimeWindow(event, startTime, endTime) &&
       fitsGroupSize(event, groupSize),
   );

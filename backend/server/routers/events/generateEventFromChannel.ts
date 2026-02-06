@@ -1,7 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import z from "zod";
 import { prisma } from "../../prisma";
-import { getActivityFromDesc } from "../../services/activity/getActivityFromDesc";
+import { getActivitiesFromDesc } from "../../services/activity/getActivityFromDesc";
 import { generateEventFieldsFromContext } from "../../services/ai/generateEventFieldsFromContext";
 import { protectedProcedure } from "../../trpc";
 
@@ -9,7 +9,7 @@ export const generateEventFromChannel = protectedProcedure
   .input(
     z.object({
       channelId: z.string(),
-    })
+    }),
   )
   .output(
     z.object({
@@ -22,7 +22,7 @@ export const generateEventFromChannel = protectedProcedure
       minAge: z.number(),
       maxAge: z.number(),
       activityId: z.string().nullable(),
-    })
+    }),
   )
   .query(async ({ ctx, input }) => {
     const messages = await prisma.chatMessage.findMany({
@@ -53,7 +53,8 @@ export const generateEventFromChannel = protectedProcedure
 
     const eventDetails = await generateEventFieldsFromContext({ messages });
 
-    const activity = await getActivityFromDesc(eventDetails.description);
+    const activity =
+      (await getActivitiesFromDesc(eventDetails.description))[0] ?? null;
 
     return {
       ...eventDetails,
