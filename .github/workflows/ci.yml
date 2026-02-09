@@ -24,4 +24,7 @@ jobs:
               run: npm ci
 
             - name: Run production build tests
+              env:
+                  DATABASE_URL: ${{ secrets.DATABASE_URL }}
+                  DIRECT_URL: ${{ secrets.DIRECT_URL }}
               run: npm run test:prod-build
