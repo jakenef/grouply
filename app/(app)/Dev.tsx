@@ -1,10 +1,24 @@
 import { trpc } from "@/lib/trpc";
+import { useCurrentUser } from "@/lib/useCurrentUserHook";
 import React from "react";
-import { ScrollView, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { EnvDebugger } from "../../app-components/dev/EnvDebugger";
 import TroubleshootItem from "../../app-components/dev/TroubleshootItem";
 
 const Dev = () => {
+  const { user } = useCurrentUser();
+
+  // Only allow in development mode OR for admin users
+  if (!__DEV__ && user?.role !== "ADMIN") {
+    return (
+      <View className="flex-1 bg-background items-center justify-center p-4">
+        <Text className="text-lg text-gray-500">Access Denied</Text>
+        <Text className="text-sm text-gray-400 mt-2">
+          This screen is only available in development mode.
+        </Text>
+      </View>
+    );
+  }
   const { mutateAsync: createLocations } =
     trpc.troubleshooting.troubleshootingLocationRouter.TRB_createLocations.useMutation();
   const { mutateAsync: deleteLocations } =

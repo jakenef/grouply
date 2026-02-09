@@ -1,6 +1,6 @@
 import { Prisma } from "@/backend/generated/prisma";
-import { prisma } from "../../prisma";
 import { openai } from "../../openai";
+import { prisma } from "../../prisma";
 
 /**
  * Finds the most similar activity from the database based on a text description.
@@ -10,13 +10,13 @@ import { openai } from "../../openai";
  * activities in the database using cosine similarity.
  *
  * @param desc - The text description to search for matching activities
- * @returns A promise that resolves to an object containing the matched activity's id, name,
+ * @returns A promise that resolves to an array containing all of the matched activity's id, name,
  *          description, and similarity score if a match above the minimum threshold is found,
- *          or null if no suitable match exists
+ *          or empty array if none close enough are found
  *
  * @remarks
- * - Uses a minimum similarity threshold of 0.45
- * - Returns only the single best match (k=1)
+ * - Uses a minimum similarity threshold of 0.3
+ * - Returns only the single best match (k=1) unless specified in parameter
  * - Requires activities in the database to have valid embedding vectors
  * - Similarity score ranges from 0 to 1, where 1 is identical
  *
@@ -28,13 +28,13 @@ import { openai } from "../../openai";
  * }
  * ```
  */
-export async function getActivityFromDesc(
+export async function getActivitiesFromDesc(
   desc: string,
-  returnClosestMatch: boolean = false
+  returnClosestMatch: boolean = false,
 ) {
   // generate semantic embedding for desc
   if (desc.trim().length == 0) {
-    return null;
+    return [];
   }
   const response = await openai.embeddings.create({
     model: "text-embedding-3-small",
@@ -43,7 +43,7 @@ export async function getActivityFromDesc(
   });
 
   const minSimilarity = 0.3;
-  const k = 1;
+  const k = 5;
 
   const embedding = response.data[0].embedding;
 
@@ -64,12 +64,12 @@ export async function getActivityFromDesc(
       WHERE embedding IS NOT NULL
       ORDER BY embedding <=> ${queryVector}::vector
       LIMIT ${k};
-    `
+    `,
   );
 
-  const best = results[0];
-  if (best && (returnClosestMatch || best.similarity > minSimilarity)) {
-    return best;
-  }
-  return null;
+  const topActivities = results.filter(
+    (activity) => returnClosestMatch || activity.similarity >= minSimilarity,
+  );
+
+  return topActivities;
 }

@@ -23,11 +23,12 @@ export default function EnvironmentIndicator() {
     environment = "LOCAL";
     bgColor = "#10b981"; // green
     textColor = "#ffffff";
-  } else if (trpcUrl.includes("render.com")) {
-    environment = "STAGING";
-    bgColor = "#f59e0b"; // amber
-    textColor = "#ffffff";
   }
+  // } else if (trpcUrl.includes("render.com")) {
+  //   environment = "STAGING";
+  //   bgColor = "#f59e0b"; // amber
+  //   textColor = "#ffffff";
+  // }
   // For production or if we can't determine, don't show anything
   else {
     return null;

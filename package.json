@@ -36,6 +36,7 @@
     "@trpc/server": "^11.6.0",
     "@types/date-fns": "^2.5.3",
     "cors": "^2.8.5",
+    "csv-parse": "^6.1.0",
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.3",
     "expo": "~54.0.30",

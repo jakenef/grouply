@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { prisma } from "../../prisma";
-import { getActivityFromDesc } from "./getActivityFromDesc";
+import { getActivitiesFromDesc } from "./getActivityFromDesc";
 
 describe("getActivityFromDesc integration tests", () => {
   let hikingTimpActivityDesc =
@@ -51,7 +51,7 @@ describe("getActivityFromDesc integration tests", () => {
       {
         model: "text-embedding-3-small",
         input: frenchMovieActivityDesc,
-      }
+      },
     );
     const frenchMovieEmbedding =
       frenchMovieActivityEmbeddingResponse.data[0].embedding;
@@ -103,35 +103,36 @@ describe("getActivityFromDesc integration tests", () => {
   it("can pick hiking correctly between wildly different activities and slightly different (hiking timp vs french movie night vs running canyon trail)", async () => {
     const userDesc =
       "hiking through mountain trails at night to reach a scenic sunrise view at the summit";
-    const foundActivity = await getActivityFromDesc(userDesc);
+    const foundActivities = await getActivitiesFromDesc(userDesc);
 
-    expect(foundActivity).not.toBeNull();
-    expect(foundActivity!.id).toBe(hikingTimpActivityId);
+    expect(foundActivities.length).toBeGreaterThan(0);
+    expect(foundActivities[0].id).toBe(hikingTimpActivityId);
+    expect(foundActivities[0].similarity).toBeGreaterThan(0.6); // Verify it's a strong match
   });
 
   it("can pick hiking correctly given a short desc", async () => {
     const userDesc = "hiking timp";
-    const foundActivity = await getActivityFromDesc(userDesc);
+    const foundActivities = await getActivitiesFromDesc(userDesc);
 
-    expect(foundActivity).not.toBeNull();
-    expect(foundActivity!.id).toBe(hikingTimpActivityId);
+    expect(foundActivities.length).toBeGreaterThan(0);
+    expect(foundActivities[0].id).toBe(hikingTimpActivityId);
   });
 
   it("can pick trail running correctly between wildly different activities and slightly different (hiking timp vs french movie night vs running canyon trail)", async () => {
     const userDesc =
       "running along a paved canyon trail surrounded by trees and streams";
-    const foundActivity = await getActivityFromDesc(userDesc);
+    const foundActivities = await getActivitiesFromDesc(userDesc);
 
-    expect(foundActivity).not.toBeNull();
-    expect(foundActivity!.id).toBe(canyonTrailActivityId);
+    expect(foundActivities.length).toBeGreaterThan(0);
+    expect(foundActivities[0].id).toBe(canyonTrailActivityId);
   });
 
   it("can tell when an activity doesn't exist", async () => {
     const userDesc =
       "balancing on a tightrope or juggling while walking across it";
-    const foundActivity = await getActivityFromDesc(userDesc);
+    const foundActivities = await getActivitiesFromDesc(userDesc);
 
-    expect(foundActivity).toBeNull();
+    expect(foundActivities).toHaveLength(0);
   });
 
   // it("can tell when an activity isn't close enough", async () => {
@@ -144,8 +145,9 @@ describe("getActivityFromDesc integration tests", () => {
   it("always returns something when closest match is turned on", async () => {
     const userDesc =
       "balancing on a tightrope or juggling while walking across it";
-    const foundActivity = await getActivityFromDesc(userDesc, true);
+    const foundActivities = await getActivitiesFromDesc(userDesc, true);
 
-    expect(foundActivity).toBeDefined();
+    expect(foundActivities.length).toBeGreaterThan(0);
+    expect(foundActivities[0]).toBeDefined();
   });
 });

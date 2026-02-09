@@ -2,7 +2,7 @@ import { ChatMessage } from "@/backend/generated/prisma";
 import { zodTextFormat } from "openai/helpers/zod";
 import z from "zod";
 import { openai } from "../../openai";
-import { getActivityFromDesc } from "../activity/getActivityFromDesc";
+import { getActivitiesFromDesc } from "../activity/getActivityFromDesc";
 
 export async function generateEventFieldsFromContext(params: {
   messages: ChatMessage[];
@@ -59,10 +59,12 @@ export async function generateEventFieldsFromContext(params: {
     },
   });
 
-  const activitySuggestion = await getActivityFromDesc(
-    aiResponse.output_parsed?.eventDescription ?? "",
-    true
-  );
+  const activitySuggestion = (
+    await getActivitiesFromDesc(
+      aiResponse.output_parsed?.eventDescription ?? "",
+      true,
+    )
+  )[0];
 
   const eventFields = {
     name: aiResponse.output_parsed?.eventName ?? "",
