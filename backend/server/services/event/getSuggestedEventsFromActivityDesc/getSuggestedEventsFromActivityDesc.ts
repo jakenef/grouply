@@ -1,4 +1,5 @@
 import { getActivitiesFromDesc } from "../../activity/getActivityFromDesc";
+import { getAllScoredValidEventsFromUser } from "../getAllScoredValidEventsFromUser/getAllScoredValidEventsFromUser";
 import { getSuggestedEventsFromUser } from "../getSuggestedEventsFromUser/getSuggestedEventsFromUser";
 
 type EventWithScore = Awaited<
@@ -39,7 +40,7 @@ export async function getSuggestedEventsFromActivityDesc({
 }) {
   const startTime = startTimeString ? new Date(startTimeString) : undefined;
   const endTime = endTimeString ? new Date(endTimeString) : undefined;
-  const events = await getSuggestedEventsFromUser(userId);
+  const events = await getAllScoredValidEventsFromUser(userId);
   const activities = await getActivitiesFromDesc(activityDescription);
 
   type Activities = Awaited<ReturnType<typeof getActivitiesFromDesc>>;
