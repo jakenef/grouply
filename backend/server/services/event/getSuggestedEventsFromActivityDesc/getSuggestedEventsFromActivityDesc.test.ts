@@ -1,12 +1,14 @@
 import { filterAndSortEvents } from "./getSuggestedEventsFromActivityDesc";
 
 describe("filterAndSortEvents", () => {
-  const mockActivity = {
-    id: "activity1",
-    name: "Basketball",
-    desc: "A team sport played with a ball",
-    similarity: 0.95,
-  };
+  const mockActivities = [
+    {
+      id: "activity1",
+      name: "Basketball",
+      desc: "A team sport played with a ball",
+      similarity: 0.95,
+    },
+  ];
 
   // Helper to create a minimal mock event
   const createMockEvent = (overrides: any = {}) => ({
@@ -106,17 +108,17 @@ describe("filterAndSortEvents", () => {
 
     const results = filterAndSortEvents(
       mockEvents,
-      mockActivity,
+      mockActivities,
       groupSize,
       startTime,
-      endTime
+      endTime,
     );
 
     // Only the first event should match all filters
     expect(results.length).toBe(1);
     expect(results[0].event.activityId).toBe("activity1");
     expect(results[0].event.startsAt.toISOString()).toBe(
-      "2025-12-01T18:00:00.000Z"
+      "2025-12-01T18:00:00.000Z",
     );
     expect(results[0].score).toBe(0.9);
   });
@@ -128,10 +130,10 @@ describe("filterAndSortEvents", () => {
 
     const results = filterAndSortEvents(
       mockEvents,
-      mockActivity,
+      mockActivities,
       groupSize,
       startTime,
-      endTime
+      endTime,
     );
     expect(results.length).toBe(0);
   });
@@ -164,10 +166,10 @@ describe("filterAndSortEvents", () => {
     ];
     const results = filterAndSortEvents(
       events,
-      mockActivity,
+      mockActivities,
       groupSize,
       startTime,
-      endTime
+      endTime,
     );
     expect(results.length).toBe(2);
     expect(results[0].score).toBe(0.9);
@@ -200,14 +202,14 @@ describe("filterAndSortEvents", () => {
     ];
     const results = filterAndSortEvents(
       events,
-      mockActivity,
+      mockActivities,
       groupSize,
       startTime,
-      endTime
+      endTime,
     );
     expect(results.length).toBe(1);
     expect(results[0].event.startsAt.toISOString()).toBe(
-      "2025-12-01T18:00:00.000Z"
+      "2025-12-01T18:00:00.000Z",
     );
   });
 
@@ -235,19 +237,19 @@ describe("filterAndSortEvents", () => {
     // groupSize undefined
     const results1 = filterAndSortEvents(
       events,
-      mockActivity,
+      mockActivities,
       undefined,
       undefined,
-      undefined
+      undefined,
     );
     expect(results1.length).toBe(2);
     // groupSize null
     const results2 = filterAndSortEvents(
       events,
-      mockActivity,
+      mockActivities,
       undefined,
       undefined,
-      undefined
+      undefined,
     );
     expect(results2.length).toBe(2);
   });
@@ -255,18 +257,18 @@ describe("filterAndSortEvents", () => {
   it("returns empty array if events is empty or null", () => {
     const results1 = filterAndSortEvents(
       [],
-      mockActivity,
+      mockActivities,
       5,
       undefined,
-      undefined
+      undefined,
     );
     expect(results1.length).toBe(0);
     const results2 = filterAndSortEvents(
       [],
-      mockActivity,
+      mockActivities,
       5,
       undefined,
-      undefined
+      undefined,
     );
     expect(results2.length).toBe(0);
   });
