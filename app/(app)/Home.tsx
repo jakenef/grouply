@@ -24,8 +24,6 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-// TODO: fix when you send message and back out quickly, ai response shows up in mini window
-
 const Home = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [eventSuggestions, setEventSuggestions] = useState<

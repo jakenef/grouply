@@ -210,9 +210,12 @@ export default function EventDetails(props: EventDetailsProps) {
             <Text className="text-muted">
               Hosted by{" "}
               <Text className="font-semibold">
-                {host?.givenName
-                  ? `${host.givenName}${host.familyName ? ` ${host.familyName}` : ""}`
-                  : "[Deleted User]"}
+                {(() => {
+                  if (host === undefined) return "";
+                  if (host === null) return "[Deleted User]";
+                  if (host.givenName) return `${host.givenName}${host.familyName ? ` ${host.familyName}` : ""}`;
+                  return "";
+                })()}
               </Text>
             </Text>
           </View>

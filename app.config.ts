@@ -1,8 +1,14 @@
 import * as dotenv from "dotenv";
 import { ConfigContext, ExpoConfig } from "expo/config";
 
-// Load the appropriate .env file based on APP_VARIANT
-const envFile = process.env.APP_VARIANT === "staging" ? ".env.stg" : ".env.dev";
+const variant = process.env.APP_VARIANT ?? "development";
+
+const envFile =
+  variant === "production"
+    ? ".env.stg"
+    : variant === "staging"
+      ? ".env.stg"
+      : ".env.dev";
 
 dotenv.config({ path: envFile });
 

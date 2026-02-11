@@ -17,6 +17,7 @@
     "migrate:staging": "cp .env.stg .env && npx prisma migrate deploy",
     "migrate:dev": "cp .env.dev .env && npx prisma migrate dev",
     "deploy:internal": "APP_VARIANT=staging eas update --channel preview --platform ios",
+    "update:production": "APP_VARIANT=production eas update --channel production --platform ios",
     "lint": "expo lint"
   },
   "dependencies": {
