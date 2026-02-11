@@ -17,11 +17,14 @@ import React, { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   Text,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface Interest {
   id: string;
@@ -51,6 +54,8 @@ const kmToMiles = (km: number): number => {
 
 const EditProfile = () => {
   const { user } = useCurrentUser();
+  const insets = useSafeAreaInsets();
+
   const [bio, setBio] = useState(user?.bio ?? "");
   const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl ?? null);
   const initialLocation: LocationData | null = user?.location
@@ -61,18 +66,18 @@ const EditProfile = () => {
       }
     : null;
   const [location, setLocation] = useState<LocationData | null>(
-    initialLocation
+    initialLocation,
   );
   const [selectedInterests, setSelectedInterests] = useState<string[]>(
-    user?.interests.map((interest) => interest.interest.id) ?? []
+    user?.interests.map((interest) => interest.interest.id) ?? [],
   );
   const [selectedTraits, setSelectedTraits] = useState<string[]>(
-    user?.traitScores.map((traitScore) => traitScore.trait.id) ?? []
+    user?.traitScores.map((traitScore) => traitScore.trait.id) ?? [],
   );
   // const [customInterests, setCustomInterests] = useState<CustomOption[]>([]);
   // const [customTraits, setCustomTraits] = useState<CustomOption[]>([]);
   const [travelDistance, setTravelDistance] = useState<number>(
-    kmToMiles(user?.maxTravelKm ?? 0)
+    kmToMiles(user?.maxTravelKm ?? 0),
   );
   const [ageRange, setAgeRange] = useState<[number, number]>([
     user?.minAgePreference ?? 18,
@@ -160,7 +165,7 @@ const EditProfile = () => {
           console.error("Error uploading avatar:", err);
           Alert.alert(
             "Upload error",
-            err?.message || "Failed to upload avatar. Please try again."
+            err?.message || "Failed to upload avatar. Please try again.",
           );
           return;
         }
@@ -186,7 +191,7 @@ const EditProfile = () => {
       console.error("Error saving preferences:", error);
       Alert.alert(
         "Error",
-        error.message || "Failed to save preferences. Please try again."
+        error.message || "Failed to save preferences. Please try again.",
       );
       setIsSaving(false);
     }
@@ -194,129 +199,134 @@ const EditProfile = () => {
   };
 
   return (
-    <View className="flex-1 bg-background px-4">
-      <View className="flex-row justify-between pt-2 items-center mb-2">
-        <Ionicons
-          name="arrow-back-circle-outline"
-          size={35}
-          color={colors.primary}
-          onPress={router.back}
-        />
+    <KeyboardAvoidingView
+      className="flex-1"
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}
+    >
+      <View className="flex-1 bg-background px-4">
+        <View className="flex-row justify-between pt-2 items-center mb-2">
+          <Ionicons
+            name="arrow-back-circle-outline"
+            size={35}
+            color={colors.primary}
+            onPress={router.back}
+          />
 
-        {isSaving ? (
-          <ActivityIndicator size="large" color={colors.primary} />
-        ) : (
-          <Pressable
-            className="border-primary border-2 rounded-lg p-1"
-            onPress={handleSave}
-          >
-            <Text className="text-lg text-primary">Save Changes</Text>
-          </Pressable>
-        )}
-      </View>
-      <View></View>
-
-      <ScrollView className="flex-1">
-        <Text className="text-2xl font-semibold py-3">Edit Profile</Text>
-
-        <View className="items-center py-4">
-          <ProfileImagePicker value={avatarUrl} onChange={setAvatarUrl} />
+          {isSaving ? (
+            <ActivityIndicator size="large" color={colors.primary} />
+          ) : (
+            <Pressable
+              className="border-primary border-2 rounded-lg p-1"
+              onPress={handleSave}
+            >
+              <Text className="text-lg text-primary">Save Changes</Text>
+            </Pressable>
+          )}
         </View>
 
-        <FormField
-          label="Bio (Optional)"
-          value={bio}
-          onChangeText={setBio}
-          placeholder="Tell people a bit about yourself..."
-          multiline
-          numberOfLines={4}
-          containerClassName="mb-8"
-          style={{ minHeight: 100 }}
-        />
+        <ScrollView className="flex-1">
+          <Text className="text-2xl font-semibold py-3">Edit Profile</Text>
 
-        {/* Location */}
-        <LocationPicker
-          mode="city"
-          onChange={handleLocationChange}
-          value={location}
-          error={errors.location}
-        />
+          <View className="items-center py-4">
+            <ProfileImagePicker value={avatarUrl} onChange={setAvatarUrl} />
+          </View>
 
-        {/* Interests Selection */}
-        <OptionsSelector
-          title="Interests"
-          options={
-            interestsQuery.data?.map((interest) => ({
-              id: interest.id,
-              label: interest.label,
-            })) || []
-          }
-          selectedOptions={selectedInterests}
-          onSelectionChange={setSelectedInterests}
-          minRequired={3}
-          allowOther={false}
-          error={errors.interests}
-          // onCustomOptionAdded={(customOption) => {
-          //   setCustomInterests((prev) => [...prev, customOption]);
-          // }}
-        />
+          <FormField
+            label="Bio (Optional)"
+            value={bio}
+            onChangeText={setBio}
+            placeholder="Tell people a bit about yourself..."
+            multiline
+            numberOfLines={4}
+            containerClassName="mb-8"
+            style={{ minHeight: 100 }}
+          />
 
-        {/* Traits Selection */}
-        <OptionsSelector
-          title="Traits"
-          options={
-            traitsQuery.data?.map((trait) => ({
-              id: trait.id,
-              label: trait.label,
-            })) || []
-          }
-          selectedOptions={selectedTraits}
-          onSelectionChange={setSelectedTraits}
-          minRequired={3}
-          allowOther={false}
-          error={errors.traits}
-          // onCustomOptionAdded={(customOption) => {
-          //   setCustomTraits((prev) => [...prev, customOption]);
-          // }}
-        />
+          {/* Location */}
+          <LocationPicker
+            mode="city"
+            onChange={handleLocationChange}
+            value={location}
+            error={errors.location}
+          />
 
-        {/* Group Size Range */}
-        <RangeSlider
-          label="What is your preferred group size?"
-          minValue={user?.minGroupSize ?? 3}
-          maxValue={user?.maxGroupSize ?? 6}
-          minLimit={2}
-          maxLimit={12}
-          step={1}
-          onValuesChange={(values) => setGroupSizeRange(values)}
-          formatLabel={(value) => (value === 9 ? "9" : String(value))}
-        />
+          {/* Interests Selection */}
+          <OptionsSelector
+            title="Interests"
+            options={
+              interestsQuery.data?.map((interest) => ({
+                id: interest.id,
+                label: interest.label,
+              })) || []
+            }
+            selectedOptions={selectedInterests}
+            onSelectionChange={setSelectedInterests}
+            minRequired={3}
+            allowOther={false}
+            error={errors.interests}
+            // onCustomOptionAdded={(customOption) => {
+            //   setCustomInterests((prev) => [...prev, customOption]);
+            // }}
+          />
 
-        {/* Max Travel Distance */}
-        <SliderSingle
-          label="How far are you willing to travel for an event?"
-          value={travelDistance}
-          minLimit={10}
-          maxLimit={100}
-          step={1}
-          onValueChange={(value) => setTravelDistance(value)}
-          formatLabel={(value) => `${value} mi (${milesToKm(value)} km)`}
-        />
+          {/* Traits Selection */}
+          <OptionsSelector
+            title="Traits"
+            options={
+              traitsQuery.data?.map((trait) => ({
+                id: trait.id,
+                label: trait.label,
+              })) || []
+            }
+            selectedOptions={selectedTraits}
+            onSelectionChange={setSelectedTraits}
+            minRequired={3}
+            allowOther={false}
+            error={errors.traits}
+            // onCustomOptionAdded={(customOption) => {
+            //   setCustomTraits((prev) => [...prev, customOption]);
+            // }}
+          />
 
-        {/* Age Range */}
-        <RangeSlider
-          label="What is your preferred age range of other attendees?"
-          minValue={user?.minAgePreference ?? 18}
-          maxValue={user?.maxAgePreference ?? 25}
-          minLimit={18}
-          maxLimit={60}
-          step={1}
-          onValuesChange={(values) => setAgeRange(values)}
-          formatLabel={(value) => (value === 60 ? "60" : String(value))}
-          error={errors.ageRange}
-        />
-      </ScrollView>
-    </View>
+          {/* Group Size Range */}
+          <RangeSlider
+            label="What is your preferred group size?"
+            minValue={user?.minGroupSize ?? 3}
+            maxValue={user?.maxGroupSize ?? 6}
+            minLimit={2}
+            maxLimit={12}
+            step={1}
+            onValuesChange={(values) => setGroupSizeRange(values)}
+            formatLabel={(value) => (value === 9 ? "9" : String(value))}
+          />
+
+          {/* Max Travel Distance */}
+          <SliderSingle
+            label="How far are you willing to travel for an event?"
+            value={travelDistance}
+            minLimit={10}
+            maxLimit={100}
+            step={1}
+            onValueChange={(value) => setTravelDistance(value)}
+            formatLabel={(value) => `${value} mi (${milesToKm(value)} km)`}
+          />
+
+          {/* Age Range */}
+          <RangeSlider
+            label="What is your preferred age range of other attendees?"
+            minValue={user?.minAgePreference ?? 18}
+            maxValue={user?.maxAgePreference ?? 25}
+            minLimit={18}
+            maxLimit={60}
+            step={1}
+            onValuesChange={(values) => setAgeRange(values)}
+            formatLabel={(value) => (value === 60 ? "60" : String(value))}
+            error={errors.ageRange}
+          />
+        </ScrollView>
+      </View>
+    </KeyboardAvoidingView>
   );
 };
 

@@ -7,12 +7,22 @@ import { ChatMessage, ChatMessageRole } from "@/shared/types/Chat";
 import { ChatEventSuggestion } from "@/shared/types/Event";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useState } from "react";
-import { Alert, Keyboard, Pressable, Text, View } from "react-native";
+import {
+  Alert,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  Text,
+  TouchableWithoutFeedback,
+  View,
+} from "react-native";
 import Animated, {
   FadeIn,
   FadeOut,
   LinearTransition,
 } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // TODO: fix when you send message and back out quickly, ai response shows up in mini window, keyboard down button when entering text into ai chat
 
@@ -25,6 +35,7 @@ const Home = () => {
   const [channelId, setChannelId] = useState("");
   const { user } = useAuth();
   const sendMessageMutation = trpc.ai.userSendAIMessage.useMutation();
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     setChannelId("");
@@ -92,83 +103,95 @@ const Home = () => {
   };
 
   return (
-    <View className="flex-1 bg-background">
-      {!isChatExpanded && (
-        <Text className="color-primary text-4xl font-bold py-3 px-5">
-          Grouply
-        </Text>
-      )}
-      {/* Back button - only shown when chat is expanded */}
-      {isChatExpanded && (
-        <Animated.View
-          entering={FadeIn.duration(200)}
-          exiting={FadeOut.duration(200)}
-          style={{
-            position: "absolute",
-            top: 12,
-            left: 16,
-            zIndex: 10,
-          }}
-        >
-          <Pressable
-            onPress={handleBack}
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              backgroundColor: colors.background.DEFAULT,
-              justifyContent: "center",
-              alignItems: "center",
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-              elevation: 3,
-            }}
+    <KeyboardAvoidingView
+      className="flex-1"
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View className="flex-1 bg-background">
+          {!isChatExpanded && (
+            <Text className="color-primary text-4xl font-bold py-3 px-5">
+              Grouply
+            </Text>
+          )}
+          {/* Back button - only shown when chat is expanded */}
+          {isChatExpanded && (
+            <Animated.View
+              entering={FadeIn.duration(200)}
+              exiting={FadeOut.duration(200)}
+              style={{
+                position: "absolute",
+                top: 12,
+                left: 16,
+                zIndex: 10,
+              }}
+            >
+              <Pressable
+                onPress={handleBack}
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  backgroundColor: colors.background.DEFAULT,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 4,
+                  elevation: 3,
+                }}
+              >
+                <Ionicons
+                  name="arrow-back"
+                  size={24}
+                  color={colors.foreground}
+                />
+              </Pressable>
+            </Animated.View>
+          )}
+
+          {/* Chat section */}
+          <Animated.View
+            layout={LinearTransition.duration(300)}
+            style={
+              isChatExpanded
+                ? { flex: 1 }
+                : {
+                    marginHorizontal: 16,
+                    marginTop: 16,
+                    borderRadius: 16,
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    minHeight: 130,
+                  }
+            }
           >
-            <Ionicons name="arrow-back" size={24} color={colors.foreground} />
-          </Pressable>
-        </Animated.View>
-      )}
+            <HomeChatSection
+              messages={messages}
+              eventSuggestions={eventSuggestions}
+              onSend={handleSendMessage}
+              isExpanded={isChatExpanded}
+              isLoading={sendMessageMutation.isPending}
+              channelId={channelId}
+            />
+          </Animated.View>
 
-      {/* Chat section */}
-      <Animated.View
-        layout={LinearTransition.duration(300)}
-        style={
-          isChatExpanded
-            ? { flex: 1 }
-            : {
-                marginHorizontal: 16,
-                marginTop: 16,
-                borderRadius: 16,
-                borderWidth: 1,
-                borderColor: colors.border,
-                minHeight: 130,
-              }
-        }
-      >
-        <HomeChatSection
-          messages={messages}
-          eventSuggestions={eventSuggestions}
-          onSend={handleSendMessage}
-          isExpanded={isChatExpanded}
-          isLoading={sendMessageMutation.isPending}
-          channelId={channelId}
-        />
-      </Animated.View>
-
-      {/* Event suggestions - fade out when chat expands */}
-      {!isChatExpanded && (
-        <Animated.View
-          layout={LinearTransition.duration(300)}
-          entering={FadeIn.duration(200)}
-          exiting={FadeOut.duration(200)}
-          style={{ flex: 1 }}
-        >
-          <EventSuggestions />
-        </Animated.View>
-      )}
-    </View>
+          {/* Event suggestions - fade out when chat expands */}
+          {!isChatExpanded && (
+            <Animated.View
+              layout={LinearTransition.duration(300)}
+              entering={FadeIn.duration(200)}
+              exiting={FadeOut.duration(200)}
+              style={{ flex: 1 }}
+            >
+              <EventSuggestions />
+            </Animated.View>
+          )}
+        </View>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 };
 
