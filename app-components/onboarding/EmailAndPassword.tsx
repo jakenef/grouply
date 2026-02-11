@@ -9,7 +9,7 @@ interface EmailAndPasswordProps {
   buttonLabel: string;
   onButtonPress: (
     email: string,
-    password: string
+    password: string,
   ) => Promise<{ data?: any; error?: any }>;
   onSuccess: () => void;
 }
@@ -87,6 +87,8 @@ const EmailAndPassword = ({
           backgroundColor: "white",
           color: colors.foreground,
         }}
+        returnKeyType="done"
+        onSubmitEditing={handleButtonPress}
       />
 
       {/* Button */}

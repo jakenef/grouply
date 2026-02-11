@@ -14,6 +14,8 @@ import Animated, {
   LinearTransition,
 } from "react-native-reanimated";
 
+// TODO: fix when you send message and back out quickly, ai response shows up in mini window, keyboard down button when entering text into ai chat
+
 const Home = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [eventSuggestions, setEventSuggestions] = useState<
