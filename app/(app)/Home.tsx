@@ -6,7 +6,7 @@ import { trpc } from "@/lib/trpc";
 import { ChatMessage, ChatMessageRole } from "@/shared/types/Chat";
 import { ChatEventSuggestion } from "@/shared/types/Event";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
   Keyboard,
@@ -24,7 +24,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-// TODO: fix when you send message and back out quickly, ai response shows up in mini window, keyboard down button when entering text into ai chat
+// TODO: fix when you send message and back out quickly, ai response shows up in mini window
 
 const Home = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -36,9 +36,11 @@ const Home = () => {
   const { user } = useAuth();
   const sendMessageMutation = trpc.ai.userSendAIMessage.useMutation();
   const insets = useSafeAreaInsets();
+  const isChatExpandedRef = useRef(isChatExpanded);
 
   useEffect(() => {
     setChannelId("");
+    isChatExpandedRef.current = isChatExpanded;
   }, [isChatExpanded]);
 
   const handleSendMessage = async (text: string) => {
@@ -58,31 +60,33 @@ const Home = () => {
         channelId,
         text,
       });
-      setChannelId(response.channelId);
-      const assistantMessage: ChatMessage = {
-        id: response.id,
-        role: response.role as any,
-        body: response.body,
-        channelId: response.channelId,
-        authorId: response.authorId,
-        toolName: response.toolName,
-        createdAt: response.createdAt,
-      };
-      setEventSuggestions(
-        response.refreshedEvents?.map((event) => {
-          const chatEventSuggestion: ChatEventSuggestion = {
-            id: event.event.id,
-            startsAt: new Date(event.event.startsAt),
-            name: event.event.name,
-            formattedLocation: event.event.location.formatted ?? "",
-            coverImageUrl: event.event.coverImageUrl,
-            numCurrentParticipants: event.event.currentAttendees,
-            maxAttendees: event.event.maxAttendees,
-          };
-          return chatEventSuggestion;
-        }),
-      );
-      setMessages((prev) => [...prev, assistantMessage]);
+      if (isChatExpandedRef.current) {
+        setChannelId(response.channelId);
+        const assistantMessage: ChatMessage = {
+          id: response.id,
+          role: response.role as any,
+          body: response.body,
+          channelId: response.channelId,
+          authorId: response.authorId,
+          toolName: response.toolName,
+          createdAt: response.createdAt,
+        };
+        setEventSuggestions(
+          response.refreshedEvents?.map((event) => {
+            const chatEventSuggestion: ChatEventSuggestion = {
+              id: event.event.id,
+              startsAt: new Date(event.event.startsAt),
+              name: event.event.name,
+              formattedLocation: event.event.location.formatted ?? "",
+              coverImageUrl: event.event.coverImageUrl,
+              numCurrentParticipants: event.event.currentAttendees,
+              maxAttendees: event.event.maxAttendees,
+            };
+            return chatEventSuggestion;
+          }),
+        );
+        setMessages((prev) => [...prev, assistantMessage]);
+      }
     } catch (error) {
       console.error("Error communicating with AI:", error);
       Alert.alert(
