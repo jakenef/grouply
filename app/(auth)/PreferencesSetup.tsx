@@ -317,7 +317,8 @@ const PreferencesSetup = () => {
           }
           selectedOptions={selectedInterests}
           onSelectionChange={setSelectedInterests}
-          minRequired={interestsQuery.data?.length! > 0 ? 3 : undefined}
+          minRequired={interestsQuery.data?.length! > 0 ? 5 : undefined}
+          maxAllowed={10}
           allowOther={false}
           error={errors.interests}
           onCustomOptionAdded={(customOption) => {
@@ -336,7 +337,8 @@ const PreferencesSetup = () => {
           }
           selectedOptions={selectedTraits}
           onSelectionChange={setSelectedTraits}
-          minRequired={traitsQuery.data?.length! > 0 ? 3 : undefined}
+          minRequired={traitsQuery.data?.length! > 0 ? 5 : undefined}
+          maxAllowed={10}
           allowOther={false}
           error={errors.traits}
           onCustomOptionAdded={(customOption) => {

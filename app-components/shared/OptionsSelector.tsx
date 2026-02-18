@@ -16,6 +16,7 @@ interface OptionsSelectorProps {
   selectedOptions: string[];
   onSelectionChange: (newSelection: string[]) => void;
   minRequired?: number;
+  maxAllowed?: number;
   allowOther?: boolean;
   error?: string;
   onCustomOptionAdded?: (option: { id: string; label: string }) => void;
@@ -27,6 +28,7 @@ const OptionsSelector = ({
   selectedOptions,
   onSelectionChange,
   minRequired = 0,
+  maxAllowed,
   allowOther = false,
   error,
   onCustomOptionAdded,
@@ -37,6 +39,7 @@ const OptionsSelector = ({
   const [customOptions, setCustomOptions] = useState<
     Array<{ id: string; label: string }>
   >([]);
+  const [maxReached, setMaxReached] = useState(false);
   const otherInputRef = useRef<TextInput>(null);
 
   // Only reset display count if the options array meaningfully changes
@@ -61,8 +64,14 @@ const OptionsSelector = ({
       // Always allow deselection, even if below minRequired
       // The error state will show in the UI
       newSelection = newSelection.filter((item) => item !== id);
+      setMaxReached(false);
     } else {
+      if (maxAllowed && newSelection.length >= maxAllowed) {
+        setMaxReached(true);
+        return;
+      }
       newSelection.push(id);
+      setMaxReached(false);
     }
 
     onSelectionChange(newSelection);
@@ -83,6 +92,10 @@ const OptionsSelector = ({
     if (!otherValue.trim()) {
       return; // Don't add empty values
     }
+    if (maxAllowed && selectedOptions.length >= maxAllowed) {
+      setMaxReached(true);
+      return;
+    }
 
     // Generate a unique ID for the custom option (prefix with 'custom-' to distinguish it)
     const customId = `custom-${Date.now()}-${otherValue
@@ -95,6 +108,7 @@ const OptionsSelector = ({
 
     // Add to selected options
     onSelectionChange([...selectedOptions, customId]);
+    setMaxReached(false);
 
     // Notify parent component of custom option if callback exists
     if (onCustomOptionAdded) {
@@ -238,17 +252,26 @@ const OptionsSelector = ({
         </Pressable>
       )}
 
-      {minRequired > 0 && (
+      {(minRequired > 0 || maxAllowed) && (
         <Text
           className={`text-sm mt-2 ${
             selectedOptions.length < minRequired
               ? "text-danger"
-              : "text-success"
+              : maxAllowed && selectedOptions.length === maxAllowed
+                ? "text-warning"
+                : "text-success"
           }`}
         >
           {selectedOptions.length < minRequired
             ? `Please select at least ${minRequired} options (${selectedOptions.length}/${minRequired})`
-            : `${selectedOptions.length} selected ✓`}
+            : maxAllowed && selectedOptions.length === maxAllowed
+              ? `Maximum of ${maxAllowed} selected (${selectedOptions.length}/${maxAllowed})`
+              : `${selectedOptions.length} selected ✓`}
+        </Text>
+      )}
+      {maxReached && (
+        <Text className="text-sm text-warning mt-1">
+          You can select up to {maxAllowed} options.
         </Text>
       )}
 

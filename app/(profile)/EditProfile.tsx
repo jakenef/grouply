@@ -18,7 +18,6 @@ import {
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
-  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -262,7 +261,8 @@ const EditProfile = () => {
             }
             selectedOptions={selectedInterests}
             onSelectionChange={setSelectedInterests}
-            minRequired={3}
+            minRequired={5}
+            maxAllowed={15}
             allowOther={false}
             error={errors.interests}
             // onCustomOptionAdded={(customOption) => {
@@ -281,7 +281,8 @@ const EditProfile = () => {
             }
             selectedOptions={selectedTraits}
             onSelectionChange={setSelectedTraits}
-            minRequired={3}
+            minRequired={5}
+            maxAllowed={15}
             allowOther={false}
             error={errors.traits}
             // onCustomOptionAdded={(customOption) => {
