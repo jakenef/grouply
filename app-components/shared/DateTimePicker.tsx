@@ -4,6 +4,7 @@ import RNDateTimePicker from "@react-native-community/datetimepicker";
 import { format } from "date-fns";
 import React, { useState } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
+import { AndroidDateTimePicker } from "./AndroidDateTimePicker";
 
 interface DateTimePickerProps {
   label: string;
@@ -13,20 +14,23 @@ interface DateTimePickerProps {
   containerClassName?: string;
 }
 
-export const DateTimePicker: React.FC<DateTimePickerProps> = ({
-  label,
-  value,
-  onChange,
-  mode = "datetime",
-  containerClassName = "mb-6",
-}) => {
-  const [showPicker, setShowPicker] = useState(false);
+export const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
+  if (Platform.OS === "android" && (props.mode === "datetime" || !props.mode)) {
+    // Use custom Android datetime picker
+    return <AndroidDateTimePicker {...props} />;
+  }
 
-  // Ensure value is always a valid Date object (handles string values from API)
+  // Fallback to original for iOS/web
+  const {
+    label,
+    value,
+    onChange,
+    mode = "datetime",
+    containerClassName = "mb-6",
+  } = props;
+  const [showPicker, setShowPicker] = useState(false);
   const dateValue =
-    value instanceof Date && !isNaN(value.getTime())
-      ? value
-      : new Date(value);
+    value instanceof Date && !isNaN(value.getTime()) ? value : new Date(value);
 
   const handleChange = (event: any, selectedDate?: Date) => {
     if (event.type === "dismissed") {
@@ -35,24 +39,15 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
     }
     if (selectedDate) {
       onChange(selectedDate);
-      if (Platform.OS === "android") {
-        setShowPicker(false);
-      }
+      setShowPicker(false);
     }
   };
 
-  const togglePicker = () => {
-    setShowPicker((prev) => !prev);
-  };
-
+  const togglePicker = () => setShowPicker((prev) => !prev);
   const formatValue = () => {
-    if (mode === "date") {
-      return format(dateValue, "MMMM d, yyyy");
-    } else if (mode === "time") {
-      return format(dateValue, "h:mm a");
-    } else {
-      return format(dateValue, "MMMM d, yyyy • h:mm a");
-    }
+    if (mode === "date") return format(dateValue, "MMMM d, yyyy");
+    if (mode === "time") return format(dateValue, "h:mm a");
+    return format(dateValue, "MMMM d, yyyy • h:mm a");
   };
 
   return (

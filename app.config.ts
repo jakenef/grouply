@@ -45,6 +45,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     edgeToEdgeEnabled: true,
     predictiveBackGestureEnabled: false,
     package: "com.grouply.grouply",
+    softwareKeyboardLayoutMode: "resize",
   },
   web: {
     output: "static",

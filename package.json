@@ -18,7 +18,9 @@
     "migrate:dev": "cp .env.dev .env && npx prisma migrate dev",
     "deploy:internal": "APP_VARIANT=staging eas update --channel preview --platform ios",
     "update:production": "APP_VARIANT=production eas update --channel production --platform ios",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "android": "expo run:android",
+    "ios": "expo run:ios"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
@@ -67,6 +69,7 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
+    "react-native-date-picker": "^5.0.13",
     "react-native-gesture-handler": "~2.28.0",
     "react-native-keyboard-controller": "1.18.5",
     "react-native-modal-datetime-picker": "^18.0.0",

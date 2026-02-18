@@ -1,5 +1,7 @@
 # AI Event Suggestion Algorithm
 
+## OUTDATED
+
 ## Overview
 
 The event suggestion algorithm takes a natural language activity description from the user and intelligently matches it against existing events using personalized scoring, activity matching, and constraint filtering.
