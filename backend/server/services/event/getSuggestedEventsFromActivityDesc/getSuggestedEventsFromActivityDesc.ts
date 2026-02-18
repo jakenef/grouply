@@ -106,10 +106,19 @@ export function filterAndSortEvents(
       fitsGroupSize(event, groupSize),
   );
 
+  // Map activityId to similarity for fast lookup
+  const activitySimilarityMap = new Map<string, number>();
+  for (const activity of activities) {
+    activitySimilarityMap.set(activity.id, activity.similarity ?? 0);
+  }
+
   filteredEvents.sort((a, b) => {
-    const aScore = a.score;
-    const bScore = b.score;
-    return bScore - aScore;
+    const aActivitySim = activitySimilarityMap.get(a.event.activityId) ?? 0;
+    const bActivitySim = activitySimilarityMap.get(b.event.activityId) ?? 0;
+    if (bActivitySim !== aActivitySim) {
+      return bActivitySim - aActivitySim; // sort by activity similarity first
+    }
+    return b.score - a.score; // then by matchScore
   });
 
   // return resulting events
