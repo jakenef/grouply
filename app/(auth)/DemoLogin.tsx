@@ -36,8 +36,8 @@ const DemoLogin = () => {
     <View className="flex-1 bg-background py-4">
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}
+        behavior="padding"
+        keyboardVerticalOffset={insets.top}
       >
         <ScrollView className="flex-1 px-8">
           <View className="items-center">

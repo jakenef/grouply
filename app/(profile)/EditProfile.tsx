@@ -201,8 +201,8 @@ const EditProfile = () => {
   return (
     <KeyboardAvoidingView
       className="flex-1"
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}
+      behavior="padding"
+      keyboardVerticalOffset={insets.top}
     >
       <View className="flex-1 bg-background px-4">
         <View className="flex-row justify-between pt-2 items-center mb-2">

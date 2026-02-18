@@ -175,7 +175,7 @@ export default function HomeChatSection({
       {/* Content area - scrollable messages or empty state */}
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior="padding"
         keyboardVerticalOffset={keyboardOffset}
       >
         <View className="flex-1">

@@ -235,8 +235,8 @@ const AboutYouSetup = () => {
       <Pressable onPress={() => router.push("/(app)/Home")} />
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}
+        behavior="padding"
+        keyboardVerticalOffset={insets.top}
       >
         <TouchableWithoutFeedback onPress={handleOutsideTouch}>
           <ScrollView
