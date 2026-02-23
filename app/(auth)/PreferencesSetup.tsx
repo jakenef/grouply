@@ -309,7 +309,7 @@ const PreferencesSetup = () => {
 
         {/* Interests Selection */}
         <OptionsSelector
-          title="What kind of things do you enjoy doing? (Please choose the 5 that you enjoy most)"
+          title="What kind of things do you enjoy doing? (Please choose the 10 that you enjoy most)"
           options={
             interestsQuery.data?.map((interest) => ({
               id: interest.id,
@@ -318,8 +318,8 @@ const PreferencesSetup = () => {
           }
           selectedOptions={selectedInterests}
           onSelectionChange={setSelectedInterests}
-          minRequired={interestsQuery.data?.length! > 0 ? 5 : undefined}
-          maxAllowed={10}
+          minRequired={interestsQuery.data?.length! > 0 ? 10 : undefined}
+          maxAllowed={15}
           allowOther={false}
           error={errors.interests}
           onCustomOptionAdded={(customOption) => {
@@ -387,6 +387,7 @@ const PreferencesSetup = () => {
           <MultipleChoiceSelector
             {...personalityQuestions.eventEnergy}
             multiSelect
+            maxAllowedSelections={2}
             selectedValues={eventEnergy}
             onSelectMultiple={setEventEnergy}
           />

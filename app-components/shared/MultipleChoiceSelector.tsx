@@ -22,6 +22,7 @@ interface MultiSelectProps {
   multiSelect: true;
   selectedValues: string[];
   onSelectMultiple: (values: string[]) => void;
+  maxAllowedSelections?: number;
 }
 
 type MultipleChoiceSelectorProps = SingleSelectProps | MultiSelectProps;
@@ -38,13 +39,24 @@ export default function MultipleChoiceSelector(
     return (props as SingleSelectProps).selectedValue === value;
   };
 
+  const [showMaxFeedback, setShowMaxFeedback] = React.useState(false);
+
   const handlePress = (value: string) => {
     if (multiSelect) {
       const { selectedValues, onSelectMultiple } = props as MultiSelectProps;
       if (selectedValues.includes(value)) {
         onSelectMultiple(selectedValues.filter((v) => v !== value));
+        setShowMaxFeedback(false);
       } else {
-        onSelectMultiple([...selectedValues, value]);
+        if (
+          props.maxAllowedSelections === undefined ||
+          selectedValues.length < props.maxAllowedSelections
+        ) {
+          onSelectMultiple([...selectedValues, value]);
+          setShowMaxFeedback(false);
+        } else {
+          setShowMaxFeedback(true);
+        }
       }
     } else {
       (props as SingleSelectProps).onSelect(value);
@@ -87,6 +99,14 @@ export default function MultipleChoiceSelector(
           </Pressable>
         ))}
       </View>
+      {/* Feedback message for maxAllowedSelections */}
+      {multiSelect &&
+        props.maxAllowedSelections !== undefined &&
+        showMaxFeedback && (
+          <Text className="mt-2 text-xs text-danger font-medium">
+            You can only select up to {props.maxAllowedSelections} options.
+          </Text>
+        )}
     </View>
   );
 }
