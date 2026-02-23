@@ -11,6 +11,21 @@ export const trpc = createTRPCReact<AppRouter>();
 const getApiUrl = () => {
   // First, try to get from baked-in app config (works with EAS updates)
   const configUrl = Constants.expoConfig?.extra?.env?.EXPO_PUBLIC_TRPC_URL;
+
+  // In development mode, override localhost with Android emulator IP for Android
+  if (
+    __DEV__ &&
+    Platform.OS === "android" &&
+    configUrl?.includes("localhost")
+  ) {
+    const androidUrl = configUrl.replace("localhost", "10.0.2.2");
+    console.log(
+      "[TRPC] Android emulator detected, converting localhost to 10.0.2.2:",
+      androidUrl,
+    );
+    return androidUrl;
+  }
+
   if (configUrl) {
     console.log("[TRPC] Using URL from app config:", configUrl);
     return configUrl;

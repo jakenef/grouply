@@ -302,13 +302,14 @@ const PreferencesSetup = () => {
             Your Preferences
           </Text>
           <Text className="text-base text-muted mt-2 text-center">
-            Help us find the perfect groups for you
+            Help us find the perfect groups for you! The more effort you put in
+            here, the better your matches will be!
           </Text>
         </View>
 
         {/* Interests Selection */}
         <OptionsSelector
-          title="What kind of things do you enjoy doing?"
+          title="What kind of things do you enjoy doing? (Please choose the 5 that you enjoy most)"
           options={
             interestsQuery.data?.map((interest) => ({
               id: interest.id,
@@ -317,7 +318,8 @@ const PreferencesSetup = () => {
           }
           selectedOptions={selectedInterests}
           onSelectionChange={setSelectedInterests}
-          minRequired={interestsQuery.data?.length! > 0 ? 3 : undefined}
+          minRequired={interestsQuery.data?.length! > 0 ? 5 : undefined}
+          maxAllowed={10}
           allowOther={false}
           error={errors.interests}
           onCustomOptionAdded={(customOption) => {
@@ -327,7 +329,7 @@ const PreferencesSetup = () => {
 
         {/* Traits Selection */}
         <OptionsSelector
-          title="What's your vibe?"
+          title="What's your vibe? (Please choose the 5 that best describe you)"
           options={
             traitsQuery.data?.map((trait) => ({
               id: trait.id,
@@ -336,7 +338,8 @@ const PreferencesSetup = () => {
           }
           selectedOptions={selectedTraits}
           onSelectionChange={setSelectedTraits}
-          minRequired={traitsQuery.data?.length! > 0 ? 3 : undefined}
+          minRequired={traitsQuery.data?.length! > 0 ? 5 : undefined}
+          maxAllowed={10}
           allowOther={false}
           error={errors.traits}
           onCustomOptionAdded={(customOption) => {

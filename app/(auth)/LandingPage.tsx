@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import React from "react";
-import { Image, Text, View } from "react-native";
+import { Image, Linking, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import GrouplyButton from "../../app-components/shared/GrouplyButton";
 
@@ -51,6 +51,30 @@ const LandingPage = () => {
               router.push("/DemoLogin");
             }}
           />
+        </View>
+        {/* Bottom links */}
+        <View className="absolute bottom-6 w-full px-8">
+          <View className="w-full flex-row justify-center items-center">
+            <Text
+              className="text-xs text-muted-darker underline mr-3"
+              onPress={() =>
+                Linking.openURL("https://grouply.carrd.co/#privacypolicy")
+              }
+            >
+              Privacy Policy
+            </Text>
+
+            <View className="w-2 h-2 rounded-full bg-primary mx-2" />
+
+            <Text
+              className="text-xs text-muted-darker underline ml-3"
+              onPress={() =>
+                Linking.openURL("https://grouply.carrd.co/#termsandconditions")
+              }
+            >
+              Terms & Conditions
+            </Text>
+          </View>
         </View>
       </View>
     </SafeAreaView>

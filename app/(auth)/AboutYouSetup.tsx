@@ -70,23 +70,16 @@ const AboutYouSetup = () => {
   const createUserMutation = trpc.users.createUser.useMutation();
 
   const onBirthdayChange = (event: any, selectedDate?: Date) => {
-    // If user canceled the picker on iOS
-    if (event.type === "dismissed") {
-      setShowDatePicker(false);
-      return;
-    }
+    // Only proceed if picker is open
+    if (!showDatePicker) return;
+    setShowDatePicker(false);
 
-    // If a date was selected
-    if (selectedDate) {
+    // Only update date/birthday if user confirmed selection
+    if (event.type === "set" && selectedDate) {
       const currentDate = selectedDate;
       setDate(currentDate);
-
-      // Format the selected date for display
       const formattedDate = format(currentDate, "MMMM d, yyyy");
       setBirthday(formattedDate);
-
-      // For Android, the picker is modal and closes automatically
-      // For iOS, we'll keep the picker open so they can continue adjusting if desired
     }
   };
 
@@ -242,8 +235,8 @@ const AboutYouSetup = () => {
       <Pressable onPress={() => router.push("/(app)/Home")} />
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}
+        behavior="padding"
+        keyboardVerticalOffset={insets.top}
       >
         <TouchableWithoutFeedback onPress={handleOutsideTouch}>
           <ScrollView

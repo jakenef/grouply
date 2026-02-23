@@ -13,7 +13,7 @@ describe("getSuggestedEventsFromUser integration", () => {
   beforeAll(async () => {
     // Create prerequisite data
     const interest = await prisma.interest.create({
-      data: { slug: "hiking", label: "Hiking", isApproved: true },
+      data: { slug: "hiking-test", label: "Hiking", isApproved: true },
     });
     testInterestId = interest.id;
 

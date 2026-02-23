@@ -267,9 +267,13 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
   return (
     <KeyboardAvoidingView
       className="flex-1 bg-background"
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior={Platform.OS === "ios" ? "padding" : "padding"}
     >
-      <ScrollView className="flex-1" keyboardShouldPersistTaps="handled">
+      <ScrollView
+        className="flex-1"
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ flexGrow: 1 }}
+      >
         <View className="p-4">
           <Text className="text-2xl font-bold text-foreground mb-6">
             {props.event ? "Edit Event" : "Create Event"}
