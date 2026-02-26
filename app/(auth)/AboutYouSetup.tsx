@@ -48,8 +48,6 @@ const AboutYouSetup = () => {
     location?: string;
   }>({});
 
-  // TODO: fix date picker android
-
   // If user is not authenticated, redirect to login
   useEffect(() => {
     if (!session && !isSubmitting) {
