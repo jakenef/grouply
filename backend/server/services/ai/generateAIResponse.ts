@@ -172,10 +172,43 @@ export async function generateAIResponse(params: {
   }
   // 4) Format AI response for return
 
+  function stripMarkdownAndUrls(text: string): string {
+    return (
+      text
+        // Remove fenced code blocks
+        .replace(/```[\s\S]*?```/g, "")
+
+        // Remove inline code
+        .replace(/`([^`]*)`/g, "$1")
+
+        // Remove markdown links but keep visible text
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+
+        // Remove raw URLs
+        .replace(/https?:\/\/\S+/g, "")
+
+        // Remove bold/italic markers
+        .replace(/\*\*([^*]+)\*\*/g, "$1")
+        .replace(/\*([^*]+)\*/g, "$1")
+        .replace(/__([^_]+)__/g, "$1")
+        .replace(/_([^_]+)_/g, "$1")
+
+        // Remove headings
+        .replace(/^#{1,6}\s+/gm, "")
+
+        // Remove bullet markers
+        .replace(/^\s*[-*+]\s+/gm, "")
+
+        // Clean up excessive whitespace
+        .replace(/\n{3,}/g, "\n\n")
+        .trim()
+    );
+  }
+
   const aiChatMessageResponse = {
     authorId: "ai-assistant",
     channelId: params.channelId,
-    body: aiResponse.output_text,
+    body: stripMarkdownAndUrls(aiResponse.output_text || ""),
     role: ChatMessageRole.ASSISTANT,
     tools: aiResponse.tools,
   };

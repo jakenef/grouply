@@ -3,15 +3,7 @@ import { ChatEventSuggestion } from "@/shared/types/Event";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import {
-  FlatList,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { FlatList, Image, Text, TextInput, View } from "react-native";
 import Animated, {
   Easing,
   FadeInDown,
@@ -22,7 +14,6 @@ import Animated, {
   withSequence,
   withTiming,
 } from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import CreateEventCard from "../events/CreateEventCard";
 import { EventCard } from "../events/EventCard";
 import GrouplyButton from "../shared/GrouplyButton";
@@ -129,10 +120,6 @@ export default function HomeChatSection({
   const [text, setText] = useState("");
   const [showTypingIndicator, setShowTypingIndicator] = useState(false);
   const inputRef = useRef<TextInput>(null);
-  const insets = useSafeAreaInsets();
-
-  // Keyboard offset for iOS to account for top safe area
-  const keyboardOffset = Platform.OS === "ios" ? insets.top : 0;
 
   // Delay showing typing indicator
   useEffect(() => {
@@ -171,194 +158,188 @@ export default function HomeChatSection({
   };
 
   return (
-    <View className="flex-1 bg-background>">
+    <View className="flex-1 bg-background">
       {/* Content area - scrollable messages or empty state */}
-      <KeyboardAvoidingView
-        className="flex-1"
-        behavior="padding"
-        keyboardVerticalOffset={keyboardOffset}
-      >
-        <View className="flex-1">
-          {messages.length === 0 ? (
-            // Collapsed/empty state
-            <View className="justify-center px-4 py-4">
-              <Text className="text-xl font-semibold mb-1.5">
-                What do you want to do?
-              </Text>
-            </View>
-          ) : (
-            <FlatList
-              data={invertedMessages}
-              inverted
-              keyExtractor={(m) => m.id}
-              keyboardShouldPersistTaps="handled"
-              contentContainerStyle={{
-                paddingHorizontal: 16,
-                paddingTop: 8,
-                paddingBottom: 12,
-              }}
-              renderItem={({ item, index }) => (
-                <View
-                  className={`mb-2 flex-row items-end gap-2 ${
-                    item.role === ChatMessageRole.USER
-                      ? "self-end flex-row-reverse"
-                      : "self-start"
-                  }`}
-                >
-                  {/* AI Avatar - only show for assistant messages */}
-                  {item.role === ChatMessageRole.ASSISTANT && (
-                    <View
-                      style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: 16,
-                        backgroundColor: "#4f47e5",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        marginBottom: 2,
-                      }}
-                    >
-                      {AI_AVATAR_URL ? (
-                        <Image
-                          source={{ uri: AI_AVATAR_URL }}
-                          style={{ width: 32, height: 32, borderRadius: 16 }}
-                          resizeMode="cover"
-                        />
-                      ) : (
-                        <Ionicons name="sparkles" size={16} color="white" />
-                      )}
-                    </View>
-                  )}
-
-                  {/* Message Bubble */}
-                  <Animated.View
-                    entering={FadeInDown.delay(Math.min(index, 4) * 40)}
-                    className={`py-2.5 px-3 rounded-2xl max-w-[80%] ${
-                      item.role === ChatMessageRole.USER
-                        ? "bg-accent"
-                        : "bg-background-darker"
-                    }`}
-                  >
-                    <Text className="text-base text-foreground">
-                      {item.body}
-                    </Text>
-                  </Animated.View>
-                </View>
-              )}
-              ListHeaderComponent={
-                showTypingIndicator ? (
+      <View className="flex-1">
+        {messages.length === 0 ? (
+          // Collapsed/empty state
+          <View className="justify-center px-4 py-4">
+            <Text className="text-xl font-semibold mb-1.5">
+              What do you want to do?
+            </Text>
+          </View>
+        ) : (
+          <FlatList
+            style={{ flex: 1 }}
+            data={invertedMessages}
+            inverted
+            scrollEnabled={true}
+            keyExtractor={(m) => m.id}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{
+              paddingHorizontal: 16,
+              paddingTop: 8,
+              paddingBottom: 12,
+            }}
+            renderItem={({ item, index }) => (
+              <View
+                className={`mb-2 flex-row items-end gap-2 ${
+                  item.role === ChatMessageRole.USER
+                    ? "self-end flex-row-reverse"
+                    : "self-start"
+                }`}
+              >
+                {/* AI Avatar - only show for assistant messages */}
+                {item.role === ChatMessageRole.ASSISTANT && (
                   <View
                     style={{
-                      marginBottom: 8,
-                      flexDirection: "row",
-                      alignItems: "flex-end",
-                      gap: 8,
-                      alignSelf: "flex-start",
+                      width: 32,
+                      height: 32,
+                      borderRadius: 16,
+                      backgroundColor: "#4f47e5",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      marginBottom: 2,
                     }}
                   >
-                    {/* AI Avatar for typing indicator */}
-                    <View
-                      style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: 16,
-                        backgroundColor: "#4f47e5",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        marginBottom: 2,
-                      }}
-                    >
-                      {AI_AVATAR_URL ? (
-                        <Image
-                          source={{ uri: AI_AVATAR_URL }}
-                          style={{ width: 32, height: 32, borderRadius: 16 }}
-                          resizeMode="cover"
-                        />
-                      ) : (
-                        <Ionicons name="sparkles" size={16} color="white" />
-                      )}
-                    </View>
-                    {/* Typing Indicator */}
-                    <View
-                      style={{
-                        paddingVertical: 10,
-                        paddingHorizontal: 16,
-                        borderRadius: 16,
-                        backgroundColor: "#f3f4f6",
-                      }}
-                    >
-                      <TypingIndicator />
-                    </View>
+                    {AI_AVATAR_URL ? (
+                      <Image
+                        source={{ uri: AI_AVATAR_URL }}
+                        style={{ width: 32, height: 32, borderRadius: 16 }}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <Ionicons name="sparkles" size={16} color="white" />
+                    )}
                   </View>
-                ) : null
-              }
-            />
-          )}
-        </View>
-        {/* Event Suggestions Scroller */}
-        {eventSuggestions !== undefined && messages.length !== 0 && (
-          <View className="px-3 py-2">
-            <FlatList
-              data={eventSuggestions}
-              renderItem={({ item }) => (
-                <View className="px-2 w-96">
-                  <EventCard
-                    event={item}
-                    onJoin={() =>
-                      router.push({
-                        pathname: `/(events)/Events/[id]`,
-                        params: { id: item.id },
-                      })
-                    }
-                  />
-                </View>
-              )}
-              horizontal={true}
-              ListFooterComponent={
-                <View className="px-2">
-                  <CreateEventCard
-                    onClick={() => {
-                      router.push({
-                        pathname: "/(events)/Events/Edit",
-                        params: { channelId },
-                      });
-                    }}
-                    buttonText="Create Event Automatically With AI"
-                  />
-                </View>
-              }
-            ></FlatList>
-          </View>
-        )}
+                )}
 
-        {/* Input bar - always visible */}
-        <View className="px-3 py-2 h-20 ">
-          <View className="flex-row items-center gap-2">
-            <TextInput
-              ref={inputRef}
-              value={text}
-              onChangeText={setText}
-              placeholder={placeholder}
-              placeholderTextColor="#6d7281"
-              returnKeyType="send"
-              onSubmitEditing={handleSend}
-              submitBehavior="submit"
-              multiline
-              scrollEnabled
-              textAlignVertical="top"
-              className="flex-1 px-3.5 py-2 border border-border rounded-[20px] text-foreground"
-            />
-            <GrouplyButton
-              onPress={handleSend}
-              disabled={!text.trim() || isLoading}
-              accessibilityRole="button"
-              accessibilityLabel="Send message"
-              iconOnly={true}
-              iconName="send"
-            />
-          </View>
+                {/* Message Bubble */}
+                <Animated.View
+                  entering={FadeInDown.delay(Math.min(index, 4) * 40)}
+                  className={`py-2.5 px-3 rounded-2xl max-w-[80%] ${
+                    item.role === ChatMessageRole.USER
+                      ? "bg-accent"
+                      : "bg-background-darker"
+                  }`}
+                >
+                  <Text className="text-base text-foreground">{item.body}</Text>
+                </Animated.View>
+              </View>
+            )}
+            ListHeaderComponent={
+              showTypingIndicator ? (
+                <View
+                  style={{
+                    marginBottom: 8,
+                    flexDirection: "row",
+                    alignItems: "flex-end",
+                    gap: 8,
+                    alignSelf: "flex-start",
+                  }}
+                >
+                  {/* AI Avatar for typing indicator */}
+                  <View
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 16,
+                      backgroundColor: "#4f47e5",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      marginBottom: 2,
+                    }}
+                  >
+                    {AI_AVATAR_URL ? (
+                      <Image
+                        source={{ uri: AI_AVATAR_URL }}
+                        style={{ width: 32, height: 32, borderRadius: 16 }}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <Ionicons name="sparkles" size={16} color="white" />
+                    )}
+                  </View>
+                  {/* Typing Indicator */}
+                  <View
+                    style={{
+                      paddingVertical: 10,
+                      paddingHorizontal: 16,
+                      borderRadius: 16,
+                      backgroundColor: "#f3f4f6",
+                    }}
+                  >
+                    <TypingIndicator />
+                  </View>
+                </View>
+              ) : null
+            }
+          />
+        )}
+      </View>
+      {/* Event Suggestions Scroller */}
+      {eventSuggestions !== undefined && messages.length !== 0 && (
+        <View className="px-3 py-2">
+          <FlatList
+            data={eventSuggestions}
+            renderItem={({ item }) => (
+              <View className="px-2 w-96">
+                <EventCard
+                  event={item}
+                  onJoin={() =>
+                    router.push({
+                      pathname: `/(events)/Events/[id]`,
+                      params: { id: item.id },
+                    })
+                  }
+                />
+              </View>
+            )}
+            horizontal={true}
+            ListFooterComponent={
+              <View className="px-2">
+                <CreateEventCard
+                  onClick={() => {
+                    router.push({
+                      pathname: "/(events)/Events/Edit",
+                      params: { channelId },
+                    });
+                  }}
+                  buttonText="Create Event Automatically With AI"
+                />
+              </View>
+            }
+          ></FlatList>
         </View>
-      </KeyboardAvoidingView>
+      )}
+
+      {/* Input bar - always visible */}
+      <View className="px-3 py-2 h-20 ">
+        <View className="flex-row items-center gap-2">
+          <TextInput
+            ref={inputRef}
+            value={text}
+            onChangeText={setText}
+            placeholder={placeholder}
+            placeholderTextColor="#6d7281"
+            returnKeyType="send"
+            onSubmitEditing={handleSend}
+            submitBehavior="submit"
+            multiline
+            scrollEnabled
+            textAlignVertical="top"
+            className="flex-1 px-3.5 py-2 border border-border rounded-[20px] text-foreground"
+          />
+          <GrouplyButton
+            onPress={handleSend}
+            disabled={!text.trim() || isLoading}
+            accessibilityRole="button"
+            accessibilityLabel="Send message"
+            iconOnly={true}
+            iconName="send"
+          />
+        </View>
+      </View>
     </View>
   );
 }
