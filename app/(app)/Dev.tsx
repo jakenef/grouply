@@ -57,7 +57,7 @@ const Dev = () => {
     const email = await new Promise<string>((resolve) => {
       Alert.prompt(
         "Generate Login Link",
-        "Enter user email or userId:",
+        "Enter user email:",
         [
           { text: "Cancel", style: "cancel", onPress: () => resolve("") },
           {
@@ -72,10 +72,7 @@ const Dev = () => {
     if (!email) return;
 
     try {
-      const result = await generateLoginLink({
-        email: email.includes("@") ? email : undefined,
-        userId: !email.includes("@") ? email : undefined,
-      });
+      const result = await generateLoginLink({ email });
 
       Alert.alert(
         "Login Link Generated",
@@ -85,7 +82,6 @@ const Dev = () => {
           {
             text: "Copy Link",
             onPress: () => {
-              // Note: You'd need @react-native-clipboard/clipboard for this
               Alert.alert("Link", result.loginLink);
             },
           },
