@@ -68,6 +68,13 @@ export const trpcClient = trpc.createClient({
         } = await supabase.auth
           .getSession()
           .catch(() => ({ data: { session: null }, error: null }));
+
+        console.log("[TRPC] Getting auth header for request:", {
+          hasSession: !!session,
+          userId: session?.user?.id,
+          hasAccessToken: !!session?.access_token,
+        });
+
         return {
           authorization: session?.access_token
             ? `Bearer ${session.access_token}`

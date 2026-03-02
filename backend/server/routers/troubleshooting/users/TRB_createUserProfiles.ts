@@ -1,3 +1,4 @@
+import { supabase } from "@/backend/server/supabase";
 import { adminProcedure } from "@/backend/server/trpc";
 import { faker } from "@faker-js/faker";
 import { TRPCError } from "@trpc/server";
@@ -11,7 +12,7 @@ export const TRB_createUserProfiles = adminProcedure
   .input(
     z.object({
       numUsers: z.number().optional(),
-    })
+    }),
   )
   .mutation(async ({ ctx, input }) => {
     const numUsersToCreate = input.numUsers || 10;
@@ -34,7 +35,26 @@ export const TRB_createUserProfiles = adminProcedure
       for (let i = 0; i < numUsersToCreate; i++) {
         const firstName = faker.person.firstName();
         const lastName = faker.person.lastName();
-        const testUserId = `TRB_createUsers_${faker.string.alphanumeric(8)}`;
+        // Use a test domain to easily identify and clean up test users
+        const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}.${faker.string.alphanumeric(4)}@grouply-test.app`;
+
+        // First, create the user in Supabase Auth
+        const {
+          data: { user: authUser },
+          error: authError,
+        } = await supabase.auth.admin.createUser({
+          email,
+          email_confirm: true, // Auto-confirm email for test users
+          user_metadata: {
+            givenName: firstName,
+            familyName: lastName,
+          },
+        });
+
+        if (authError || !authUser) {
+          console.error("Failed to create auth user:", authError);
+          continue; // Skip this user and continue with next
+        }
 
         // Pick a random location from the existing ones
         const randomLocation = faker.helpers.arrayElement(locations);
@@ -42,9 +62,10 @@ export const TRB_createUserProfiles = adminProcedure
         const result = await ctx.prisma.$transaction(async (tx) => {
           const user = await tx.user.create({
             data: {
-              authUserId: testUserId,
-              email: faker.internet.email({ firstName, lastName }),
+              authUserId: authUser.id, // Use the real Supabase auth user ID
+              email,
               givenName: `${firstName}`,
+              familyName: lastName,
               locationId: randomLocation.id,
               avatarUrl: faker.image.avatar(),
               role: "USER",
@@ -67,7 +88,7 @@ export const TRB_createUserProfiles = adminProcedure
             });
             const selectedTraits = faker.helpers.arrayElements(
               traits,
-              numTraits
+              numTraits,
             );
 
             for (const trait of selectedTraits) {
@@ -96,7 +117,7 @@ export const TRB_createUserProfiles = adminProcedure
             });
             const selectedInterests = faker.helpers.arrayElements(
               interests,
-              numInterests
+              numInterests,
             );
 
             for (const interest of selectedInterests) {
