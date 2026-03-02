@@ -1,5 +1,6 @@
 import { router } from "../../trpc";
 import { troubleshootingActivityRouter } from "./activities";
+import { troubleshootingAuthRouter } from "./auth";
 import { troubleshootingEventRouter } from "./events";
 import { interestsRouter } from "./interests";
 import { troubleshootingLocationRouter } from "./locations";
@@ -14,4 +15,5 @@ export const troubleshootingRouter = router({
   troubleshootingEventRouter,
   troubleshootingTraitsRouter,
   interestsRouter,
+  troubleshootingAuthRouter,
 });
