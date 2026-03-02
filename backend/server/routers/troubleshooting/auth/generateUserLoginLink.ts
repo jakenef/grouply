@@ -15,10 +15,13 @@ export const generateUserLoginLink = adminProcedure
   )
   .mutation(async ({ input }) => {
     try {
-      // Generate magic link
+      // Generate magic link with redirect to app deep link
       const { data, error } = await supabase.auth.admin.generateLink({
         type: "magiclink",
         email: input.email,
+        options: {
+          redirectTo: "grouply://",
+        },
       });
 
       if (error || !data) {
