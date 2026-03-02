@@ -48,8 +48,6 @@ const AboutYouSetup = () => {
     location?: string;
   }>({});
 
-  // TODO: fix date picker android
-
   // If user is not authenticated, redirect to login
   useEffect(() => {
     if (!session && !isSubmitting) {
@@ -229,7 +227,7 @@ const AboutYouSetup = () => {
       setShowDatePicker(false);
     }
   };
-
+  // TODO: birthday selector on ios closes when new year scrolled to
   return (
     <View className="flex-1 bg-background">
       <Pressable onPress={() => router.push("/(app)/Home")} />

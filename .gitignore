@@ -10,6 +10,8 @@
 
 assets/data
 
+prod.sql
+
 #prisma
 backend/generated/
 

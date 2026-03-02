@@ -129,6 +129,8 @@ interface EventDetails {
   locationId?: string;
 }
 
+//TODO: cap at 99 people for event
+
 export const EventDetailsForm = (props: EventDetailsFormProps) => {
   const { user } = useCurrentUser();
   const utils = trpc.useUtils();

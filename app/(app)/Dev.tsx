@@ -1,8 +1,9 @@
 import { trpc } from "@/lib/trpc";
 import { useCurrentUser } from "@/lib/useCurrentUserHook";
 import React from "react";
-import { ScrollView, Text, View } from "react-native";
+import { Alert, Linking, ScrollView, Text, View } from "react-native";
 import { EnvDebugger } from "../../app-components/dev/EnvDebugger";
+import TroubleshootDropdown from "../../app-components/dev/TroubleshootDropdown";
 import TroubleshootItem from "../../app-components/dev/TroubleshootItem";
 
 const Dev = () => {
@@ -49,6 +50,52 @@ const Dev = () => {
   const { mutateAsync: deleteInterests } =
     trpc.troubleshooting.interestsRouter.TRB_deleteInterests.useMutation();
 
+  const { mutateAsync: generateLoginLink } =
+    trpc.troubleshooting.troubleshootingAuthRouter.generateUserLoginLink.useMutation();
+
+  const handleGenerateLoginLink = async () => {
+    const email = await new Promise<string>((resolve) => {
+      Alert.prompt(
+        "Generate Login Link",
+        "Enter user email:",
+        [
+          { text: "Cancel", style: "cancel", onPress: () => resolve("") },
+          {
+            text: "Generate",
+            onPress: (value: string | undefined) => resolve(value || ""),
+          },
+        ],
+        "plain-text",
+      );
+    });
+
+    if (!email) return;
+
+    try {
+      const result = await generateLoginLink({ email });
+
+      Alert.alert(
+        "Login Link Generated",
+        `Email: ${result.email}\n\nClick "Open Link" to sign in as this user.`,
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Copy Link",
+            onPress: () => {
+              Alert.alert("Link", result.loginLink);
+            },
+          },
+          {
+            text: "Open Link",
+            onPress: () => Linking.openURL(result.loginLink),
+          },
+        ],
+      );
+    } catch (error: any) {
+      Alert.alert("Error", error.message || "Failed to generate login link");
+    }
+  };
+
   return (
     <View className="flex-1 bg-background">
       <ScrollView className="flex-1 bg-background">
@@ -56,105 +103,106 @@ const Dev = () => {
           {/* Environment Variables Debugger */}
           <EnvDebugger />
 
-          <TroubleshootItem
-            title="Clear Test Users"
-            description="Removes all test users from the database"
-            onRun={async () => {
-              await deleteTestUsers();
-            }}
-          />
+          <TroubleshootDropdown title="Auth Tools">
+            <TroubleshootItem
+              title="🔐 Generate User Login Link"
+              description="Generate a magic link to sign in as any user (for debugging prod issues)"
+              onRun={async () => {
+                await handleGenerateLoginLink();
+              }}
+            />
+          </TroubleshootDropdown>
 
-          <TroubleshootItem
-            title="Generate Test Users"
-            description="Creates a specified number of test users in the database"
-            requiresInput
-            inputPlaceholder="Number of users to create"
-            onRun={async (value) => {
-              await createTestUsers({ numUsers: value });
-            }}
-          />
-
-          <TroubleshootItem
-            title="Generate Test Locations"
-            description="Creates a fixed set of locations"
-            onRun={async () => {
-              await createLocations();
-            }}
-          />
-
-          <TroubleshootItem
-            title="Delete Test Locations"
-            description="Deletes locations starting with TRB"
-            onRun={async () => {
-              await deleteLocations();
-            }}
-          />
-
-          <TroubleshootItem
-            title="Generate Activites"
-            description="Creates a fixed set of activities"
-            onRun={async () => {
-              await createActivities();
-            }}
-          />
-
-          <TroubleshootItem
-            title="Delete Activities"
-            description="Deletes all activities in db"
-            onRun={async () => {
-              await deleteActivities();
-            }}
-          />
-
-          <TroubleshootItem
-            title="Generate Traits"
-            description="Creates a fixed set of traits"
-            onRun={async () => {
-              await createTraits({ numTraits: 10, useStarters: true });
-            }}
-          />
-
-          <TroubleshootItem
-            title="Delete Traits"
-            description="Deletes all TRB traits in db"
-            onRun={async () => {
-              await deleteTraits();
-            }}
-          />
-
-          <TroubleshootItem
-            title="Generate Interests"
-            description="Creates a fixed set of interests"
-            onRun={async () => {
-              await createInterests({ numInterests: 10, useStarters: true });
-            }}
-          />
-
-          <TroubleshootItem
-            title="Delete Interests"
-            description="Deletes all TRB interests in db"
-            onRun={async () => {
-              await deleteInterests();
-            }}
-          />
-
-          <TroubleshootItem
-            title="Clear Test Events"
-            description="Removes all test events from the database"
-            onRun={async () => {
-              await deleteEvents();
-            }}
-          />
-
-          <TroubleshootItem
-            title="Generate Test Events"
-            description="Creates a specified number of test events in the database"
-            requiresInput
-            inputPlaceholder="Number of events to create"
-            onRun={async (value) => {
-              await createEvents({ numEvents: value });
-            }}
-          />
+          <TroubleshootDropdown title="Database Tools">
+            <TroubleshootItem
+              title="Clear Test Users"
+              description="Removes all test users from the database"
+              onRun={async () => {
+                await deleteTestUsers();
+              }}
+            />
+            <TroubleshootItem
+              title="Generate Test Users"
+              description="Creates a specified number of test users in the database"
+              requiresInput
+              inputPlaceholder="Number of users to create"
+              onRun={async (value?: number) => {
+                await createTestUsers({ numUsers: value ?? 0 });
+              }}
+            />
+            <TroubleshootItem
+              title="Generate Test Locations"
+              description="Creates a fixed set of locations"
+              onRun={async () => {
+                await createLocations();
+              }}
+            />
+            <TroubleshootItem
+              title="Delete Test Locations"
+              description="Deletes locations starting with TRB"
+              onRun={async () => {
+                await deleteLocations();
+              }}
+            />
+            <TroubleshootItem
+              title="Generate Activites"
+              description="Creates a fixed set of activities"
+              onRun={async () => {
+                await createActivities();
+              }}
+            />
+            <TroubleshootItem
+              title="Delete Activities"
+              description="Deletes all activities in db"
+              onRun={async () => {
+                await deleteActivities();
+              }}
+            />
+            <TroubleshootItem
+              title="Generate Traits"
+              description="Creates a fixed set of traits"
+              onRun={async () => {
+                await createTraits({ numTraits: 10, useStarters: true });
+              }}
+            />
+            <TroubleshootItem
+              title="Delete Traits"
+              description="Deletes all TRB traits in db"
+              onRun={async () => {
+                await deleteTraits();
+              }}
+            />
+            <TroubleshootItem
+              title="Generate Interests"
+              description="Creates a fixed set of interests"
+              onRun={async () => {
+                await createInterests({ numInterests: 10, useStarters: true });
+              }}
+            />
+            <TroubleshootItem
+              title="Delete Interests"
+              description="Deletes all TRB interests in db"
+              onRun={async () => {
+                await deleteInterests();
+              }}
+            />
+            <TroubleshootItem
+              title="Clear Test Events"
+              description="Removes all test events from the database"
+              onRun={async () => {
+                await deleteEvents();
+              }}
+            />
+            <TroubleshootItem
+              title="Generate Test Events"
+              description="Creates a specified number of test events in the database"
+              requiresInput
+              inputPlaceholder="Number of events to create"
+              onRun={async (value?: number) => {
+                await createEvents({ numEvents: value ?? 0 });
+              }}
+            />
+          </TroubleshootDropdown>
         </View>
       </ScrollView>
     </View>
