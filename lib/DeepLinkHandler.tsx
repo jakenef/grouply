@@ -28,20 +28,10 @@ export function DeepLinkHandler() {
         const refreshToken = params.get("refresh_token");
         const type = params.get("type");
 
-        console.log("[DeepLink] Parsed params:", {
-          type,
-          hasAccessToken: !!accessToken,
-          hasRefreshToken: !!refreshToken,
-        });
-
         // If we have auth tokens, set the session
         if (accessToken && refreshToken) {
-          console.log("[DeepLink] Logging out current user first...");
-
           // Sign out current user first to avoid conflicts
           await supabase.auth.signOut();
-
-          console.log("[DeepLink] Setting session with new tokens...");
 
           const { data, error } = await supabase.auth.setSession({
             access_token: accessToken,
@@ -56,23 +46,12 @@ export function DeepLinkHandler() {
               email: data.user?.email,
             });
 
-            // Verify session is accessible immediately
-            const { data: verifySession } = await supabase.auth.getSession();
-            console.log("[DeepLink] Verified session:", {
-              hasSession: !!verifySession.session,
-              userId: verifySession.session?.user?.id,
-              hasAccessToken: !!verifySession.session?.access_token,
-            });
-
             // Navigate to home screen after session is set
             // Add a delay to ensure auth state propagates to providers
             setTimeout(() => {
-              console.log("[DeepLink] Navigating to Home...");
               router.replace("/(app)/Home");
             }, 1500);
           }
-        } else {
-          console.log("[DeepLink] No auth tokens found in URL");
         }
       } catch (error) {
         console.error("[DeepLink] Error handling auth redirect:", error);
@@ -86,14 +65,12 @@ export function DeepLinkHandler() {
     const handleInitialUrl = async () => {
       const url = await Linking.getInitialURL();
       if (url) {
-        console.log("[DeepLink] Initial URL:", url);
         handleAuthRedirect(url);
       }
     };
 
     // Handle deep links when app is already open
     const subscription = Linking.addEventListener("url", ({ url }) => {
-      console.log("[DeepLink] Received URL:", url);
       handleAuthRedirect(url);
     });
 
