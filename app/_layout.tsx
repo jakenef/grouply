@@ -1,4 +1,5 @@
 import { AuthProvider } from "@/lib/auth";
+import { DeepLinkHandler } from "@/lib/DeepLinkHandler";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -61,6 +62,7 @@ export default function RootLayout() {
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
+          <DeepLinkHandler />
           <SafeAreaProvider>
             <SafeAreaView className="flex-1 bg-background">
               <Stack
