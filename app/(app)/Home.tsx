@@ -165,6 +165,7 @@ const Home = () => {
                   borderWidth: 1,
                   borderColor: colors.border,
                   minHeight: 130,
+                  overflow: "hidden",
                 }
           }
         >
