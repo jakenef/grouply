@@ -25,7 +25,7 @@ function generateNamesText(firstNames: string[]): string {
 
   return "";
 }
-
+// TODO: my user's pfp doesn't get rendered here or in the hosted by section when i created on ios and then switch to android
 export default function ProfilePictureGroup({
   userIds,
   showNames = true,

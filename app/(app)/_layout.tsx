@@ -1,4 +1,3 @@
-import EnvironmentIndicator from "@/app-components/dev/EnvironmentIndicator";
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/lib/theme";
 import { useCurrentUser } from "@/lib/useCurrentUserHook";
@@ -23,7 +22,7 @@ export default function AppLayout() {
 
   return (
     <>
-      <EnvironmentIndicator />
+      {/* <EnvironmentIndicator /> */}
       <Tabs
         screenOptions={{
           headerShown: false,
