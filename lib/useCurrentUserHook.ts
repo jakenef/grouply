@@ -10,6 +10,7 @@ export function useCurrentUser() {
   } = trpc.users.getMyUser.useQuery(undefined, {
     enabled: !!user,
     retry: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes - prevent refetch during navigation
   });
 
   if (!user) {

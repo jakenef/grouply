@@ -65,7 +65,12 @@ const AboutYouSetup = () => {
   }, [session]);
 
   // Set up tRPC mutation
-  const createUserMutation = trpc.users.createUser.useMutation();
+  const utils = trpc.useUtils();
+  const createUserMutation = trpc.users.createUser.useMutation({
+    onSuccess: () => {
+      utils.users.getMyUser.invalidate();
+    },
+  });
 
   const onBirthdayChange = (event: any, selectedDate?: Date) => {
     // Only proceed if picker is open

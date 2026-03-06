@@ -31,10 +31,13 @@ const EmailAndPassword = ({
         const errorType = parseAuthError(result.error);
         const errorMessage = getAuthErrorMessage(errorType);
         Alert.alert("Error", "Username or password is incorrect");
+        setIsLoading(false);
       } else {
+        // Keep loading state active during navigation
         onSuccess();
       }
-    } finally {
+    } catch (error) {
+      console.error("Unexpected error during login:", error);
       setIsLoading(false);
     }
   };
