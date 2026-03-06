@@ -12,29 +12,58 @@ const supabaseAdmin = createClient(
       autoRefreshToken: false,
       persistSession: false,
     },
-  }
+  },
 );
 
 // Create context with auth info
 export const createContext = async ({ req }: CreateExpressContextOptions) => {
+  const requestId = Math.random().toString(36).substring(7);
+  const startTime = Date.now();
   const token = req.headers.authorization?.replace("Bearer ", "");
+
+  console.log(
+    `[Context:${requestId}] 🔑 Creating context for ${req.method} ${req.url}`,
+  );
+  console.log(`[Context:${requestId}] Has token: ${!!token}`);
 
   let user = null;
   let supabaseUser = null;
 
   if (token) {
     try {
+      console.log(`[Context:${requestId}] Validating Supabase token...`);
+      const tokenValidationStart = Date.now();
+
       // Verify the Supabase JWT token
       const {
         data: { user: authUser },
         error,
       } = await supabaseAdmin.auth.getUser(token);
 
-      if (authUser && !error) {
+      const tokenValidationDuration = Date.now() - tokenValidationStart;
+      console.log(
+        `[Context:${requestId}] Token validation completed in ${tokenValidationDuration}ms`,
+      );
+
+      if (error) {
+        console.error(
+          `[Context:${requestId}] ❌ Token validation error:`,
+          error.message,
+        );
+      } else if (authUser) {
+        console.log(
+          `[Context:${requestId}] ✅ Token valid for user: ${authUser.id}, email: ${authUser.email}`,
+        );
+
         // Store the Supabase user info
         supabaseUser = authUser;
 
         // Look up the user in your Prisma database
+        console.log(
+          `[Context:${requestId}] Querying Prisma for user with authUserId: ${authUser.id}`,
+        );
+        const dbQueryStart = Date.now();
+
         user = await prisma.user.findUnique({
           where: { authUserId: authUser.id },
           select: {
@@ -45,12 +74,38 @@ export const createContext = async ({ req }: CreateExpressContextOptions) => {
             authUserId: true,
           },
         });
+
+        const dbQueryDuration = Date.now() - dbQueryStart;
+        console.log(
+          `[Context:${requestId}] Database query completed in ${dbQueryDuration}ms`,
+        );
+
+        if (user) {
+          console.log(
+            `[Context:${requestId}] ✅ User found in database: ${user.id}, role: ${user.role}`,
+          );
+        } else {
+          console.warn(
+            `[Context:${requestId}] ⚠️ User not found in database (authUserId: ${authUser.id})`,
+          );
+        }
       }
-    } catch (error) {
+    } catch (error: any) {
       // Invalid token - user stays null
-      console.log("Token validation failed:", error);
+      console.error(
+        `[Context:${requestId}] ❌ Token validation exception:`,
+        error.message || error,
+      );
+      console.error(`[Context:${requestId}] Stack trace:`, error.stack);
     }
+  } else {
+    console.log(`[Context:${requestId}] No token provided in request`);
   }
+
+  const totalDuration = Date.now() - startTime;
+  console.log(
+    `[Context:${requestId}] 🏁 Context created in ${totalDuration}ms, hasUser: ${!!user}, hasSupabaseUser: ${!!supabaseUser}`,
+  );
 
   return {
     prisma,
@@ -58,6 +113,7 @@ export const createContext = async ({ req }: CreateExpressContextOptions) => {
     supabaseUser, // Supabase auth user (or null)
     req, // Include the request object for debugging
     token, // Include the token for debugging
+    requestId, // Include request ID for logging
   };
 };
 
@@ -71,13 +127,19 @@ export const publicProcedure = t.procedure;
 
 // Protected procedure requires a fully registered user in the database
 export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
+  const requestId = (ctx as any).requestId || "unknown";
+  console.log(`[ProtectedProcedure:${requestId}] Checking authorization...`);
+
   if (!ctx.user) {
     // Get more information about why the auth failed
-    console.error("Auth failed:", {
-      hasToken: !!ctx.token,
-      hasSupabaseUser: !!ctx.supabaseUser,
-      tokenPrefix: ctx.token ? ctx.token.substring(0, 10) + "..." : "none",
-    });
+    console.error(
+      `[ProtectedProcedure:${requestId}] ❌ Authorization FAILED:`,
+      {
+        hasToken: !!ctx.token,
+        hasSupabaseUser: !!ctx.supabaseUser,
+        tokenPrefix: ctx.token ? ctx.token.substring(0, 10) + "..." : "none",
+      },
+    );
 
     throw new TRPCError({
       code: "UNAUTHORIZED",
@@ -86,6 +148,11 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
         : "No authentication token provided. You must be logged in to access this endpoint.",
     });
   }
+
+  console.log(
+    `[ProtectedProcedure:${requestId}] ✅ Authorization successful for user: ${ctx.user.id}`,
+  );
+
   return next({
     ctx: {
       ...ctx,
@@ -113,13 +180,25 @@ export const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
 // Auth procedure only requires a valid Supabase token but not necessarily a DB user
 // This is used for endpoints like user registration
 export const authProcedure = t.procedure.use(({ ctx, next }) => {
+  const requestId = (ctx as any).requestId || "unknown";
+  console.log(
+    `[AuthProcedure:${requestId}] Checking Supabase authentication...`,
+  );
+
   if (!ctx.supabaseUser) {
-    console.error("Auth failed - no Supabase user");
+    console.error(
+      `[AuthProcedure:${requestId}] ❌ Auth failed - no Supabase user`,
+    );
     throw new TRPCError({
       code: "UNAUTHORIZED",
       message: "You must be logged in to access this endpoint",
     });
   }
+
+  console.log(
+    `[AuthProcedure:${requestId}] ✅ Supabase auth successful for user: ${ctx.supabaseUser.id}`,
+  );
+
   return next({
     ctx: {
       ...ctx,

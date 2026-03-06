@@ -11,12 +11,8 @@ export default function AppLayout() {
   const { user: profile, isLoading } = useCurrentUser();
   const [hasTimedOut, setHasTimedOut] = useState(false);
 
-  // If no session, redirect to auth
-  if (!session) {
-    return <Redirect href="/(auth)/LandingPage" />;
-  }
-
   // Start timeout timer when loading profile
+  // Must be before conditional returns (Rules of Hooks)
   useEffect(() => {
     if (!isLoading) {
       setHasTimedOut(false);
@@ -25,13 +21,18 @@ export default function AppLayout() {
 
     const timer = setTimeout(() => {
       if (isLoading) {
-        console.error("Profile loading timed out after 10 seconds");
+        console.error("[AppLayout] Profile loading timed out after 6 seconds");
         setHasTimedOut(true);
       }
-    }, 10000); // 10 second timeout
+    }, 6000); // 6 second timeout
 
     return () => clearTimeout(timer);
   }, [isLoading]);
+
+  // If no session, redirect to auth
+  if (!session) {
+    return <Redirect href="/(auth)/LandingPage" />;
+  }
 
   // Show timeout error screen
   if (hasTimedOut) {

@@ -63,17 +63,73 @@ export const trpcClient = trpc.createClient({
     httpBatchLink({
       url: getApiUrl(),
       headers: async () => {
+        const startTime = Date.now();
+        console.log("[TRPC] Fetching session for request headers...");
+
         const {
           data: { session },
-        } = await supabase.auth
-          .getSession()
-          .catch(() => ({ data: { session: null }, error: null }));
+        } = await supabase.auth.getSession().catch((error) => {
+          console.error("[TRPC] Failed to get session:", error);
+          return { data: { session: null }, error: null };
+        });
+
+        const hasToken = !!session?.access_token;
+        console.log(
+          `[TRPC] Session fetched in ${Date.now() - startTime}ms, hasToken: ${hasToken}`,
+        );
 
         return {
           authorization: session?.access_token
             ? `Bearer ${session.access_token}`
             : undefined,
         };
+      },
+      // Add timeout to prevent infinite hangs
+      fetch: async (url, options) => {
+        const requestId = Math.random().toString(36).substring(7);
+        const startTime = Date.now();
+        console.log(`[TRPC:${requestId}] 🚀 Starting request to: ${url}`);
+        console.log(`[TRPC:${requestId}] Headers:`, options?.headers);
+
+        // Create abort controller for timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+          console.error(
+            `[TRPC:${requestId}] ⏱️ Request timed out after 15 seconds`,
+          );
+          controller.abort();
+        }, 15000); // 15 second timeout
+
+        try {
+          const response = await fetch(url, {
+            ...options,
+            signal: controller.signal,
+          });
+
+          const duration = Date.now() - startTime;
+          console.log(
+            `[TRPC:${requestId}] ✅ Request completed in ${duration}ms, status: ${response.status}`,
+          );
+
+          clearTimeout(timeoutId);
+          return response;
+        } catch (error: any) {
+          const duration = Date.now() - startTime;
+
+          if (error.name === "AbortError") {
+            console.error(
+              `[TRPC:${requestId}] ❌ Request aborted after ${duration}ms (timeout)`,
+            );
+          } else {
+            console.error(
+              `[TRPC:${requestId}] ❌ Request failed after ${duration}ms:`,
+              error.message,
+            );
+          }
+
+          clearTimeout(timeoutId);
+          throw error;
+        }
       },
     }),
   ],
