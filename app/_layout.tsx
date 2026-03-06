@@ -16,7 +16,37 @@ SplashScreen.preventAutoHideAsync();
 let hasCheckedHealth = false;
 
 export default function RootLayout() {
-  const [queryClient] = useState(() => new QueryClient());
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: 5 * 60 * 1000, // 5 minutes
+            retry: 1, // Retry once on failure
+            retryDelay: (attemptIndex) =>
+              Math.min(1000 * 2 ** attemptIndex, 5000),
+            networkMode: "online", // Only query when online
+            refetchOnWindowFocus: false,
+            // Log query status for debugging
+            onError: (error: any) => {
+              console.error(
+                "[QueryClient] Query error:",
+                error.message || error,
+              );
+            },
+          },
+          mutations: {
+            retry: 1,
+            onError: (error: any) => {
+              console.error(
+                "[QueryClient] Mutation error:",
+                error.message || error,
+              );
+            },
+          },
+        },
+      }),
+  );
 
   useEffect(() => {
     // Only run health check once per session, not on hot reloads

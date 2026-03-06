@@ -10,7 +10,7 @@ interface ConfirmEmailProps {
   onSendOTP: (email: string) => Promise<{ data?: any; error?: any }>;
   onVerifyOTP: (
     email: string,
-    code: string
+    code: string,
   ) => Promise<{ data?: any; error?: any }>;
   onSuccess: () => void;
   sendButtonLabel: string;
@@ -61,10 +61,13 @@ const ConfirmEmail: React.FC<ConfirmEmailProps> = ({
         const errorType = parseAuthError(result.error);
         const errorMessage = getAuthErrorMessage(errorType);
         Alert.alert("Error", errorMessage);
+        setIsVerifying(false);
       } else {
+        // Keep loading state active during navigation
         onSuccess();
       }
-    } finally {
+    } catch (error) {
+      console.error("Unexpected error during OTP verification:", error);
       setIsVerifying(false);
     }
   };

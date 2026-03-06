@@ -61,12 +61,12 @@ const Profile = () => {
               console.error(error);
               Alert.alert(
                 "Error",
-                "Failed to delete account. Please try again."
+                "Failed to delete account. Please try again.",
               );
             }
           },
         },
-      ]
+      ],
     );
   };
 

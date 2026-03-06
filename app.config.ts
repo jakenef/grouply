@@ -29,10 +29,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     url: "https://u.expo.dev/94502a26-4752-4105-b2b0-602ba67498ff",
   },
   ios: {
-    supportsTablet: true,
+    supportsTablet: false,
     bundleIdentifier: "com.grouply.grouplyapp",
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
+      NSLocationWhenInUseUsageDescription:
+        "Grouply uses your location to show nearby events and groups.",
+      NSPhotoLibraryUsageDescription:
+        "Grouply allows you to upload photos for your profile and events.",
     },
   },
   android: {

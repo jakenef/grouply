@@ -3,7 +3,7 @@ import { colors } from "@/lib/theme";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import React from "react";
-import { Image, Pressable, Text, View } from "react-native";
+import { Image, Platform, Pressable, Text, View } from "react-native";
 
 interface ProfileImagePickerProps {
   /**
@@ -48,6 +48,18 @@ export const ProfileImagePicker: React.FC<ProfileImagePickerProps> = ({
   disabled = false,
   displayOnly = false,
 }) => {
+  // Fix localhost URLs for Android emulator
+  const getFixedImageUrl = (url: string | null) => {
+    if (!url) return null;
+    // On Android emulator, replace 127.0.0.1 with 10.0.2.2
+    if (Platform.OS === "android" && url.includes("127.0.0.1")) {
+      return url.replace("127.0.0.1", "10.0.2.2");
+    }
+    return url;
+  };
+
+  const imageUrl = getFixedImageUrl(value);
+
   const handlePress = async () => {
     if (disabled || displayOnly) return;
 
@@ -78,9 +90,9 @@ export const ProfileImagePicker: React.FC<ProfileImagePickerProps> = ({
       }}
       disabled={disabled}
     >
-      {value ? (
+      {imageUrl ? (
         <Image
-          source={{ uri: value }}
+          source={{ uri: imageUrl }}
           className="w-full h-full rounded-full"
           resizeMode="cover"
           accessibilityLabel="Profile image"
