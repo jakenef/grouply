@@ -38,6 +38,14 @@ enum ChatMessageRole {
   TOOL
 }
 
+enum ReportReason {
+  INAPPROPRIATE
+  SEXUAL_CONTENT_INVOLVING_MINORS
+  HARRASSMENT_OR_ABUSE
+  SPAM
+  OTHER
+}
+
 // =======================
 // Models
 // =======================
@@ -80,6 +88,7 @@ model User {
   registrations   EventRegistration[]
   chatMemberships ChatMember[]
   chatMessages    ChatMessage[]
+  reports         Report[]
 
   @@index([locationId])
 }
@@ -176,15 +185,15 @@ model Activity {
 
 // ---------- Events & Snapshot ----------
 model Event {
-  id            String   @id @default(uuid())
-  name          String
-  desc          String? // TODO: rename to description
-  startsAt      DateTime
-  endsAt        DateTime
-  isCanceled   Boolean  @default(false) @map("isCancelled")
-  maxAgeLimit   Int?
-  minAgeLimit   Int?
-  coverImageUrl String
+  id                  String   @id @default(uuid())
+  name                String
+  desc                String? // TODO: rename to description
+  startsAt            DateTime
+  endsAt              DateTime
+  isCanceled          Boolean  @default(false) @map("isCancelled")
+  maxAgeLimit         Int?
+  minAgeLimit         Int?
+  coverImageUrl       String
   additionalImageUrls String[]
 
   // Organizer (nullable to handle deleted users)
@@ -213,6 +222,7 @@ model Event {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  reports   Report[]
 
   @@index([activityId])
   @@index([startsAt])
@@ -311,4 +321,17 @@ model ChatMessage {
   author  User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
   @@index([channelId, createdAt])
+}
+
+model Report {
+  id             String       @id @default(uuid())
+  eventId        String
+  reporterUserId String
+  reason         ReportReason
+  description    String?
+  isResolved     Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+
+  event    Event @relation(fields: [eventId], references: [id])
+  reporter User  @relation(fields: [reporterUserId], references: [id])
 }
