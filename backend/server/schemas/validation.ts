@@ -16,6 +16,15 @@ export const locationDataSchema = z.object({
 // Gender enum validation
 export const genderEnum = z.enum(["MALE", "FEMALE", "OTHER"]);
 
+// Report reason enum validation
+export const reportReasonEnum = z.enum([
+  "INAPPROPRIATE",
+  "SEXUAL_CONTENT_INVOLVING_MINORS",
+  "HARRASSMENT_OR_ABUSE",
+  "SPAM",
+  "OTHER",
+]);
+
 // Event location schema (simplified for frontend)
 export const eventLocationSchema = z.object({
   id: z.string(),

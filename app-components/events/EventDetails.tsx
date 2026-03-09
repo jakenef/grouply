@@ -4,18 +4,14 @@ import { trpc } from "@/lib/trpc";
 import { useCurrentUser } from "@/lib/useCurrentUserHook";
 import calculateAge from "@/shared/utils/calculateAge";
 import { Ionicons } from "@expo/vector-icons";
+import BottomSheet, {
+  BottomSheetBackdrop,
+  BottomSheetView,
+} from "@gorhom/bottom-sheet";
 import { format } from "date-fns";
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
-import {
-  Alert,
-  Image,
-  Modal,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Alert, Image, Pressable, ScrollView, Text, View } from "react-native";
 import GrouplyButton from "../shared/GrouplyButton";
 import ImageCarousel from "../shared/ImageCarousel";
 import ProfilePictureGroup from "../users/ProfilePictureGroup";
@@ -47,10 +43,11 @@ interface EventDetailsProps {
 
 export default function EventDetails(props: EventDetailsProps) {
   const { user } = useCurrentUser();
-  const [menuVisible, setMenuVisible] = useState(false);
+  const bottomSheetRef = useRef<BottomSheet>(null);
   const [isJoining, setIsJoining] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
   const [isCanceling, setIsCanceling] = useState(false);
+  const [isReporting, setIsReporting] = useState(false);
 
   const formattedStart = format(
     props.event.startTime,
@@ -75,6 +72,7 @@ export default function EventDetails(props: EventDetailsProps) {
     userAge <= props.event.maxAge && userAge >= props.event.minAge;
   const isUserHost = user?.id == props.event.hostId;
   const utils = trpc.useUtils();
+
   const joinMutation = trpc.events.joinEvent.useMutation({
     onSuccess: () => {
       utils.events.getEventDetailsFromId.invalidate({ id: props.event.id });
@@ -90,6 +88,7 @@ export default function EventDetails(props: EventDetailsProps) {
       utils.events.getEventDetailsFromId.invalidate({ id: props.event.id });
     },
   });
+  const reportEventMutation = trpc.reports.reportEvent.useMutation();
 
   // Reset loading states when attendance status changes after refetch
   useEffect(() => {
@@ -124,7 +123,7 @@ export default function EventDetails(props: EventDetailsProps) {
   }
 
   function handleCancel() {
-    setMenuVisible(false);
+    bottomSheetRef.current?.close();
     Alert.alert(
       "Cancel Event",
       "Are you sure you want to cancel this event? This action cannot be undone.",
@@ -153,6 +152,75 @@ export default function EventDetails(props: EventDetailsProps) {
     );
   }
 
+  async function handleReport() {
+    bottomSheetRef.current?.close();
+    Alert.alert(
+      "Report Event",
+      "Why are you reporting this event?",
+      [
+        {
+          text: "Inappropriate Content",
+          onPress: () => submitReport("INAPPROPRIATE"),
+        },
+        {
+          text: "Sexual Content Involving Minors",
+          onPress: () => submitReport("SEXUAL_CONTENT_INVOLVING_MINORS"),
+        },
+        {
+          text: "Harassment or Abuse",
+          onPress: () => submitReport("HARRASSMENT_OR_ABUSE"),
+        },
+        {
+          text: "Spam",
+          onPress: () => submitReport("SPAM"),
+        },
+        {
+          text: "Other",
+          onPress: () => submitReport("OTHER"),
+        },
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+      ],
+      { cancelable: true }
+    );
+  }
+
+  async function submitReport(
+    reason:
+      | "INAPPROPRIATE"
+      | "SEXUAL_CONTENT_INVOLVING_MINORS"
+      | "HARRASSMENT_OR_ABUSE"
+      | "SPAM"
+      | "OTHER"
+  ) {
+    setIsReporting(true);
+    try {
+      await reportEventMutation.mutateAsync({
+        eventId: props.event.id,
+        reason,
+      });
+      Alert.alert("Success", "Event reported. Thank you for your feedback.");
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error", "Failed to report event. Please try again.");
+    } finally {
+      setIsReporting(false);
+    }
+  }
+
+  const renderBackdrop = useCallback(
+    (props: any) => (
+      <BottomSheetBackdrop
+        {...props}
+        disappearsOnIndex={-1}
+        appearsOnIndex={0}
+      />
+    ),
+    []
+  );
+
   return (
     <View className="flex-1 bg-background">
       {/* Header */}
@@ -162,35 +230,15 @@ export default function EventDetails(props: EventDetailsProps) {
           size={30}
           onPress={() => router.back()}
         />
-        {isUserHost && !props.event.isCanceled && !isPast && (
-          <Ionicons
-            name="ellipsis-horizontal"
-            size={30}
-            onPress={() => setMenuVisible(true)}
-          />
-        )}
+
+        <Ionicons
+          name="ellipsis-horizontal"
+          size={30}
+          onPress={() => bottomSheetRef.current?.expand()}
+        />
 
         {/* <Ionicons name="share-outline" size={30} /> */}
       </View>
-      <Modal
-        visible={menuVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setMenuVisible(false)}
-      >
-        <Pressable
-          className="flex-1 bg-black/50"
-          onPress={() => setMenuVisible(false)}
-        >
-          <View className="bg-white rounded-lg m-4 p-4 absolute top-16 right-4">
-            <Pressable className="py-3" onPress={handleCancel}>
-              <Text className="text-red-500">
-                {isCanceling ? "Canceling..." : "Cancel Event"}
-              </Text>
-            </Pressable>
-          </View>
-        </Pressable>
-      </Modal>
 
       {/* Content */}
       <ScrollView className="flex-1">
@@ -213,7 +261,8 @@ export default function EventDetails(props: EventDetailsProps) {
                 {(() => {
                   if (host === undefined) return "";
                   if (host === null) return "[Deleted User]";
-                  if (host.givenName) return `${host.givenName}${host.familyName ? ` ${host.familyName}` : ""}`;
+                  if (host.givenName)
+                    return `${host.givenName}${host.familyName ? ` ${host.familyName}` : ""}`;
                   return "";
                 })()}
               </Text>
@@ -400,6 +449,48 @@ export default function EventDetails(props: EventDetailsProps) {
           <ProfilePictureGroup userIds={props.event.attendeeIds} />
         </View>
       </ScrollView>
+
+      <BottomSheet
+        ref={bottomSheetRef}
+        index={-1}
+        snapPoints={isUserHost ? ["30%"] : ["20%"]}
+        enablePanDownToClose
+        backdropComponent={renderBackdrop}
+      >
+        <BottomSheetView className="p-6">
+          <Pressable
+            className="py-4 flex-row items-center"
+            onPress={handleReport}
+          >
+            <Ionicons
+              name="flag-outline"
+              size={24}
+              color={colors.primary}
+              className="mr-3"
+            />
+            <Text className="text-lg font-semibold">
+              {isReporting ? "Reporting..." : "Report Event"}
+            </Text>
+          </Pressable>
+
+          {isUserHost && !props.event.isCanceled && !isPast && (
+            <Pressable
+              className="py-4 flex-row items-center"
+              onPress={handleCancel}
+            >
+              <Ionicons
+                name="trash-outline"
+                size={24}
+                color="#ef4444"
+                className="mr-3"
+              />
+              <Text className="text-red-500 text-lg font-semibold">
+                {isCanceling ? "Canceling..." : "Cancel Event"}
+              </Text>
+            </Pressable>
+          )}
+        </BottomSheetView>
+      </BottomSheet>
     </View>
   );
 }

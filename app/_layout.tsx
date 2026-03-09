@@ -1,10 +1,16 @@
 import { AuthProvider } from "@/lib/auth";
 import { DeepLinkHandler } from "@/lib/DeepLinkHandler";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+  MutationCache,
+  QueryCache,
+  QueryClient,
+  QueryClientProvider,
+} from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
 import { Alert } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { getBaseUrl, trpc, trpcClient } from "../lib/trpc";
 import "./globals.css";
@@ -19,6 +25,19 @@ export default function RootLayout() {
   const [queryClient] = useState(
     () =>
       new QueryClient({
+        queryCache: new QueryCache({
+          onError: (error: any) => {
+            console.error("[QueryClient] Query error:", error.message || error);
+          },
+        }),
+        mutationCache: new MutationCache({
+          onError: (error: any) => {
+            console.error(
+              "[QueryClient] Mutation error:",
+              error.message || error,
+            );
+          },
+        }),
         defaultOptions: {
           queries: {
             staleTime: 5 * 60 * 1000, // 5 minutes
@@ -27,22 +46,9 @@ export default function RootLayout() {
               Math.min(1000 * 2 ** attemptIndex, 5000),
             networkMode: "online", // Only query when online
             refetchOnWindowFocus: false,
-            // Log query status for debugging
-            onError: (error: any) => {
-              console.error(
-                "[QueryClient] Query error:",
-                error.message || error,
-              );
-            },
           },
           mutations: {
             retry: 1,
-            onError: (error: any) => {
-              console.error(
-                "[QueryClient] Mutation error:",
-                error.message || error,
-              );
-            },
           },
         },
       }),
@@ -89,22 +95,24 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <DeepLinkHandler />
-          <SafeAreaProvider>
-            <SafeAreaView className="flex-1 bg-background">
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                  contentStyle: { backgroundColor: "#ffffff" },
-                }}
-              ></Stack>
-            </SafeAreaView>
-          </SafeAreaProvider>
-        </AuthProvider>
-      </QueryClientProvider>
-    </trpc.Provider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <trpc.Provider client={trpcClient} queryClient={queryClient}>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <DeepLinkHandler />
+            <SafeAreaProvider>
+              <SafeAreaView className="flex-1 bg-background">
+                <Stack
+                  screenOptions={{
+                    headerShown: false,
+                    contentStyle: { backgroundColor: "#ffffff" },
+                  }}
+                ></Stack>
+              </SafeAreaView>
+            </SafeAreaProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+      </trpc.Provider>
+    </GestureHandlerRootView>
   );
 }
