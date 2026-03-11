@@ -46,6 +46,12 @@ enum ReportReason {
   OTHER
 }
 
+enum SubscriptionPlatform {
+  IOS
+  ANDROID
+  WEB
+}
+
 // =======================
 // Models
 // =======================
@@ -89,6 +95,7 @@ model User {
   chatMemberships ChatMember[]
   chatMessages    ChatMessage[]
   reports         Report[]
+  Subscription    Subscription[]
 
   @@index([locationId])
 }
@@ -334,4 +341,23 @@ model Report {
 
   event    Event @relation(fields: [eventId], references: [id])
   reporter User  @relation(fields: [reporterUserId], references: [id])
+}
+
+// -------Subscriptions-----------
+model Subscription {
+  id               String               @id @default(uuid())
+  userId           String
+  platform         SubscriptionPlatform
+  productId        String
+  currentPeriodEnd DateTime
+  originalTxId     String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([originalTxId])
+  @@index([currentPeriodEnd])
 }
