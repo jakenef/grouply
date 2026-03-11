@@ -106,9 +106,20 @@ export const scoredEventSchema = z.object({
   score: z.number(),
 });
 
+// Subscription platform enum validation
+export const subscriptionPlatformEnum = z.enum(["IOS", "ANDROID", "WEB"]);
+
+// Verify receipt schema
+export const verifyReceiptSchema = z.object({
+  receipt: z.string(),
+  platform: subscriptionPlatformEnum,
+});
+
 // Export types derived from schemas
 export type LocationData = z.infer<typeof locationDataSchema>;
 export type Gender = z.infer<typeof genderEnum>;
+export type SubscriptionPlatform = z.infer<typeof subscriptionPlatformEnum>;
+export type VerifyReceiptInput = z.infer<typeof verifyReceiptSchema>;
 export type EventLocation = z.infer<typeof eventLocationSchema>;
 export type EventOrganizer = z.infer<typeof eventOrganizerSchema>;
 export type Activity = z.infer<typeof activitySchema>;

@@ -206,3 +206,47 @@ export const authProcedure = t.procedure.use(({ ctx, next }) => {
     },
   });
 });
+
+/**
+ * Paid procedure requires an active subscription
+ * Admins bypass this check
+ */
+export const paidProcedure = protectedProcedure.use(async ({ ctx, next }) => {
+  const requestId = (ctx as any).requestId || "unknown";
+  console.log(`[PaidProcedure:${requestId}] Checking subscription...`);
+
+  // Admins bypass subscription checks
+  if (ctx.user.role === "ADMIN") {
+    console.log(`[PaidProcedure:${requestId}] ✅ User is ADMIN, bypassing check`);
+    return next({ ctx });
+  }
+
+  const subscription = await ctx.prisma.subscription.findFirst({
+    where: {
+      userId: ctx.user.id,
+      currentPeriodEnd: {
+        gte: new Date(),
+      },
+    },
+    orderBy: {
+      currentPeriodEnd: "desc",
+    },
+  });
+
+  if (!subscription) {
+    console.warn(`[PaidProcedure:${requestId}] ❌ No active subscription found for user: ${ctx.user.id}`);
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "This feature requires an active subscription.",
+    });
+  }
+
+  console.log(`[PaidProcedure:${requestId}] ✅ Active subscription found (expires: ${subscription.currentPeriodEnd})`);
+
+  return next({
+    ctx: {
+      ...ctx,
+      subscription,
+    },
+  });
+});
