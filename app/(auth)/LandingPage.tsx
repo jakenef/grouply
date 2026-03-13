@@ -27,11 +27,22 @@ const LandingPage = () => {
           </View>
 
           {/* Middle - Buttons */}
+
           <View className="w-full px-8">
+            <GrouplyButton
+              label="Try Demo (For Reviewers)"
+              variant="primary"
+              size="large"
+              fullWidth
+              className="mb-4"
+              onPress={() => {
+                router.push("/DemoLogin");
+              }}
+            />
             {/* Login Button */}
             <GrouplyButton
               label="Log In"
-              variant="primary"
+              variant="outline"
               size="large"
               fullWidth
               className="mb-4"
@@ -48,16 +59,6 @@ const LandingPage = () => {
               fullWidth
               onPress={() => {
                 router.push("/SignupEmail");
-              }}
-            />
-
-            <GrouplyButton
-              label="Demo"
-              variant="text"
-              size="large"
-              fullWidth
-              onPress={() => {
-                router.push("/DemoLogin");
               }}
             />
           </View>
