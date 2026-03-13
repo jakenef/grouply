@@ -5,7 +5,7 @@ export const getAvatarUrlsFromIds = protectedProcedure
   .input(
     z.object({
       userIds: z.array(z.string()),
-    })
+    }),
   )
   .output(
     z.array(
@@ -13,8 +13,8 @@ export const getAvatarUrlsFromIds = protectedProcedure
         userId: z.string(),
         avatarUrl: z.string().nullable(),
         firstName: z.string(),
-      })
-    )
+      }),
+    ),
   )
   .query(async ({ ctx, input }) => {
     const users = await ctx.prisma.user.findMany({

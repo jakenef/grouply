@@ -1,12 +1,12 @@
 import z from "zod";
 import { prisma } from "../../prisma";
-import { publicProcedure } from "../../trpc";
+import { paidProcedure } from "../../trpc";
 
-export const getActivityById = publicProcedure
+export const getActivityById = paidProcedure
   .input(
     z.object({
       id: z.string(),
-    })
+    }),
   )
   .query(async ({ input }) => {
     const activity = await prisma.activity.findUnique({

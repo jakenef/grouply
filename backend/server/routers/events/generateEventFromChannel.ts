@@ -3,9 +3,9 @@ import z from "zod";
 import { prisma } from "../../prisma";
 import { getActivitiesFromDesc } from "../../services/activity/getActivityFromDesc";
 import { generateEventFieldsFromContext } from "../../services/ai/generateEventFieldsFromContext";
-import { protectedProcedure } from "../../trpc";
+import { paidProcedure } from "../../trpc";
 
-export const generateEventFromChannel = protectedProcedure
+export const generateEventFromChannel = paidProcedure
   .input(
     z.object({
       channelId: z.string(),

@@ -1,12 +1,12 @@
 import z from "zod";
 import { prisma } from "../../prisma";
-import { publicProcedure } from "../../trpc";
+import { paidProcedure } from "../../trpc";
 
-export const searchActivities = publicProcedure
+export const searchActivities = paidProcedure
   .input(
     z.object({
       query: z.string(),
-    })
+    }),
   )
   .query(async ({ input }) => {
     console.log("Searching activities with query:", input.query);

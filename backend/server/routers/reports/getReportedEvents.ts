@@ -1,15 +1,6 @@
-import { TRPCError } from "@trpc/server";
-import { protectedProcedure } from "../../trpc";
+import { adminProcedure } from "../../trpc";
 
-export const getReportedEvents = protectedProcedure.query(async ({ ctx }) => {
-  // Check if user is admin
-  if (ctx.user.role !== "ADMIN") {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "Only admins can access reports",
-    });
-  }
-
+export const getReportedEvents = adminProcedure.query(async ({ ctx }) => {
   const reports = await ctx.prisma.report.findMany({
     where: {
       isResolved: false,
@@ -59,7 +50,8 @@ export const getReportedEvents = protectedProcedure.query(async ({ ctx }) => {
       reason: report.reason,
       description: report.description,
       reporterId: report.reporterUserId,
-      reporterName: `${report.reporter.givenName} ${report.reporter.familyName ?? ""}`.trim(),
+      reporterName:
+        `${report.reporter.givenName} ${report.reporter.familyName ?? ""}`.trim(),
       createdAt: report.createdAt,
     });
     return acc;

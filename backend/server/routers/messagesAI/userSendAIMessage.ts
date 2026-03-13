@@ -2,14 +2,14 @@ import z from "zod";
 import { prisma } from "../../prisma";
 import { scoredEventSchema } from "../../schemas";
 import { generateAIResponse } from "../../services/ai/generateAIResponse";
-import { protectedProcedure } from "../../trpc";
+import { paidProcedure } from "../../trpc";
 
-export const userSendAIMessage = protectedProcedure
+export const userSendAIMessage = paidProcedure
   .input(
     z.object({
       channelId: z.string().optional(),
       text: z.string().trim().min(1),
-    })
+    }),
   )
   .output(
     z.object({
@@ -25,7 +25,7 @@ export const userSendAIMessage = protectedProcedure
       toolArgs: z.any().nullable(),
       toolResult: z.any().nullable(),
       refreshedEvents: z.array(scoredEventSchema).optional(),
-    })
+    }),
   )
   .mutation(async ({ ctx, input }) => {
     let channel = undefined;

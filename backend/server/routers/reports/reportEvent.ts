@@ -1,9 +1,9 @@
 import { TRPCError } from "@trpc/server";
 import z from "zod";
 import { reportReasonEnum } from "../../schemas/validation";
-import { protectedProcedure } from "../../trpc";
+import { paidProcedure } from "../../trpc";
 
-export const reportEvent = protectedProcedure
+export const reportEvent = paidProcedure
   .input(
     z.object({
       eventId: z.string(),

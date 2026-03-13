@@ -1,8 +1,8 @@
 import { TRPCError } from "@trpc/server";
 import z from "zod";
-import { protectedProcedure } from "../../trpc";
+import { paidProcedure } from "../../trpc";
 
-const leaveEvent = protectedProcedure
+const leaveEvent = paidProcedure
   .input(z.object({ eventId: z.string() }))
   .mutation(async ({ ctx, input }) => {
     // check if event exists

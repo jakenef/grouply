@@ -8,11 +8,23 @@ import { protectedProcedure } from "../../trpc";
  */
 async function verifyWithApple(receipt: string) {
   console.log("Stub: Verifying with Apple...", receipt.substring(0, 10) + "...");
-  // In a real app, you would call Apple's verifyReceipt endpoint or use a library
+  
+  // For testing purposes, we'll look for product IDs in the mock "receipt"
+  let productId = "grouply_premium_monthly";
+  let durationDays = 30;
+
+  if (receipt.includes("trial")) {
+    productId = "grouply_premium_trial";
+    durationDays = 7;
+  } else if (receipt.includes("yearly")) {
+    productId = "grouply_premium_yearly";
+    durationDays = 365;
+  }
+
   return {
     originalTxId: "ios_tx_" + Math.random().toString(36).substring(7),
-    productId: "grouply_premium_monthly",
-    expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+    productId: productId,
+    expiresAt: new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000),
   };
 }
 
@@ -21,11 +33,23 @@ async function verifyWithApple(receipt: string) {
  */
 async function verifyWithGoogle(receipt: string) {
   console.log("Stub: Verifying with Google...", receipt.substring(0, 10) + "...");
-  // In a real app, you would use googleapis to check the purchase token
+  
+  // For testing purposes, we'll look for product IDs in the mock "receipt"
+  let productId = "grouply_premium_monthly";
+  let durationDays = 30;
+
+  if (receipt.includes("trial")) {
+    productId = "grouply_premium_trial";
+    durationDays = 7;
+  } else if (receipt.includes("yearly")) {
+    productId = "grouply_premium_yearly";
+    durationDays = 365;
+  }
+
   return {
     originalTxId: "android_tx_" + Math.random().toString(36).substring(7),
-    productId: "grouply_premium_monthly",
-    expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+    productId: productId,
+    expiresAt: new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000),
   };
 }
 
