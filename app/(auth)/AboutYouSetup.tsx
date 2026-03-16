@@ -16,6 +16,7 @@ import React, { useEffect, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -41,6 +42,7 @@ const AboutYouSetup = () => {
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [errors, setErrors] = useState<{
     displayName?: string;
     birthday?: string;
@@ -378,6 +380,35 @@ const AboutYouSetup = () => {
               style={{ minHeight: 100 }}
             />
 
+            {/* Terms and Conditions Checkbox */}
+            <View className="flex-row items-center mb-6 px-1">
+              <Pressable
+                onPress={() => setAgreedToTerms(!agreedToTerms)}
+                className={`w-6 h-6 rounded border items-center justify-center mr-3 ${
+                  agreedToTerms
+                    ? "bg-primary border-primary"
+                    : "border-border bg-white"
+                }`}
+              >
+                {agreedToTerms && (
+                  <Ionicons name="checkmark" size={18} color="white" />
+                )}
+              </Pressable>
+              <View className="flex-1 flex-row flex-wrap">
+                <Text className="text-sm text-muted">I agree to Grouply's </Text>
+                <Text
+                  className="text-sm text-primary font-semibold underline"
+                  onPress={() =>
+                    Linking.openURL(
+                      "https://grouply.carrd.co/#termsandconditions",
+                    )
+                  }
+                >
+                  Terms & Conditions
+                </Text>
+              </View>
+            </View>
+
             {/* Save and Continue Button */}
             <View className="mb-8">
               <GrouplyButton
@@ -391,6 +422,7 @@ const AboutYouSetup = () => {
                   !birthday ||
                   !gender ||
                   !location ||
+                  !agreedToTerms ||
                   isSubmitting
                 }
                 isLoading={isSubmitting}
