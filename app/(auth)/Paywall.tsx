@@ -25,15 +25,15 @@ const Paywall = () => {
     "grouply_premium_trial",
   );
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Keep mock IAP for buttons and logic
   const { requestPurchase, finishTransaction } = useIAPMock();
 
   // Use real IAP ONLY for logging
-  const { 
-    connected: isIAPConnected, 
-    subscriptions: realSubscriptions, 
-    fetchProducts: fetchRealProducts 
+  const {
+    connected: isIAPConnected,
+    subscriptions: realSubscriptions,
+    fetchProducts: fetchRealProducts,
   } = useIAP();
 
   const verifyReceiptMutation = trpc.subscriptions.verifyReceipt.useMutation();
@@ -41,16 +41,23 @@ const Paywall = () => {
   // Log real subscriptions when connected
   useEffect(() => {
     if (isIAPConnected) {
-      console.log("🔍 [Real IAP] Connected. Fetching subscriptions for logging...");
-      fetchRealProducts({ skus: REAL_SUBSCRIPTION_SKUS, type: "subs" }).catch((err) => {
-        console.error("❌ [Real IAP] Error fetching products:", err);
-      });
+      console.log(
+        "🔍 [Real IAP] Connected. Fetching subscriptions for logging...",
+      );
+      fetchRealProducts({ skus: REAL_SUBSCRIPTION_SKUS, type: "subs" }).catch(
+        (err) => {
+          console.error("❌ [Real IAP] Error fetching products:", err);
+        },
+      );
     }
   }, [isIAPConnected, fetchRealProducts]);
 
   useEffect(() => {
     if (realSubscriptions.length > 0) {
-      console.log("✅ [Real IAP] Subscriptions Fetched:", JSON.stringify(realSubscriptions, null, 2));
+      console.log(
+        "✅ [Real IAP] Subscriptions Fetched:",
+        JSON.stringify(realSubscriptions, null, 2),
+      );
     }
   }, [realSubscriptions]);
 
