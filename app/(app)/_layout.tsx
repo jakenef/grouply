@@ -1,6 +1,7 @@
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/lib/theme";
 import { useCurrentUser } from "@/lib/useCurrentUserHook";
+import { trpc } from "@/lib/trpc";
 import { Ionicons } from "@expo/vector-icons";
 import { Redirect, Tabs, router } from "expo-router";
 import { useEffect, useState } from "react";
@@ -8,8 +9,15 @@ import { Pressable, Text, View } from "react-native";
 
 export default function AppLayout() {
   const { session, signOut } = useAuth();
-  const { user: profile, isLoading } = useCurrentUser();
+  const { user: profile, isLoading: isProfileLoading } = useCurrentUser();
   const [hasTimedOut, setHasTimedOut] = useState(false);
+
+  // Check subscription status
+  const { data: subscriptionStatus, isLoading: isSubLoading } = trpc.subscriptions.getStatus.useQuery(undefined, {
+    enabled: !!session && !!profile,
+  });
+
+  const isLoading = isProfileLoading || (!!profile && isSubLoading);
 
   // Start timeout timer when loading profile
   // Must be before conditional returns (Rules of Hooks)
@@ -79,6 +87,11 @@ export default function AppLayout() {
   // Keep showing nothing while loading (splash is still visible from index.tsx)
   if (isLoading) {
     return null;
+  }
+
+  // If profile exists but no active subscription, redirect to paywall
+  if (profile && subscriptionStatus && !subscriptionStatus.isActive) {
+    return <Redirect href="/(auth)/Paywall" />;
   }
 
   const isAdmin = profile?.role === "ADMIN";

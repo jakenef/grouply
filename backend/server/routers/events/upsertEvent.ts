@@ -5,9 +5,9 @@ import calculateAge from "../../../../shared/utils/calculateAge";
 import { Prisma } from "../../../generated/prisma";
 import { prisma } from "../../prisma";
 import { locationDataSchema } from "../../schemas";
-import { protectedProcedure } from "../../trpc";
+import { paidProcedure } from "../../trpc";
 
-export const upsertEvent = protectedProcedure
+export const upsertEvent = paidProcedure
   .input(
     z.object({
       eventId: z.string().optional(),

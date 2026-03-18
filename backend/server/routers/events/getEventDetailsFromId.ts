@@ -1,12 +1,12 @@
 import z from "zod";
 import { prisma } from "../../prisma";
-import { protectedProcedure } from "../../trpc";
+import { paidProcedure } from "../../trpc";
 
-export const getEventDetailsFromId = protectedProcedure
+export const getEventDetailsFromId = paidProcedure
   .input(
     z.object({
       id: z.string(),
-    })
+    }),
   )
   .output(
     z
@@ -32,7 +32,7 @@ export const getEventDetailsFromId = protectedProcedure
         hostId: z.string().nullable(),
         isCanceled: z.boolean(),
       })
-      .optional()
+      .optional(),
   )
   .query(async ({ ctx, input }) => {
     const event = await prisma.event.findUnique({
@@ -43,7 +43,7 @@ export const getEventDetailsFromId = protectedProcedure
     if (event) {
       const numRegs = event.registrations.length;
       const attendeeIds = event.registrations.map(
-        (registration) => registration.userId
+        (registration) => registration.userId,
       );
       return {
         id: event.id,

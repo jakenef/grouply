@@ -1,13 +1,13 @@
 import { TRPCError } from "@trpc/server";
 import z from "zod";
 import calculateAge from "../../../../shared/utils/calculateAge";
-import { protectedProcedure } from "../../trpc";
+import { paidProcedure } from "../../trpc";
 
-const joinEvent = protectedProcedure
+const joinEvent = paidProcedure
   .input(
     z.object({
       eventId: z.string(),
-    })
+    }),
   )
   .mutation(async ({ ctx, input }) => {
     const event = await ctx.prisma.event.findUnique({

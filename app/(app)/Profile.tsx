@@ -18,6 +18,7 @@ const Profile = () => {
   const router = useRouter();
   const isAdmin = user?.role === "ADMIN";
   const deleteUserMutation = trpc.users.deleteMyUser.useMutation();
+  const subscriptionQuery = trpc.subscriptions.getStatus.useQuery();
 
   // Format joined date
   const formatJoinedDate = (date: Date | null | undefined) => {
@@ -26,6 +27,21 @@ const Profile = () => {
       month: "long",
       year: "numeric",
     });
+  };
+
+  const formatSubscriptionStatus = () => {
+    if (subscriptionQuery.isLoading) return "Loading...";
+    if (!subscriptionQuery.data?.isActive) return "Inactive";
+
+    const date = subscriptionQuery.data.subscription?.currentPeriodEnd;
+    if (!date) return "Active";
+
+    const formattedDate = new Date(date).toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+    return `Active until ${formattedDate}`;
   };
 
   const kmToMiles = (km: number): number => {
@@ -44,7 +60,7 @@ const Profile = () => {
   const handleDeleteAccount = () => {
     Alert.alert(
       "Delete Account",
-      "Are you sure you want to delete your account? This action cannot be undone.",
+      "Are you sure you want to delete your account? This action cannot be undone. Deleting your acount does NOT cancel your subscription. To cancel, go to your store provider.",
       [
         {
           text: "No, Keep Account",
@@ -159,6 +175,11 @@ const Profile = () => {
               <Text className="text-base">{age}</Text>
             </View>
           )}
+
+          <View className="py-2">
+            <Text className="text-muted text-sm">Subscription Status</Text>
+            <Text className="text-base">{formatSubscriptionStatus()}</Text>
+          </View>
 
           {joinedDate && (
             <View className="py-2">

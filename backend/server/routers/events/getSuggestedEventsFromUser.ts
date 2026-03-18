@@ -1,61 +1,10 @@
 import { getSuggestedEventsFromUser as getSuggestedEventsService } from "../../services/event/getSuggestedEventsFromUser/getSuggestedEventsFromUser";
-import { protectedProcedure } from "../../trpc";
+import { paidProcedure } from "../../trpc";
 
-export const getSuggestedEventsFromUser = protectedProcedure.query(
+export const getSuggestedEventsFromUser = paidProcedure.query(
   async ({ ctx }) => {
     const events = await getSuggestedEventsService(ctx.user.id);
-    // const dtoEvents = events.map(mapScoredEventToDTO);
-    // function mapScoredEventToDTO(scoredEvent: any) {
-    //   return {
-    //     event: {
-    //       id: scoredEvent.event.id,
-    //       name: scoredEvent.event.name,
-    //       desc: scoredEvent.event.desc,
-    //       startsAt: scoredEvent.event.startsAt,
-    //       endsAt: scoredEvent.event.endsAt,
-    //       isCanceled: scoredEvent.event.isCanceled,
-    //       maxAgeLimit: scoredEvent.event.maxAgeLimit,
-    //       minAgeLimit: scoredEvent.event.minAgeLimit,
-    //       imageUrls: scoredEvent.event.imageUrls,
-    //       coverImageUrl: scoredEvent.event.coverImageUrl,
-    //       organizer: {
-    //         id: scoredEvent.event.organizer.id,
-    //         givenName: scoredEvent.event.organizer.givenName,
-    //         avatarUrl: scoredEvent.event.organizer.avatarUrl,
-    //       },
-    //       activity: {
-    //         id: scoredEvent.event.activity.id,
-    //         slug: scoredEvent.event.activity.slug,
-    //         label: scoredEvent.event.activity.label,
-    //       },
-    //       location: {
-    //         id: scoredEvent.event.location.id,
-    //         formatted: scoredEvent.event.location.formatted,
-    //         city: scoredEvent.event.location.city,
-    //         region: scoredEvent.event.location.region,
-    //         countryCode: scoredEvent.event.location.countryCode,
-    //         lat: scoredEvent.event.location.lat,
-    //         lng: scoredEvent.event.location.lng,
-    //       },
-    //       maxAttendees: scoredEvent.event.maxAttendees,
-    //       minAttendees: scoredEvent.event.minAttendees,
-    //       currentAttendees: scoredEvent.event.registrations?.length ?? 0,
-    //       isFull: scoredEvent.event.isFull,
-    //       snapshot: scoredEvent.event.snapshot
-    //         ? {
-    //             hostUserId: scoredEvent.event.snapshot.hostUserId,
-    //             hostGivenName: scoredEvent.event.snapshot.hostGivenName,
-    //             interestIds: scoredEvent.event.snapshot.interestIds,
-    //             traitScores: scoredEvent.event.snapshot.traitScores,
-    //           }
-    //         : null,
-    //       createdAt: scoredEvent.event.createdAt,
-    //       updatedAt: scoredEvent.event.updatedAt,
-    //     },
-    //     score: scoredEvent.score,
-    //   };
-    // }
 
     return events;
-  }
+  },
 );

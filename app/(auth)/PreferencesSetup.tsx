@@ -247,8 +247,8 @@ const PreferencesSetup = () => {
         },
       });
 
-      // Navigate to main app
-      router.replace("/(app)/Home");
+      // Navigate to Paywall
+      router.replace("/(auth)/Paywall");
     } catch (error: any) {
       console.error("Error saving preferences:", error);
       Alert.alert(

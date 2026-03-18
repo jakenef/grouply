@@ -5,6 +5,7 @@ import { interestsRouter } from "./interests";
 import { locationsRouter } from "./locations";
 import { messagesAIRouter } from "./messagesAI";
 import { reportsRouter } from "./reports";
+import { subscriptionsRouter } from "./subscriptions";
 import { traitsRouter } from "./traits";
 import { troubleshootingRouter } from "./troubleshooting";
 import { usersRouter } from "./users/index";
@@ -19,6 +20,7 @@ export const appRouter = router({
   events: eventsRouter,
   activities: activitiesRouter,
   reports: reportsRouter,
+  subscriptions: subscriptionsRouter,
 });
 
 export type AppRouter = typeof appRouter;
