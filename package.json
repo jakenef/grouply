@@ -20,7 +20,11 @@
     "update:production": "APP_VARIANT=production eas update --channel production --platform ios && APP_VARIANT=production eas update --channel production --platform android",
     "lint": "expo lint",
     "android": "expo run:android",
-    "ios": "expo run:ios"
+    "ios": "expo run:ios",
+    "eas:build:ios": "eas build -p ios",
+    "eas:build:android": "eas build -p android",
+    "eas:submit:ios": "eas submit -p ios",
+    "eas:submit:android": "eas submit -p android"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
