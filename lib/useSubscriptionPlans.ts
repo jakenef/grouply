@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Platform } from "react-native";
-import { useIAP, ProductSubscription, SubscriptionOffer } from "react-native-iap";
+import { useIAP } from "react-native-iap";
 
 const REAL_SUBSCRIPTION_SKUS_IOS = [
   "grouply_subscription_monthly",
@@ -38,13 +38,18 @@ export function useSubscriptionPlans() {
 
   useEffect(() => {
     let isMounted = true;
-    
+
     const loadProducts = async () => {
-      if (!isIAPConnected || !REAL_SUBSCRIPTION_SKUS || REAL_SUBSCRIPTION_SKUS.length === 0) return;
-      
+      if (
+        !isIAPConnected ||
+        !REAL_SUBSCRIPTION_SKUS ||
+        REAL_SUBSCRIPTION_SKUS.length === 0
+      )
+        return;
+
       setIsFetching(true);
       setError(null);
-      
+
       try {
         await fetchRealProducts({ skus: REAL_SUBSCRIPTION_SKUS, type: "subs" });
       } catch (err: any) {
@@ -76,11 +81,19 @@ export function useSubscriptionPlans() {
       return (realSubscriptions as any[])
         .map((p) => {
           const isYearly = p.productId.includes("yearly");
-          let description = isYearly ? "Annual access" : "Flexible monthly access";
+          let description = isYearly
+            ? "Annual access"
+            : "Flexible monthly access";
 
           if (isYearly && monthlyProduct && yearlyProduct) {
-            const yPrice = typeof yearlyProduct.price === 'string' ? parseFloat(yearlyProduct.price) : yearlyProduct.price;
-            const mPrice = typeof monthlyProduct.price === 'string' ? parseFloat(monthlyProduct.price) : monthlyProduct.price;
+            const yPrice =
+              typeof yearlyProduct.price === "string"
+                ? parseFloat(yearlyProduct.price)
+                : yearlyProduct.price;
+            const mPrice =
+              typeof monthlyProduct.price === "string"
+                ? parseFloat(monthlyProduct.price)
+                : monthlyProduct.price;
 
             if (yPrice && mPrice) {
               const monthlyEquiv = (yPrice / 12).toLocaleString(undefined, {
@@ -106,88 +119,69 @@ export function useSubscriptionPlans() {
     }
 
     // Android
-    return (realSubscriptions as ProductSubscription[]).flatMap((product) => {
-      const offers: SubscriptionOffer[] = product.subscriptionOffers || [];
+    return (realSubscriptions as any[])
+      .flatMap((product) => {
+        const productId = product.productId || product.id;
+        const offers = product.subscriptionOfferDetailsAndroid || [];
 
-      const monthlyOffer = offers.find(
-        (o) =>
-          o.basePlanIdAndroid?.includes("monthly") &&
-          o.pricingPhasesAndroid?.pricingPhaseList.length === 1,
-      );
-      const yearlyOffer = offers.find((o) =>
-        o.basePlanIdAndroid?.includes("yearly"),
-      );
+        return offers.map((offer: any) => {
+          const phases = offer.pricingPhases?.pricingPhaseList || [];
+          const basePlanId = offer.basePlanId || "";
+          const hasTrial = phases.length > 1;
 
-      return offers.map((offer) => {
-        const phases = offer.pricingPhasesAndroid?.pricingPhaseList || [];
-        const basePlanId = offer.basePlanIdAndroid || "";
-        const hasTrial = phases.length > 1;
-
-        if (!basePlanId) return null;
-
-        if (basePlanId.includes("monthly") && hasTrial) {
-          return {
-            id: "trial",
-            storeId: product.productId,
-            offerToken: offer.offerTokenAndroid || undefined,
-            title: "7-Day Free Trial",
-            subtitle: `Then ${phases[1].formattedPrice}/month`,
-            price: "Free",
-            description: "Try all features for free",
-            badge: "BEST FOR NEW USERS",
-          };
-        }
-
-        if (basePlanId.includes("monthly")) {
-          return {
-            id: "monthly",
-            storeId: product.productId,
-            offerToken: offer.offerTokenAndroid || undefined,
-            title: "Monthly",
-            subtitle: "Billed monthly",
-            price: phases[0].formattedPrice,
-            description: "Flexible monthly access",
-          };
-        }
-
-        if (basePlanId.includes("yearly")) {
-          let description = "Best value for long-term use";
-
-          if (monthlyOffer && yearlyOffer && monthlyOffer.pricingPhasesAndroid && yearlyOffer.pricingPhasesAndroid) {
-            const yPrice =
-              parseFloat(yearlyOffer.pricingPhasesAndroid.pricingPhaseList[0].priceAmountMicros) /
-              1000000;
-            const mPrice =
-              parseFloat(
-                monthlyOffer.pricingPhasesAndroid.pricingPhaseList[0].priceAmountMicros,
-              ) / 1000000;
-            const currencyCode = yearlyOffer.pricingPhasesAndroid.pricingPhaseList[0].priceCurrencyCode;
-
-            if (!isNaN(yPrice) && !isNaN(mPrice)) {
-              const monthlyEquiv = (yPrice / 12).toLocaleString(undefined, {
-                style: "currency",
-                currency: currencyCode,
-              });
-              const savings = Math.round((1 - yPrice / (mPrice * 12)) * 100);
-              description = `${monthlyEquiv}/month — save ${savings}%`;
-            }
+          if (!productId) {
+            console.error("❌ Missing productId:", product);
+            return null;
           }
 
-          return {
-            id: "yearly",
-            storeId: product.productId,
-            offerToken: offer.offerTokenAndroid || undefined,
-            title: "Yearly",
-            subtitle: "Billed annually",
-            price: phases[0].formattedPrice,
-            description: description,
-            badge: "BEST VALUE",
-          };
-        }
+          const offerToken = offer.offerToken ?? offer.offerTokenAndroid;
 
-        return null;
-      });
-    }).filter(Boolean) as NormalizedPlan[];
+          if (!offerToken) {
+            console.error("❌ Missing offerToken:", offer);
+          }
+
+          if (basePlanId.includes("monthly") && hasTrial) {
+            return {
+              id: "trial",
+              storeId: productId,
+              offerToken,
+              title: "7-Day Free Trial",
+              subtitle: `Then ${phases[1].formattedPrice}/month`,
+              price: "Free",
+              description: "Try all features for free",
+              badge: "BEST FOR NEW USERS",
+            };
+          }
+
+          if (basePlanId.includes("monthly")) {
+            return {
+              id: "monthly",
+              storeId: productId,
+              offerToken,
+              title: "Monthly",
+              subtitle: "Billed monthly",
+              price: phases[0].formattedPrice,
+              description: "Flexible monthly access",
+            };
+          }
+
+          if (basePlanId.includes("yearly")) {
+            return {
+              id: "yearly",
+              storeId: productId,
+              offerToken,
+              title: "Yearly",
+              subtitle: "Billed annually",
+              price: phases[0].formattedPrice,
+              description: "Best value for long-term use",
+              badge: "BEST VALUE",
+            };
+          }
+
+          return null;
+        });
+      })
+      .filter((p): p is NormalizedPlan => p !== null);
   }, [realSubscriptions]);
 
   return {

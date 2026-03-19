@@ -51,6 +51,7 @@ const Paywall = () => {
 
   const handleSubscribe = async () => {
     if (!selectedPlan) return;
+    console.log("DEBUG PLAN:", selectedPlan);
 
     setIsProcessing(true);
 
