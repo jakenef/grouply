@@ -1,8 +1,11 @@
 import GrouplyButton from "@/app-components/shared/GrouplyButton";
-import { useIAPMock } from "@/lib/iap";
+import { colors } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";
+import {
+  NormalizedPlan,
+  useSubscriptionPlans,
+} from "@/lib/useSubscriptionPlans";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   Alert,
@@ -15,113 +18,77 @@ import {
 } from "react-native";
 import { useIAP } from "react-native-iap";
 
-const REAL_SUBSCRIPTION_SKUS = [
-  "grouply_subscription_monthly",
-  "grouply_subscription_yearly",
-];
-
 const Paywall = () => {
-  const [selectedPlan, setSelectedPlan] = useState<string>(
-    "grouply_premium_trial",
-  );
-  const [isLoading, setIsLoading] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<NormalizedPlan | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  // Keep mock IAP for buttons and logic
-  const { requestPurchase, finishTransaction } = useIAPMock();
+  const { requestPurchase } = useIAP({
+    onPurchaseSuccess: (purchase) => {
+      console.log("🎉 SUCCESS:", purchase);
+      setIsProcessing(false);
+    },
+    onPurchaseError: (error) => {
+      console.error("❌ ERROR:", error);
+      setIsProcessing(false);
+    },
+  });
 
-  // Use real IAP ONLY for logging
-  const {
-    connected: isIAPConnected,
-    subscriptions: realSubscriptions,
-    fetchProducts: fetchRealProducts,
-  } = useIAP();
+  // Use new hook for data
+  const { plans, isLoading: isPlansLoading } = useSubscriptionPlans();
 
   const verifyReceiptMutation = trpc.subscriptions.verifyReceipt.useMutation();
 
-  // Log real subscriptions when connected
+  // Set default selection once plans load
   useEffect(() => {
-    if (isIAPConnected) {
-      console.log(
-        "🔍 [Real IAP] Connected. Fetching subscriptions for logging...",
-      );
-      fetchRealProducts({ skus: REAL_SUBSCRIPTION_SKUS, type: "subs" }).catch(
-        (err) => {
-          console.error("❌ [Real IAP] Error fetching products:", err);
-        },
-      );
+    if (plans.length > 0 && !selectedPlan) {
+      const defaultPlan =
+        plans.find((p) => p.badge === "BEST FOR NEW USERS") ||
+        plans.find((p) => p.title === "Monthly") ||
+        plans[0];
+      setSelectedPlan(defaultPlan);
     }
-  }, [isIAPConnected, fetchRealProducts]);
-
-  useEffect(() => {
-    if (realSubscriptions.length > 0) {
-      console.log(
-        "✅ [Real IAP] Subscriptions Fetched:",
-        JSON.stringify(realSubscriptions, null, 2),
-      );
-    }
-  }, [realSubscriptions]);
-
-  const plans = [
-    {
-      id: "grouply_premium_trial",
-      title: "7-Day Free Trial",
-      subtitle: "Then $7.99/month",
-      price: "Free",
-      description: "Try all features for free",
-      badge: "BEST FOR NEW USERS",
-    },
-    {
-      id: "grouply_premium_monthly",
-      title: "Monthly",
-      subtitle: "Billed monthly",
-      price: "$7.99",
-      description: "Flexible monthly access",
-    },
-    {
-      id: "grouply_premium_yearly",
-      title: "Yearly",
-      subtitle: "Billed annually",
-      price: "$69.99",
-      description: "$5.99/month — save 20%",
-      badge: "BEST VALUE",
-    },
-  ];
+  }, [plans, selectedPlan]);
 
   const handleSubscribe = async () => {
-    setIsLoading(true);
+    if (!selectedPlan) return;
+
+    setIsProcessing(true);
+
     try {
-      const { transactionId, productId } = await requestPurchase({
-        sku: selectedPlan,
+      const purchase = await requestPurchase({
+        request:
+          Platform.OS === "android"
+            ? {
+                google: {
+                  skus: [selectedPlan.storeId],
+                  subscriptionOffers: [
+                    {
+                      sku: selectedPlan.storeId,
+                      offerToken: selectedPlan.offerToken!,
+                    },
+                  ],
+                },
+              }
+            : {
+                ios: {
+                  sku: selectedPlan.storeId,
+                },
+              },
+        type: "subs",
       });
 
-      // After "purchase", verify with our backend
-      const result = await verifyReceiptMutation.mutateAsync({
-        receipt: `mock_receipt_${selectedPlan}_${transactionId}`,
-        platform: Platform.OS.toUpperCase() as "IOS" | "ANDROID",
-      });
-
-      if (result.hasAccess) {
-        await finishTransaction({ transactionId });
-        Alert.alert("Success!", "Your subscription is now active.", [
-          { text: "Let's Go!", onPress: () => router.replace("/(app)/Home") },
-        ]);
-      } else {
-        throw new Error("Verification failed: No access granted.");
-      }
+      console.log("Purchase triggered");
     } catch (error: any) {
-      console.error("Subscription error:", error);
-      Alert.alert(
-        "Subscription Failed",
-        error.message || "There was an error processing your subscription.",
-      );
-    } finally {
-      setIsLoading(false);
+      console.error("❌ Purchase error:", error);
+
+      if (error?.code === "E_USER_CANCELLED") return;
+
+      Alert.alert("Purchase Failed", error.message || "Something went wrong");
     }
   };
 
   const handleRestore = () => {
     Alert.alert("Restore Purchase", "Searching for existing subscriptions...");
-    // Mock restore logic
     setTimeout(() => {
       Alert.alert(
         "No Purchases Found",
@@ -154,6 +121,8 @@ const Paywall = () => {
     },
   ];
 
+  const isLoading = isPlansLoading || isProcessing;
+
   return (
     <ScrollView
       showsVerticalScrollIndicator={false}
@@ -174,7 +143,11 @@ const Paywall = () => {
         {features.map((feature, index) => (
           <View key={index} className="flex-row items-start mb-5">
             <View className="bg-accent p-2 rounded-full mr-4">
-              <Ionicons name={feature.icon as any} size={22} color="#4f47e5" />
+              <Ionicons
+                name={feature.icon as any}
+                size={22}
+                color={colors.primary}
+              />
             </View>
             <View className="flex-1">
               <Text className="text-lg font-semibold text-foreground">
@@ -188,71 +161,84 @@ const Paywall = () => {
 
       {/* Pricing Plans */}
       <View className="mb-8">
-        {plans.map((plan) => (
-          <TouchableOpacity
-            key={plan.id}
-            activeOpacity={0.7}
-            onPress={() => setSelectedPlan(plan.id)}
-            className={`mb-4 p-4 rounded-2xl border-2 ${
-              selectedPlan === plan.id
-                ? "border-primary bg-accent/20"
-                : "border-gray-100 bg-white"
-            }`}
-          >
-            {plan.badge && (
-              <View className="absolute -top-3 right-4 bg-primary px-3 py-1 rounded-full">
-                <Text className="text-white text-[10px] font-bold">
-                  {plan.badge}
-                </Text>
+        {isPlansLoading ? (
+          <View className="py-10 items-center">
+            <Text className="text-gray-400">Loading plans...</Text>
+          </View>
+        ) : plans.length === 0 ? (
+          <View className="py-10 items-center">
+            <Text className="text-gray-400">No plans available.</Text>
+          </View>
+        ) : (
+          plans.map((plan) => (
+            <TouchableOpacity
+              key={`${plan.storeId}-${plan.id}`}
+              onPress={() => setSelectedPlan(plan)}
+              className={`mb-4 p-4 rounded-2xl border-2 ${
+                selectedPlan?.id === plan.id
+                  ? "border-primary bg-accent"
+                  : "border-gray-100 bg-white"
+              }`}
+            >
+              {plan.badge && (
+                <View className="absolute -top-3 right-4 bg-primary px-3 py-1 rounded-full">
+                  <Text className="text-white text-[10px] font-bold">
+                    {plan.badge}
+                  </Text>
+                </View>
+              )}
+              <View className="flex-row justify-between items-center">
+                <View className="flex-1">
+                  <Text className="text-xl font-bold text-foreground">
+                    {plan.title}
+                  </Text>
+                  <Text className="text-muted text-sm">{plan.subtitle}</Text>
+                  <Text className="text-primary text-xs mt-1 font-medium">
+                    {plan.description}
+                  </Text>
+                </View>
+                <View className="items-end">
+                  <Text className="text-2xl font-bold text-foreground">
+                    {plan.price}
+                  </Text>
+                  <Ionicons
+                    name={
+                      selectedPlan?.id === plan.id
+                        ? "checkmark-circle"
+                        : "ellipse-outline"
+                    }
+                    size={24}
+                    color={
+                      selectedPlan?.id === plan.id
+                        ? colors.primary
+                        : colors.muted.DEFAULT
+                    }
+                    style={{ marginTop: 4 }}
+                  />
+                </View>
               </View>
-            )}
-            <View className="flex-row justify-between items-center">
-              <View className="flex-1">
-                <Text className="text-xl font-bold text-foreground">
-                  {plan.title}
-                </Text>
-                <Text className="text-muted text-sm">{plan.subtitle}</Text>
-                <Text className="text-primary text-xs mt-1 font-medium">
-                  {plan.description}
-                </Text>
-              </View>
-              <View className="items-end">
-                <Text className="text-2xl font-bold text-foreground">
-                  {plan.price}
-                </Text>
-                <Ionicons
-                  name={
-                    selectedPlan === plan.id
-                      ? "checkmark-circle"
-                      : "ellipse-outline"
-                  }
-                  size={24}
-                  color={selectedPlan === plan.id ? "#4f47e5" : "#d1d5db"}
-                  style={{ marginTop: 4 }}
-                />
-              </View>
-            </View>
-          </TouchableOpacity>
-        ))}
+            </TouchableOpacity>
+          ))
+        )}
       </View>
 
       {/* Main CTA */}
       <GrouplyButton
         label={
-          isLoading
+          isProcessing
             ? "Processing..."
-            : selectedPlan === "grouply_premium_trial"
-              ? "Try Free & Subscribe"
-              : `Subscribe for ${
-                  plans.find((p) => p.id === selectedPlan)?.price
-                }`
+            : selectedPlan
+              ? selectedPlan.id === "trial"
+                ? "Try Free & Subscribe"
+                : `Subscribe for ${selectedPlan.price}`
+              : "Select a Plan"
         }
         variant="primary"
         size="large"
         fullWidth
         onPress={handleSubscribe}
-        isLoading={isLoading}
-        disabled={isLoading}
+        isLoading={isProcessing}
+        disabled={isLoading || !selectedPlan}
       />
 
       <View className="mt-4 mb-8">
