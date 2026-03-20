@@ -1,4 +1,5 @@
-import { TRPCError } from "@trpc/server";
+import { google } from "googleapis";
+import { env } from "../../env";
 import { prisma } from "../../prisma";
 import { verifyReceiptSchema } from "../../schemas/validation";
 import { protectedProcedure } from "../../trpc";
@@ -6,18 +7,18 @@ import { protectedProcedure } from "../../trpc";
 /**
  * Stub for Apple receipt verification
  */
-async function verifyWithApple(receipt: string) {
-  console.log("Stub: Verifying with Apple...", receipt.substring(0, 10) + "...");
-  
+async function verifyWithApple(receipt: string, productId: string) {
+  console.log(
+    "Stub: Verifying with Apple...",
+    receipt.substring(0, 10) + "...",
+  );
+
   // For testing purposes, we'll look for product IDs in the mock "receipt"
-  let productId = "grouply_premium_monthly";
   let durationDays = 30;
 
-  if (receipt.includes("trial")) {
-    productId = "grouply_premium_trial";
+  if (receipt.includes("trial") || productId.includes("trial")) {
     durationDays = 7;
-  } else if (receipt.includes("yearly")) {
-    productId = "grouply_premium_yearly";
+  } else if (receipt.includes("yearly") || productId.includes("yearly")) {
     durationDays = 365;
   }
 
@@ -29,82 +30,135 @@ async function verifyWithApple(receipt: string) {
 }
 
 /**
- * Stub for Google receipt verification
+ * Real implementation for Google receipt verification
  */
-async function verifyWithGoogle(receipt: string) {
-  console.log("Stub: Verifying with Google...", receipt.substring(0, 10) + "...");
-  
-  // For testing purposes, we'll look for product IDs in the mock "receipt"
-  let productId = "grouply_premium_monthly";
-  let durationDays = 30;
+async function verifyWithGoogle(productId: string, purchaseToken: string) {
+  console.log("Verifying with Google Play...", {
+    productId,
+    purchaseToken: `${purchaseToken.slice(0, 8)}...`,
+  });
 
-  if (receipt.includes("trial")) {
-    productId = "grouply_premium_trial";
-    durationDays = 7;
-  } else if (receipt.includes("yearly")) {
-    productId = "grouply_premium_yearly";
-    durationDays = 365;
+  if (!env.GOOGLE_PLAY_SERVICE_ACCOUNT) {
+    throw new Error("Google Play Service Account not configured");
+  }
+
+  const auth = new google.auth.GoogleAuth({
+    credentials: env.GOOGLE_PLAY_SERVICE_ACCOUNT,
+    scopes: ["https://www.googleapis.com/auth/androidpublisher"],
+  });
+
+  const authClient = await auth.getClient();
+  const publisher = google.androidpublisher({
+    version: "v3",
+    auth: authClient as any,
+  });
+
+  const res = await publisher.purchases.subscriptions.get({
+    packageName: "com.grouply.grouply",
+    subscriptionId: productId,
+    token: purchaseToken,
+  });
+
+  const { expiryTimeMillis, orderId } = res.data;
+
+  if (!expiryTimeMillis) {
+    throw new Error("Missing expiryTimeMillis");
+  }
+
+  const expiryTime = parseInt(expiryTimeMillis, 10);
+  const isActive = expiryTime > Date.now();
+
+  if (!isActive) {
+    throw new Error("Subscription expired");
   }
 
   return {
-    originalTxId: "android_tx_" + Math.random().toString(36).substring(7),
-    productId: productId,
-    expiresAt: new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000),
+    originalTxId: orderId || purchaseToken,
+    productId,
+    purchaseToken,
+    expiresAt: new Date(expiryTime),
   };
 }
 
 export const verifyReceipt = protectedProcedure
   .input(verifyReceiptSchema)
   .mutation(async ({ input, ctx }) => {
-    const { receipt, platform } = input;
-    let verificationResult;
+    const {
+      platform,
+      productId,
+      transactionId,
+      purchaseToken,
+      transactionReceipt,
+    } = input;
 
-    try {
-      if (platform === "IOS") {
-        verificationResult = await verifyWithApple(receipt);
-      } else if (platform === "ANDROID") {
-        verificationResult = await verifyWithGoogle(receipt);
-      } else {
-        // Handle WEB or other platforms if needed
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: `Platform ${platform} not supported for receipt verification yet.`,
-        });
+    console.log("📦 Purchase data from app:", {
+      platform,
+      productId,
+      transactionId,
+      purchaseToken: purchaseToken ? `${purchaseToken.slice(0, 8)}...` : null,
+      transactionReceipt: transactionReceipt
+        ? `${transactionReceipt.slice(0, 10)}...`
+        : null,
+    });
+
+    let verificationResult: {
+      originalTxId: string;
+      productId: string;
+      expiresAt: Date;
+      purchaseToken?: string;
+    };
+
+    if (platform === "ANDROID") {
+      if (!purchaseToken) {
+        throw new Error("Purchase token is required for Android verification");
       }
-
-      const { originalTxId, productId, expiresAt } = verificationResult;
-
-      // Upsert the subscription record
-      const subscription = await prisma.subscription.upsert({
-        where: {
-          originalTxId: originalTxId,
-        },
-        update: {
-          currentPeriodEnd: expiresAt,
-          productId: productId,
-          platform: platform,
-          userId: ctx.user.id, // Update user in case it changed (e.g. restore purchase)
-        },
-        create: {
-          originalTxId: originalTxId,
-          productId: productId,
-          platform: platform,
-          currentPeriodEnd: expiresAt,
-          userId: ctx.user.id,
-        },
-      });
-
-      return {
-        hasAccess: subscription.currentPeriodEnd > new Date(),
-        expiresAt: subscription.currentPeriodEnd,
-        subscriptionId: subscription.id,
-      };
-    } catch (error: any) {
-      console.error("Receipt verification failed:", error);
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to verify receipt with the platform provider.",
-        cause: error,
-      });
+      verificationResult = await verifyWithGoogle(productId, purchaseToken);
+    } else if (platform === "IOS") {
+      if (!transactionReceipt) {
+        throw new Error("Transaction receipt is required for iOS verification");
+      }
+      verificationResult = await verifyWithApple(transactionReceipt, productId);
+    } else {
+      throw new Error(`Platform ${platform} verification not implemented`);
     }
+
+    const existingSubscription = await prisma.subscription.findFirst({
+      where: {
+        OR: [
+          { originalTxId: verificationResult.originalTxId },
+          ...(verificationResult.purchaseToken
+            ? [{ purchaseToken: verificationResult.purchaseToken }]
+            : []),
+        ],
+      },
+    });
+
+    const subscription = existingSubscription
+      ? await prisma.subscription.update({
+          where: { id: existingSubscription.id },
+          data: {
+            productId: verificationResult.productId,
+            platform,
+            userId: ctx.user.id,
+            currentPeriodEnd: verificationResult.expiresAt,
+            originalTxId: verificationResult.originalTxId,
+            purchaseToken: verificationResult.purchaseToken ?? undefined,
+          },
+        })
+      : await prisma.subscription.create({
+          data: {
+            originalTxId: verificationResult.originalTxId,
+            purchaseToken: verificationResult.purchaseToken ?? null,
+            productId: verificationResult.productId,
+            platform,
+            userId: ctx.user.id,
+            currentPeriodEnd: verificationResult.expiresAt,
+          },
+        });
+
+    return {
+      ok: true,
+      subscriptionId: subscription.id,
+      expiresAt: verificationResult.expiresAt,
+    };
   });
