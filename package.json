@@ -65,6 +65,7 @@
     "expo-updates": "~29.0.16",
     "expo-web-browser": "~15.0.10",
     "express": "^5.1.0",
+    "googleapis": "^171.4.0",
     "jsonwebtoken": "^9.0.2",
     "leo-profanity": "^1.9.0",
     "module-alias": "^2.2.3",

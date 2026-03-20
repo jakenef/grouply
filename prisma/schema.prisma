@@ -350,7 +350,8 @@ model Subscription {
   platform         SubscriptionPlatform
   productId        String
   currentPeriodEnd DateTime
-  originalTxId     String @unique
+  originalTxId     String?              @unique
+  purchaseToken    String?              @unique
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

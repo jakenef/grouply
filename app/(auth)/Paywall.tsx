@@ -6,6 +6,7 @@ import {
   useSubscriptionPlans,
 } from "@/lib/useSubscriptionPlans";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   Alert,
@@ -16,15 +17,30 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useIAP } from "react-native-iap";
+import { Purchase, useIAP } from "react-native-iap";
 
 const Paywall = () => {
+  const router = useRouter();
   const [selectedPlan, setSelectedPlan] = useState<NormalizedPlan | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const { requestPurchase } = useIAP({
-    onPurchaseSuccess: (purchase) => {
+  const verifyReceiptMutation = trpc.subscriptions.verifyReceipt.useMutation();
+
+  const { requestPurchase, finishTransaction, getAvailablePurchases } = useIAP({
+    onPurchaseSuccess: async (purchase) => {
       console.log("🎉 SUCCESS:", purchase);
+      const success = await handleVerifyPurchase(purchase);
+
+      if (success) {
+        Alert.alert("Success", "Welcome to Grouply Premium!", [
+          { text: "Get Started", onPress: () => router.replace("/Home") },
+        ]);
+      } else {
+        Alert.alert(
+          "Verification Failed",
+          "We couldn't verify your purchase. If you were charged, please contact support.",
+        );
+      }
       setIsProcessing(false);
     },
     onPurchaseError: (error) => {
@@ -33,10 +49,38 @@ const Paywall = () => {
     },
   });
 
+  const handleVerifyPurchase = async (purchase: Purchase) => {
+    if (!purchase) return false;
+
+    const isAndroid = Platform.OS === "android";
+
+    try {
+      await verifyReceiptMutation.mutateAsync({
+        platform: isAndroid ? "ANDROID" : "IOS",
+        productId: purchase.productId,
+        transactionId: purchase.transactionId ?? null,
+        purchaseToken: isAndroid ? (purchase as any).purchaseToken : null,
+        transactionReceipt: !isAndroid
+          ? (purchase as any).transactionReceipt
+          : null,
+      });
+    } catch (err) {
+      console.error("Verification error:", err);
+      return false;
+    }
+
+    try {
+      // Finish only after successful verification to avoid granting/ack mismatch.
+      await finishTransaction({ purchase });
+    } catch (e) {
+      console.warn("Could not finish transaction:", e);
+    }
+
+    return true;
+  };
+
   // Use new hook for data
   const { plans, isLoading: isPlansLoading } = useSubscriptionPlans();
-
-  const verifyReceiptMutation = trpc.subscriptions.verifyReceipt.useMutation();
 
   // Set default selection once plans load
   useEffect(() => {
@@ -56,7 +100,20 @@ const Paywall = () => {
     setIsProcessing(true);
 
     try {
-      const purchase = await requestPurchase({
+      const androidOfferToken =
+        Platform.OS === "android" ? selectedPlan.offerToken?.trim() : null;
+
+      if (Platform.OS === "android" && !androidOfferToken) {
+        console.warn("Selected Android plan has no offerToken.", selectedPlan);
+        Alert.alert(
+          "Plan Unavailable",
+          "This plan is missing its Android offer token. Please refresh and try again.",
+        );
+        setIsProcessing(false);
+        return;
+      }
+
+      await requestPurchase({
         request:
           Platform.OS === "android"
             ? {
@@ -65,7 +122,7 @@ const Paywall = () => {
                   subscriptionOffers: [
                     {
                       sku: selectedPlan.storeId,
-                      offerToken: selectedPlan.offerToken!,
+                      offerToken: androidOfferToken!,
                     },
                   ],
                 },
@@ -82,20 +139,25 @@ const Paywall = () => {
     } catch (error: any) {
       console.error("❌ Purchase error:", error);
 
+      setIsProcessing(false);
+
       if (error?.code === "E_USER_CANCELLED") return;
 
       Alert.alert("Purchase Failed", error.message || "Something went wrong");
     }
   };
 
-  const handleRestore = () => {
-    Alert.alert("Restore Purchase", "Searching for existing subscriptions...");
-    setTimeout(() => {
-      Alert.alert(
-        "No Purchases Found",
-        "We couldn't find any active subscriptions for this account.",
-      );
-    }, 1500);
+  const handleRestore = async () => {
+    setIsProcessing(true);
+    try {
+      const purchases = await getAvailablePurchases();
+      console.log("🔍 Available purchases:", purchases);
+    } catch (err) {
+      console.error("Restore error:", err);
+      Alert.alert("Error", "Failed to restore purchases. Please try again.");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const openLink = (url: string) => {
