@@ -21,6 +21,7 @@ import { Purchase, useIAP } from "react-native-iap";
 
 const Paywall = () => {
   const router = useRouter();
+  const utils = trpc.useUtils();
   const [selectedPlan, setSelectedPlan] = useState<NormalizedPlan | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -32,8 +33,11 @@ const Paywall = () => {
       const success = await handleVerifyPurchase(purchase);
 
       if (success) {
-        Alert.alert("Success", "Welcome to Grouply Premium!", [
-          { text: "Get Started", onPress: () => router.replace("/Home") },
+        Alert.alert("Success", "Welcome to Grouply!", [
+          {
+            text: "Get Started",
+            onPress: () => router.replace("/(app)/Home"),
+          },
         ]);
       } else {
         Alert.alert(
@@ -64,6 +68,12 @@ const Paywall = () => {
           ? (purchase as any).transactionReceipt
           : null,
       });
+
+      // Mark entitlement-related queries stale so navigation checks refetch.
+      await Promise.all([
+        utils.subscriptions.getStatus.invalidate(),
+        utils.users.getMyUser.invalidate(),
+      ]);
     } catch (err) {
       console.error("Verification error:", err);
       return false;

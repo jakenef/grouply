@@ -1,7 +1,7 @@
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/lib/theme";
-import { useCurrentUser } from "@/lib/useCurrentUserHook";
 import { trpc } from "@/lib/trpc";
+import { useCurrentUser } from "@/lib/useCurrentUserHook";
 import { Ionicons } from "@expo/vector-icons";
 import { Redirect, Tabs, router } from "expo-router";
 import { useEffect, useState } from "react";
@@ -13,11 +13,19 @@ export default function AppLayout() {
   const [hasTimedOut, setHasTimedOut] = useState(false);
 
   // Check subscription status
-  const { data: subscriptionStatus, isLoading: isSubLoading } = trpc.subscriptions.getStatus.useQuery(undefined, {
+  const {
+    data: subscriptionStatus,
+    isLoading: isSubLoading,
+    isFetching: isSubFetching,
+  } = trpc.subscriptions.getStatus.useQuery(undefined, {
     enabled: !!session && !!profile,
+    // Always refresh entitlement at layout mount to avoid stale paywall redirects.
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
-  const isLoading = isProfileLoading || (!!profile && isSubLoading);
+  const isLoading =
+    isProfileLoading || (!!profile && (isSubLoading || isSubFetching));
 
   // Start timeout timer when loading profile
   // Must be before conditional returns (Rules of Hooks)
