@@ -160,8 +160,72 @@ const Paywall = () => {
   const handleRestore = async () => {
     setIsProcessing(true);
     try {
-      const purchases = await getAvailablePurchases();
+      const purchasesRaw = await getAvailablePurchases();
+      // Explicitly type as Purchase[] and fallback to empty array if undefined/null
+      const purchases: Purchase[] = Array.isArray(purchasesRaw)
+        ? purchasesRaw
+        : [];
       console.log("🔍 Available purchases:", purchases);
+
+      if (purchases.length === 0) {
+        Alert.alert(
+          "No Purchases Found",
+          "No active purchases were found to restore on this device.",
+        );
+        return;
+      }
+
+      let restored = 0;
+      let failed = 0;
+      for (const purchase of purchases) {
+        try {
+          const isAndroid = Platform.OS === "android";
+          await verifyReceiptMutation.mutateAsync({
+            platform: isAndroid ? "ANDROID" : "IOS",
+            productId: purchase.productId,
+            transactionId: purchase.transactionId ?? null,
+            purchaseToken: isAndroid ? (purchase as any).purchaseToken : null,
+            transactionReceipt: !isAndroid
+              ? (purchase as any).transactionReceipt
+              : null,
+          });
+          await finishTransaction({ purchase });
+          restored++;
+        } catch (err) {
+          console.error(
+            "Restore verification failed for purchase:",
+            purchase,
+            err,
+          );
+          failed++;
+        }
+      }
+
+      // Invalidate entitlement-related queries
+      await Promise.all([
+        utils.subscriptions.getStatus.invalidate(),
+        utils.users.getMyUser.invalidate(),
+      ]);
+
+      if (restored > 0) {
+        Alert.alert(
+          "Restore Complete",
+          failed === 0
+            ? `Successfully restored your purchase${restored > 1 ? "s" : ""}!`
+            : `Restored ${restored} purchase${restored > 1 ? "s" : ""}, but ${failed} failed. If you are missing access, please contact support.`,
+          [
+            {
+              text: "Get Started",
+              onPress: () => router.replace("/(app)/Home"),
+            },
+          ],
+        );
+      } else {
+        Alert.alert(
+          "Restore Failed",
+          "We could not restore any purchases. If you believe you have an active subscription, please contact support.",
+        );
+      }
     } catch (err) {
       console.error("Restore error:", err);
       Alert.alert("Error", "Failed to restore purchases. Please try again.");
