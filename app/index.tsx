@@ -9,16 +9,20 @@ export default function Index() {
   const userExistsQuery = trpc.users.checkUserExists.useQuery(undefined, {
     enabled: !!session,
   });
-  
+
   // Also check subscription status
   const subscriptionQuery = trpc.subscriptions.getStatus.useQuery(undefined, {
     enabled: !!session && !!userExistsQuery.data?.exists,
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
-  const isCheckingAuth = 
-    isLoading || 
-    (session && userExistsQuery.isLoading) || 
-    (session && userExistsQuery.data?.exists && subscriptionQuery.isLoading);
+  const isCheckingAuth =
+    isLoading ||
+    (session && userExistsQuery.isLoading) ||
+    (session &&
+      userExistsQuery.data?.exists &&
+      (subscriptionQuery.isLoading || subscriptionQuery.isFetching));
 
   // Hide splash screen when auth check is complete
   useEffect(() => {

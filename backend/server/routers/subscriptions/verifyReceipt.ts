@@ -133,6 +133,13 @@ export const verifyReceipt = protectedProcedure
       },
     });
 
+    // If the token/txId is already linked to a different user, block restore
+    if (existingSubscription && existingSubscription.userId !== ctx.user.id) {
+      throw new Error(
+        "This purchase is already linked to another account. Please contact support if you believe this is an error.",
+      );
+    }
+
     const subscription = existingSubscription
       ? await prisma.subscription.update({
           where: { id: existingSubscription.id },
