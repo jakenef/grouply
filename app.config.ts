@@ -16,7 +16,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "Grouply",
   slug: "grouply",
-  version: "1.0.0",
+  version: "1.0.1",
   orientation: "portrait",
   icon: "./assets/images/grouplyAppIcon.png",
   scheme: "grouply",

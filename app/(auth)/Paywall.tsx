@@ -1,6 +1,7 @@
 import GrouplyButton from "@/app-components/shared/GrouplyButton";
 import { colors } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";
+import { useIAPClient } from "@/lib/useIAPClient";
 import {
   NormalizedPlan,
   useSubscriptionPlans,
@@ -12,46 +13,48 @@ import {
   Alert,
   Linking,
   Platform,
+  Pressable,
   ScrollView,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
-import { Purchase, useIAP } from "react-native-iap";
+import type { Purchase } from "react-native-iap";
 
 const Paywall = () => {
   const router = useRouter();
   const utils = trpc.useUtils();
   const [selectedPlan, setSelectedPlan] = useState<NormalizedPlan | null>(null);
+  const [selectedPlanKey, setSelectedPlanKey] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
   const verifyReceiptMutation = trpc.subscriptions.verifyReceipt.useMutation();
 
-  const { requestPurchase, finishTransaction, getAvailablePurchases } = useIAP({
-    onPurchaseSuccess: async (purchase) => {
-      console.log("🎉 SUCCESS:", purchase);
-      const success = await handleVerifyPurchase(purchase);
+  const { requestPurchase, finishTransaction, getAvailablePurchases } =
+    useIAPClient({
+      onPurchaseSuccess: async (purchase) => {
+        console.log("🎉 SUCCESS:", purchase);
+        const success = await handleVerifyPurchase(purchase);
 
-      if (success) {
-        Alert.alert("Success", "Welcome to Grouply!", [
-          {
-            text: "Get Started",
-            onPress: () => router.replace("/(app)/Home"),
-          },
-        ]);
-      } else {
-        Alert.alert(
-          "Verification Failed",
-          "We couldn't verify your purchase. If you were charged, please contact support.",
-        );
-      }
-      setIsProcessing(false);
-    },
-    onPurchaseError: (error) => {
-      console.error("❌ ERROR:", error);
-      setIsProcessing(false);
-    },
-  });
+        if (success) {
+          Alert.alert("Success", "Welcome to Grouply!", [
+            {
+              text: "Get Started",
+              onPress: () => router.replace("/(app)/Home"),
+            },
+          ]);
+        } else {
+          Alert.alert(
+            "Verification Failed",
+            "We couldn't verify your purchase. If you were charged, please contact support.",
+          );
+        }
+        setIsProcessing(false);
+      },
+      onPurchaseError: (error) => {
+        console.error("❌ ERROR:", error);
+        setIsProcessing(false);
+      },
+    });
 
   const handleVerifyPurchase = async (purchase: Purchase) => {
     if (!purchase) return false;
@@ -100,6 +103,7 @@ const Paywall = () => {
         plans.find((p) => p.title === "Monthly") ||
         plans[0];
       setSelectedPlan(defaultPlan);
+      setSelectedPlanKey(`${defaultPlan.storeId}:${defaultPlan.id}`);
     }
   }, [plans, selectedPlan]);
 
@@ -308,14 +312,18 @@ const Paywall = () => {
           </View>
         ) : (
           plans.map((plan) => (
-            <TouchableOpacity
+            <Pressable
               key={`${plan.storeId}-${plan.id}`}
-              onPress={() => setSelectedPlan(plan)}
+              onPress={() => {
+                setSelectedPlan(plan);
+                setSelectedPlanKey(`${plan.storeId}:${plan.id}`);
+              }}
               className={`mb-4 p-4 rounded-2xl border-2 ${
-                selectedPlan?.id === plan.id
+                selectedPlanKey === `${plan.storeId}:${plan.id}`
                   ? "border-primary bg-accent"
                   : "border-gray-100 bg-white"
               }`}
+              style={({ pressed }) => ({ opacity: pressed ? 0.96 : 1 })}
             >
               {plan.badge && (
                 <View className="absolute -top-3 right-4 bg-primary px-3 py-1 rounded-full">
@@ -340,13 +348,13 @@ const Paywall = () => {
                   </Text>
                   <Ionicons
                     name={
-                      selectedPlan?.id === plan.id
+                      selectedPlanKey === `${plan.storeId}:${plan.id}`
                         ? "checkmark-circle"
                         : "ellipse-outline"
                     }
                     size={24}
                     color={
-                      selectedPlan?.id === plan.id
+                      selectedPlanKey === `${plan.storeId}:${plan.id}`
                         ? colors.primary
                         : colors.muted.DEFAULT
                     }
@@ -354,7 +362,7 @@ const Paywall = () => {
                   />
                 </View>
               </View>
-            </TouchableOpacity>
+            </Pressable>
           ))
         )}
       </View>
@@ -379,11 +387,17 @@ const Paywall = () => {
       />
 
       <View className="mt-4 mb-8">
-        <TouchableOpacity onPress={handleRestore}>
+        <Pressable
+          onPress={handleRestore}
+          disabled={isProcessing}
+          style={({ pressed }) => ({
+            opacity: isProcessing ? 0.55 : pressed ? 0.9 : 1,
+          })}
+        >
           <Text className="text-center text-primary font-semibold">
             Already Subscribed? Restore Purchase
           </Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
       {/* Legal Stuff */}
@@ -395,7 +409,7 @@ const Paywall = () => {
           24 hours prior to the end of the current period.
         </Text>
         <View className="flex-row mt-4 justify-center">
-          <TouchableOpacity
+          <Pressable
             onPress={() =>
               openLink("https://grouply.carrd.co/#termsandconditions")
             }
@@ -403,15 +417,15 @@ const Paywall = () => {
             <Text className="text-primary text-xs font-medium mx-3">
               Terms and Conditions
             </Text>
-          </TouchableOpacity>
+          </Pressable>
           <Text className="text-muted text-xs">•</Text>
-          <TouchableOpacity
+          <Pressable
             onPress={() => openLink("https://grouply.carrd.co/#privacypolicy")}
           >
             <Text className="text-primary text-xs font-medium mx-3">
               Privacy Policy
             </Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </View>
     </ScrollView>

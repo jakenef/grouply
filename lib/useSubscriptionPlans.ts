@@ -1,3 +1,4 @@
+import { isLocalDevelopmentMode } from "@/lib/environmentMode";
 import { useEffect, useMemo, useState } from "react";
 import { Platform } from "react-native";
 import { useIAP } from "react-native-iap";
@@ -15,6 +16,68 @@ const REAL_SUBSCRIPTION_SKUS = Platform.select({
   default: [],
 });
 
+const MOCK_ANDROID_STORE_ID = "grouply_subscription";
+
+const MOCK_PLANS_ANDROID: NormalizedPlan[] = [
+  {
+    id: "trial",
+    storeId: MOCK_ANDROID_STORE_ID,
+    offerToken: "local-offer-token-trial",
+    title: "7-Day Free Trial",
+    subtitle: "Then $9.99/month",
+    price: "Free",
+    description: "Try all features for free",
+    badge: "BEST FOR NEW USERS",
+  },
+  {
+    id: "monthly",
+    storeId: MOCK_ANDROID_STORE_ID,
+    offerToken: "local-offer-token-monthly",
+    title: "Monthly",
+    subtitle: "Billed monthly",
+    price: "$9.99",
+    description: "Flexible monthly access",
+  },
+  {
+    id: "yearly",
+    storeId: MOCK_ANDROID_STORE_ID,
+    offerToken: "local-offer-token-yearly",
+    title: "Yearly",
+    subtitle: "Billed annually",
+    price: "$79.99",
+    description: "Best value for long-term use",
+    badge: "BEST VALUE",
+  },
+];
+
+const MOCK_PLANS_IOS: NormalizedPlan[] = [
+  {
+    id: "grouply_subscription_monthly",
+    storeId: "grouply_subscription_monthly",
+    title: "Monthly",
+    subtitle: "Billed monthly",
+    price: "$9.99",
+    description: "Flexible monthly access",
+  },
+  {
+    id: "grouply_subscription_yearly",
+    storeId: "grouply_subscription_yearly",
+    title: "Yearly",
+    subtitle: "Billed annually",
+    price: "$79.99",
+    description: "$6.67/month - save 33%",
+    badge: "BEST VALUE",
+  },
+];
+
+type SubscriptionPlansResult = {
+  plans: NormalizedPlan[];
+  isLoading: boolean;
+  error: Error | null;
+  isIAPConnected: boolean;
+  isMockMode: boolean;
+};
+
 export interface NormalizedPlan {
   id: string;
   storeId: string;
@@ -26,7 +89,29 @@ export interface NormalizedPlan {
   offerToken?: string; // Android only
 }
 
-export function useSubscriptionPlans() {
+const useMockSubscriptionPlans = (): SubscriptionPlansResult => {
+  const plans = useMemo((): NormalizedPlan[] => {
+    if (Platform.OS === "android") {
+      return MOCK_PLANS_ANDROID;
+    }
+
+    if (Platform.OS === "ios") {
+      return MOCK_PLANS_IOS;
+    }
+
+    return [];
+  }, []);
+
+  return {
+    plans,
+    isLoading: false,
+    error: null,
+    isIAPConnected: true,
+    isMockMode: true,
+  };
+};
+
+const useRealSubscriptionPlans = (): SubscriptionPlansResult => {
   const [isFetching, setIsFetching] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -189,5 +274,14 @@ export function useSubscriptionPlans() {
     isLoading: isFetching || (!isIAPConnected && !error),
     error,
     isIAPConnected,
+    isMockMode: false,
   };
+};
+
+const useSubscriptionPlansImpl = isLocalDevelopmentMode()
+  ? useMockSubscriptionPlans
+  : useRealSubscriptionPlans;
+
+export function useSubscriptionPlans(): SubscriptionPlansResult {
+  return useSubscriptionPlansImpl();
 }

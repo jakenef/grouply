@@ -80,6 +80,31 @@ async function verifyWithGoogle(productId: string, purchaseToken: string) {
   };
 }
 
+/**
+ * Local mock implementation for Android receipt verification
+ */
+async function verifyWithGoogleMock(productId: string, purchaseToken: string) {
+  console.log("Mock: Verifying with Google Play (local mode)...", {
+    productId,
+    purchaseToken: `${purchaseToken.slice(0, 8)}...`,
+  });
+
+  let durationDays = 30;
+
+  if (productId.includes("trial")) {
+    durationDays = 7;
+  } else if (productId.includes("yearly")) {
+    durationDays = 365;
+  }
+
+  return {
+    originalTxId: `android_local_${purchaseToken}`,
+    productId,
+    purchaseToken,
+    expiresAt: new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000),
+  };
+}
+
 export const verifyReceipt = protectedProcedure
   .input(verifyReceiptSchema)
   .mutation(async ({ input, ctx }) => {
@@ -112,7 +137,20 @@ export const verifyReceipt = protectedProcedure
       if (!purchaseToken) {
         throw new Error("Purchase token is required for Android verification");
       }
-      verificationResult = await verifyWithGoogle(productId, purchaseToken);
+
+      if (env.IS_LOCAL_MODE) {
+        verificationResult = await verifyWithGoogleMock(
+          productId,
+          purchaseToken,
+        );
+      } else {
+        if (!env.GOOGLE_PLAY_SERVICE_ACCOUNT) {
+          throw new Error(
+            "Google Play Service Account is required for non-local Android verification",
+          );
+        }
+        verificationResult = await verifyWithGoogle(productId, purchaseToken);
+      }
     } else if (platform === "IOS") {
       if (!transactionReceipt) {
         throw new Error("Transaction receipt is required for iOS verification");
