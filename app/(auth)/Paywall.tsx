@@ -142,7 +142,7 @@ const Paywall = () => {
                 },
               }
             : {
-                ios: {
+                apple: {
                   sku: selectedPlan.storeId,
                 },
               },
@@ -373,7 +373,8 @@ const Paywall = () => {
           isProcessing
             ? "Processing..."
             : selectedPlan
-              ? selectedPlan.id === "trial"
+              ? selectedPlan.id === "trial" ||
+                selectedPlan.id.includes(":trial")
                 ? "Try Free & Subscribe"
                 : `Subscribe for ${selectedPlan.price}`
               : "Select a Plan"

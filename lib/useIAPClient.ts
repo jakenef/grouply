@@ -1,27 +1,19 @@
 import { Platform } from "react-native";
-import { Purchase, useIAP } from "react-native-iap";
+import {
+  getAvailablePurchases as getAvailablePurchasesFromStore,
+  Purchase,
+  PurchaseError,
+  RequestPurchaseProps,
+  useIAP,
+} from "react-native-iap";
 import { isLocalDevelopmentMode } from "./environmentMode";
 
 type IAPHandlers = {
   onPurchaseSuccess: (purchase: Purchase) => Promise<void> | void;
-  onPurchaseError: (error: any) => void;
+  onPurchaseError: (error: PurchaseError) => void;
 };
 
-type RequestPurchaseArgs = {
-  request:
-    | {
-        google: {
-          skus: string[];
-          subscriptionOffers?: Array<{ sku: string; offerToken: string }>;
-        };
-      }
-    | {
-        ios: {
-          sku: string;
-        };
-      };
-  type: "subs";
-};
+type RequestPurchaseArgs = RequestPurchaseProps;
 
 type FinishTransactionArgs = {
   purchase: Purchase;
@@ -62,8 +54,8 @@ const useMockIAPClient = ({
     try {
       const productId =
         Platform.OS === "android"
-          ? (request as any)?.google?.skus?.[0]
-          : (request as any)?.ios?.sku;
+          ? (request.google?.skus?.[0] ?? request.android?.skus?.[0])
+          : (request.apple?.sku ?? request.ios?.sku);
 
       if (!productId) {
         throw new Error("Missing product SKU for mock purchase");
@@ -73,7 +65,7 @@ const useMockIAPClient = ({
       mockPurchaseHistory = [purchase];
       await onPurchaseSuccess(purchase);
     } catch (error) {
-      onPurchaseError(error);
+      onPurchaseError(error as PurchaseError);
       throw error;
     }
   };
@@ -95,17 +87,18 @@ const useMockIAPClient = ({
 };
 
 const useRealIAPClient = (handlers: IAPHandlers): IAPClient => {
-  const { requestPurchase, finishTransaction, getAvailablePurchases } = useIAP({
+  const { requestPurchase, finishTransaction } = useIAP({
     onPurchaseSuccess: handlers.onPurchaseSuccess,
     onPurchaseError: handlers.onPurchaseError,
   });
 
   return {
-    requestPurchase: requestPurchase as unknown as IAPClient["requestPurchase"],
-    finishTransaction:
-      finishTransaction as unknown as IAPClient["finishTransaction"],
-    getAvailablePurchases:
-      getAvailablePurchases as unknown as IAPClient["getAvailablePurchases"],
+    requestPurchase,
+    finishTransaction,
+    getAvailablePurchases: async () => {
+      const purchases = await getAvailablePurchasesFromStore();
+      return Array.isArray(purchases) ? (purchases as Purchase[]) : [];
+    },
   };
 };
 
