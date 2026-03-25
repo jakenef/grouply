@@ -16,8 +16,6 @@ const APPLE_BUNDLE_ID = "com.grouply.grouplyapp";
  * Mock for Apple receipt verification (local development)
  */
 async function verifyWithAppleMock(productId: string) {
-  console.log("Mock: Verifying with Apple (local mode)...", { productId });
-
   let durationDays = 30;
 
   if (productId.includes("trial")) {
@@ -41,27 +39,11 @@ async function verifyWithApple(
   productId: string,
   reqId?: string,
 ) {
-  console.log(
-    `[verifyReceipt:${reqId ?? "n/a"}] Verifying with Apple (JWS)...`,
-    {
-      productId,
-      jws: `${signedTransactionJWS.substring(0, 10)}...`,
-    },
-  );
-
   const rootCaPaths = env.APPLE_ROOT_CA_PATHS?.length
     ? env.APPLE_ROOT_CA_PATHS
     : env.APPLE_ROOT_CA_PATH
       ? [env.APPLE_ROOT_CA_PATH]
       : [];
-
-  // TEMP DEBUG: Trace iOS verification environment and certificate configuration.
-  console.log(`[verifyReceipt:${reqId ?? "n/a"}] iOS verifier config`, {
-    environment:
-      env.APPLE_APP_STORE_ENV === "PRODUCTION" ? "PRODUCTION" : "SANDBOX",
-    rootCertPathCount: rootCaPaths.length,
-    hasAppAppleId: !!env.APPLE_APP_ID,
-  });
 
   if (!rootCaPaths.length) {
     throw new Error("APPLE_ROOT_CA_PATHS or APPLE_ROOT_CA_PATH not configured");
@@ -132,14 +114,6 @@ async function verifyWithApple(
       );
     }
 
-    // Use decoded product ID and original transaction ID as source of truth
-    console.log(`[verifyReceipt:${reqId ?? "n/a"}] Apple JWS decode success`, {
-      originalTxId,
-      transactionId: decodedTransactionId,
-      productId: decodedProductId,
-      expiresAt: new Date(decodedExpiresDate).toISOString(),
-    });
-
     return {
       originalTxId,
       productId: decodedProductId,
@@ -160,11 +134,6 @@ async function verifyWithApple(
  * Real implementation for Google receipt verification
  */
 async function verifyWithGoogle(productId: string, purchaseToken: string) {
-  console.log("Verifying with Google Play...", {
-    productId,
-    purchaseToken: `${purchaseToken.slice(0, 8)}...`,
-  });
-
   if (!env.GOOGLE_PLAY_SERVICE_ACCOUNT) {
     throw new Error("Google Play Service Account not configured");
   }
@@ -211,11 +180,6 @@ async function verifyWithGoogle(productId: string, purchaseToken: string) {
  * Local mock implementation for Android receipt verification
  */
 async function verifyWithGoogleMock(productId: string, purchaseToken: string) {
-  console.log("Mock: Verifying with Google Play (local mode)...", {
-    productId,
-    purchaseToken: `${purchaseToken.slice(0, 8)}...`,
-  });
-
   let durationDays = 30;
 
   if (productId.includes("trial")) {
@@ -244,17 +208,6 @@ export const verifyReceipt = protectedProcedure
       transactionReceipt,
       signedTransactionJWS,
     } = input;
-
-    console.log(`[verifyReceipt:${reqId}] 📦 Purchase data from app`, {
-      reqId,
-      userId: ctx.user.id,
-      platform,
-      productId,
-      transactionId,
-      hasPurchaseToken: !!purchaseToken,
-      hasTransactionReceipt: !!transactionReceipt,
-      hasSignedTransactionJWS: !!signedTransactionJWS,
-    });
 
     try {
       let verificationResult: {
@@ -306,12 +259,6 @@ export const verifyReceipt = protectedProcedure
         throw new Error(`Platform ${platform} verification not implemented`);
       }
 
-      console.log(`[verifyReceipt:${reqId}] verification success`, {
-        decodedOriginalTxId: verificationResult.originalTxId,
-        decodedProductId: verificationResult.productId,
-        expiresAt: verificationResult.expiresAt.toISOString(),
-      });
-
       const existingSubscription = await prisma.subscription.findFirst({
         where: {
           OR: [
@@ -352,10 +299,6 @@ export const verifyReceipt = protectedProcedure
               currentPeriodEnd: verificationResult.expiresAt,
             },
           });
-
-      console.log(`[verifyReceipt:${reqId}] db write success`, {
-        subscriptionId: subscription.id,
-      });
 
       return {
         ok: true,
