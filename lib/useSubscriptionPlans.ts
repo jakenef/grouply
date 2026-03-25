@@ -10,6 +10,8 @@ const REAL_SUBSCRIPTION_SKUS_IOS = [
 
 const REAL_SUBSCRIPTION_SKUS_ANDROID = ["grouply_subscription"];
 
+const SUBSCRIPTION_GROUP_ID = "21977012";
+
 const IOS_EMPTY_SUBSCRIPTION_RETRY_MAX = 3;
 const IOS_EMPTY_SUBSCRIPTION_RETRY_DELAY_MS = 900;
 
@@ -79,7 +81,6 @@ type SubscriptionPlansResult = {
   error: Error | null;
   isIAPConnected: boolean;
   isMockMode: boolean;
-  debugInfo: string;
 };
 
 export interface NormalizedPlan {
@@ -112,16 +113,6 @@ const useMockSubscriptionPlans = (): SubscriptionPlansResult => {
     error: null,
     isIAPConnected: true,
     isMockMode: true,
-    debugInfo: JSON.stringify(
-      {
-        mode: "mock",
-        platform: Platform.OS,
-        skus: REAL_SUBSCRIPTION_SKUS,
-        plans,
-      },
-      null,
-      2,
-    ),
   };
 };
 
@@ -141,26 +132,6 @@ const useRealSubscriptionPlans = (): SubscriptionPlansResult => {
     subscriptions: realSubscriptions,
     fetchProducts: fetchRealProducts,
   } = useIAP();
-
-  const subscriptionsDebug = useMemo(() => {
-    return (realSubscriptions as any[]).map((p) => ({
-      id: p?.id,
-      productId: p?.productId,
-      title: p?.title,
-      displayNameIOS: p?.displayNameIOS,
-      displayPrice: p?.displayPrice,
-      localizedPrice: p?.localizedPrice,
-      currency: p?.currency,
-      type: p?.type,
-      platform: p?.platform,
-      introOfferFromStandardized: Array.isArray(p?.subscriptionOffers)
-        ? p.subscriptionOffers.find(
-            (offer: any) => offer?.type === "introductory",
-          )
-        : null,
-      introOfferFromLegacy: p?.subscriptionInfoIOS?.introductoryOffer ?? null,
-    }));
-  }, [realSubscriptions]);
 
   useEffect(() => {
     let isMounted = true;
@@ -262,8 +233,21 @@ const useRealSubscriptionPlans = (): SubscriptionPlansResult => {
         return sku.includes("monthly");
       });
 
+      const directEligibility = monthlySubscription?.isEligibleForIntroOffer;
+      if (typeof directEligibility === "boolean") {
+        if (isMounted) {
+          setIsIntroOfferEligibleIOS(directEligibility);
+          setIntroEligibilityGroupIdIOS(null);
+        }
+        return;
+      }
+
       const groupId =
-        monthlySubscription?.subscriptionInfoIOS?.subscriptionGroupId ?? null;
+        monthlySubscription?.subscriptionInfoIOS?.subscriptionGroupId ??
+        monthlySubscription?.subscriptionInfoIOS?.subscriptionGroupIdentifier ??
+        monthlySubscription?.subscriptionGroupIdIOS ??
+        monthlySubscription?.subscriptionGroupIdentifierIOS ??
+        SUBSCRIPTION_GROUP_ID;
 
       if (!groupId) {
         if (isMounted) {
@@ -359,6 +343,11 @@ const useRealSubscriptionPlans = (): SubscriptionPlansResult => {
 
           const isYearly = isYearlySku(sku);
           const introOffer = !isYearly ? getIntroOffer(p) : null;
+          const directEligibility = p?.isEligibleForIntroOffer;
+          const resolvedEligibility =
+            typeof directEligibility === "boolean"
+              ? directEligibility
+              : isIntroOfferEligibleIOS;
 
           let description = isYearly
             ? "Annual access"
@@ -388,10 +377,9 @@ const useRealSubscriptionPlans = (): SubscriptionPlansResult => {
           }
 
           const hasIntroOffer = !!introOffer;
-          const shouldHideTrialOnIOS =
-            hasIntroOffer && isIntroOfferEligibleIOS === false;
+          const shouldShowTrialOnIOS = hasIntroOffer && resolvedEligibility;
 
-          if (!isYearly && hasIntroOffer && !shouldHideTrialOnIOS) {
+          if (!isYearly && shouldShowTrialOnIOS) {
             const trialPeriod = formatTrialPeriod(introOffer);
             acc.push({
               id: `${sku}:trial`,
@@ -509,37 +497,6 @@ const useRealSubscriptionPlans = (): SubscriptionPlansResult => {
       .filter((p): p is NormalizedPlan => p !== null);
   }, [realSubscriptions, isIntroOfferEligibleIOS, introEligibilityGroupIdIOS]);
 
-  const monthlySubscriptionDebug = useMemo(() => {
-    if (Platform.OS !== "ios") {
-      return null;
-    }
-
-    const iosSubscriptions = (realSubscriptions as any[]) ?? [];
-    const monthlySubscription = iosSubscriptions.find((product) => {
-      const sku = (product?.id ?? product?.productId ?? "")
-        .toString()
-        .toLowerCase();
-      return sku.includes("monthly");
-    });
-
-    const hasIntroOffer = Array.isArray(monthlySubscription?.subscriptionOffers)
-      ? monthlySubscription.subscriptionOffers.some(
-          (offer: any) => offer?.type === "introductory",
-        )
-      : !!monthlySubscription?.subscriptionInfoIOS?.introductoryOffer;
-
-    return {
-      sku: monthlySubscription?.id ?? monthlySubscription?.productId ?? null,
-      hasIntroOffer,
-      introOfferVisibilityDecision:
-        hasIntroOffer && isIntroOfferEligibleIOS === false
-          ? "hidden_explicitly_ineligible"
-          : hasIntroOffer
-            ? "shown_intro_available_or_unknown_eligibility"
-            : "hidden_no_intro_offer",
-    };
-  }, [realSubscriptions, isIntroOfferEligibleIOS]);
-
   const hasPendingIOSRetry =
     Platform.OS === "ios" &&
     isIAPConnected &&
@@ -558,32 +515,6 @@ const useRealSubscriptionPlans = (): SubscriptionPlansResult => {
     error,
     isIAPConnected,
     isMockMode: false,
-    debugInfo: JSON.stringify(
-      {
-        mode: "real",
-        platform: Platform.OS,
-        isIAPConnected,
-        isFetching,
-        configuredSkus: REAL_SUBSCRIPTION_SKUS,
-        subscriptionsCount: realSubscriptions?.length ?? 0,
-        mappedPlansCount: plans.length,
-        iosEmptyRetryCount,
-        iosEmptyRetryMax: IOS_EMPTY_SUBSCRIPTION_RETRY_MAX,
-        hasPendingIOSRetry,
-        introEligibilityGroupIdIOS,
-        isIntroOfferEligibleIOS,
-        monthlySubscriptionDebug,
-        error: error
-          ? {
-              name: error.name,
-              message: error.message,
-            }
-          : null,
-        subscriptionsDebug,
-      },
-      null,
-      2,
-    ),
   };
 };
 
