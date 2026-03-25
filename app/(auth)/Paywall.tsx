@@ -8,7 +8,7 @@ import {
 } from "@/lib/useSubscriptionPlans";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
   Linking,
@@ -26,6 +26,19 @@ const Paywall = () => {
   const [selectedPlan, setSelectedPlan] = useState<NormalizedPlan | null>(null);
   const [selectedPlanKey, setSelectedPlanKey] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [debugEvents, setDebugEvents] = useState<string[]>([]);
+  const seenIosTxKeysRef = useRef<Set<string>>(new Set());
+
+  const logIapDebug = (message: string) => {
+    if (Platform.OS !== "ios") return;
+    // TEMP DEBUG: Keep bounded in-app iOS IAP event logs for faster diagnosis.
+    const line = `${new Date().toISOString().split("T")[1]?.slice(0, 8)} ${message}`;
+    setDebugEvents((prev) => {
+      const next = [...prev, line];
+      return next.length > 30 ? next.slice(next.length - 30) : next;
+    });
+    console.log(`[TEMP DEBUG IAP] ${message}`);
+  };
 
   const verifyReceiptMutation = trpc.subscriptions.verifyReceipt.useMutation();
 
@@ -33,9 +46,22 @@ const Paywall = () => {
     useIAPClient({
       onPurchaseSuccess: async (purchase) => {
         console.log("🎉 SUCCESS:", purchase);
-        const success = await handleVerifyPurchase(purchase);
+        const txKey =
+          Platform.OS === "ios"
+            ? (purchase.transactionId ??
+              (purchase as any).originalTransactionIdentifierIOS ??
+              (purchase as any).originalTransactionId ??
+              "unknown")
+            : null;
+        logIapDebug(
+          `listener success event product=${purchase.productId} tx=${txKey ?? "n/a"} hasJws=${!!(purchase as any).jwsRepresentation}`,
+        );
+        const success = await handleVerifyPurchase(purchase, "listener");
 
         if (success) {
+          logIapDebug(
+            "navigation attempt -> /(app)/Home after listener success",
+          );
           Alert.alert("Success", "Welcome to Grouply!", [
             {
               text: "Get Started",
@@ -43,25 +69,49 @@ const Paywall = () => {
             },
           ]);
         } else {
-          Alert.alert(
-            "Verification Failed",
-            "We couldn't verify your purchase. If you were charged, please contact support.",
-          );
+          logIapDebug("listener verification failed (alert suppressed)");
         }
         setIsProcessing(false);
       },
       onPurchaseError: (error) => {
         console.error("❌ ERROR:", error);
+        logIapDebug(
+          `listener error code=${(error as any)?.code ?? "unknown"} message=${(error as any)?.message ?? "unknown"}`,
+        );
         setIsProcessing(false);
       },
     });
 
-  const handleVerifyPurchase = async (purchase: Purchase) => {
+  const handleVerifyPurchase = async (
+    purchase: Purchase,
+    source: "listener" | "subscribe" | "restore",
+  ) => {
     if (!purchase) return false;
 
     const isAndroid = Platform.OS === "android";
+    const iosTxKey =
+      Platform.OS === "ios"
+        ? (purchase.transactionId ??
+          (purchase as any).originalTransactionIdentifierIOS ??
+          (purchase as any).originalTransactionId ??
+          null)
+        : null;
+
+    if (Platform.OS === "ios" && iosTxKey) {
+      if (seenIosTxKeysRef.current.has(iosTxKey)) {
+        logIapDebug(
+          `skip duplicate session verification tx=${iosTxKey} source=${source}`,
+        );
+        return true;
+      }
+      seenIosTxKeysRef.current.add(iosTxKey);
+      logIapDebug(`track session tx=${iosTxKey} source=${source}`);
+    }
 
     try {
+      logIapDebug(
+        `verify start source=${source} tx=${iosTxKey ?? purchase.transactionId ?? "n/a"} hasJws=${!!(purchase as any).jwsRepresentation}`,
+      );
       await verifyReceiptMutation.mutateAsync({
         platform: isAndroid ? "ANDROID" : "IOS",
         productId: purchase.productId,
@@ -69,27 +119,45 @@ const Paywall = () => {
         purchaseToken: isAndroid ? (purchase as any).purchaseToken : null,
         transactionReceipt: !isAndroid
           ? (purchase as any).transactionReceipt
-           : null,
-         signedTransactionJWS: !isAndroid
-           ? (purchase as any).jwsRepresentation
-           : null,
-       });
+          : null,
+        signedTransactionJWS: !isAndroid
+          ? (purchase as any).jwsRepresentation
+          : null,
+      });
+      logIapDebug(`verify success source=${source}`);
 
       // Mark entitlement-related queries stale so navigation checks refetch.
       await Promise.all([
         utils.subscriptions.getStatus.invalidate(),
         utils.users.getMyUser.invalidate(),
       ]);
+      logIapDebug(`invalidate complete source=${source}`);
     } catch (err) {
       console.error("Verification error:", err);
+      logIapDebug(
+        `verify failure source=${source} message=${
+          err instanceof Error ? err.message : "unknown"
+        }`,
+      );
+
+      if (Platform.OS === "ios" && iosTxKey) {
+        seenIosTxKeysRef.current.delete(iosTxKey);
+        logIapDebug(`untrack tx after failure tx=${iosTxKey}`);
+      }
       return false;
     }
 
     try {
       // Finish only after successful verification to avoid granting/ack mismatch.
       await finishTransaction({ purchase });
+      logIapDebug(`finishTransaction complete source=${source}`);
     } catch (e) {
       console.warn("Could not finish transaction:", e);
+      logIapDebug(
+        `finishTransaction failure source=${source} message=${
+          e instanceof Error ? e.message : "unknown"
+        }`,
+      );
     }
 
     return true;
@@ -153,8 +221,12 @@ const Paywall = () => {
       });
 
       console.log("Purchase triggered");
+      logIapDebug("subscribe tap triggered requestPurchase");
     } catch (error: any) {
       console.error("❌ Purchase error:", error);
+      logIapDebug(
+        `subscribe purchase error code=${error?.code ?? "unknown"} message=${error?.message ?? "unknown"}`,
+      );
 
       setIsProcessing(false);
 
@@ -166,6 +238,7 @@ const Paywall = () => {
 
   const handleRestore = async () => {
     setIsProcessing(true);
+    logIapDebug("restore tap start");
     try {
       const purchasesRaw = await getAvailablePurchases();
       // Explicitly type as Purchase[] and fallback to empty array if undefined/null
@@ -173,6 +246,7 @@ const Paywall = () => {
         ? purchasesRaw
         : [];
       console.log("🔍 Available purchases:", purchases);
+      logIapDebug(`restore fetched purchases count=${purchases.length}`);
 
       if (purchases.length === 0) {
         Alert.alert(
@@ -186,21 +260,12 @@ const Paywall = () => {
       let failed = 0;
       for (const purchase of purchases) {
         try {
-          const isAndroid = Platform.OS === "android";
-          await verifyReceiptMutation.mutateAsync({
-            platform: isAndroid ? "ANDROID" : "IOS",
-            productId: purchase.productId,
-            transactionId: purchase.transactionId ?? null,
-            purchaseToken: isAndroid ? (purchase as any).purchaseToken : null,
-            transactionReceipt: !isAndroid
-              ? (purchase as any).transactionReceipt
-               : null,
-             signedTransactionJWS: !isAndroid
-               ? (purchase as any).jwsRepresentation
-               : null,
-           });
-          await finishTransaction({ purchase });
-          restored++;
+          const success = await handleVerifyPurchase(purchase, "restore");
+          if (success) {
+            restored++;
+          } else {
+            failed++;
+          }
         } catch (err) {
           console.error(
             "Restore verification failed for purchase:",
@@ -218,6 +283,7 @@ const Paywall = () => {
       ]);
 
       if (restored > 0) {
+        logIapDebug("navigation attempt -> /(app)/Home after restore");
         Alert.alert(
           "Restore Complete",
           failed === 0
@@ -231,6 +297,7 @@ const Paywall = () => {
           ],
         );
       } else {
+        logIapDebug("restore completed with zero restored purchases");
         Alert.alert(
           "Restore Failed",
           "We could not restore any purchases. If you believe you have an active subscription, please contact support.",
@@ -238,6 +305,9 @@ const Paywall = () => {
       }
     } catch (err) {
       console.error("Restore error:", err);
+      logIapDebug(
+        `restore outer error message=${err instanceof Error ? err.message : "unknown"}`,
+      );
       Alert.alert("Error", "Failed to restore purchases. Please try again.");
     } finally {
       setIsProcessing(false);
@@ -406,6 +476,26 @@ const Paywall = () => {
           </Text>
         </Pressable>
       </View>
+
+      {Platform.OS === "ios" ? (
+        <View className="mb-6 rounded-xl border border-gray-300 bg-white p-3">
+          <Text className="text-xs font-semibold text-foreground mb-2">
+            TEMP DEBUG IAP (iOS)
+          </Text>
+          {debugEvents.length === 0 ? (
+            <Text className="text-[11px] text-muted">No events yet.</Text>
+          ) : (
+            debugEvents.map((line, idx) => (
+              <Text
+                key={`${idx}-${line}`}
+                className="text-[11px] text-muted mb-1"
+              >
+                {line}
+              </Text>
+            ))
+          )}
+        </View>
+      ) : null}
 
       {/* Legal Stuff */}
       <View className="items-center mb-10">

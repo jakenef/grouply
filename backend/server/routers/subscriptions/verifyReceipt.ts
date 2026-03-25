@@ -39,23 +39,32 @@ async function verifyWithAppleMock(productId: string) {
 async function verifyWithApple(
   signedTransactionJWS: string,
   productId: string,
+  reqId?: string,
 ) {
-  console.log("Verifying with Apple (JWS)...", {
-    productId,
-    jws: `${signedTransactionJWS.substring(0, 10)}...`,
+  console.log(
+    `[verifyReceipt:${reqId ?? "n/a"}] Verifying with Apple (JWS)...`,
+    {
+      productId,
+      jws: `${signedTransactionJWS.substring(0, 10)}...`,
+    },
+  );
+
+  const rootCaPaths = env.APPLE_ROOT_CA_PATHS?.length
+    ? env.APPLE_ROOT_CA_PATHS
+    : env.APPLE_ROOT_CA_PATH
+      ? [env.APPLE_ROOT_CA_PATH]
+      : [];
+
+  // TEMP DEBUG: Trace iOS verification environment and certificate configuration.
+  console.log(`[verifyReceipt:${reqId ?? "n/a"}] iOS verifier config`, {
+    environment:
+      env.APPLE_APP_STORE_ENV === "PRODUCTION" ? "PRODUCTION" : "SANDBOX",
+    rootCertPathCount: rootCaPaths.length,
+    hasAppAppleId: !!env.APPLE_APP_ID,
   });
 
-  const rootCaPaths =
-    env.APPLE_ROOT_CA_PATHS?.length
-      ? env.APPLE_ROOT_CA_PATHS
-      : env.APPLE_ROOT_CA_PATH
-        ? [env.APPLE_ROOT_CA_PATH]
-        : [];
-
   if (!rootCaPaths.length) {
-    throw new Error(
-      "APPLE_ROOT_CA_PATHS or APPLE_ROOT_CA_PATH not configured",
-    );
+    throw new Error("APPLE_ROOT_CA_PATHS or APPLE_ROOT_CA_PATH not configured");
   }
 
   // Load one or more Apple root CA certificates.
@@ -124,13 +133,23 @@ async function verifyWithApple(
     }
 
     // Use decoded product ID and original transaction ID as source of truth
+    console.log(`[verifyReceipt:${reqId ?? "n/a"}] Apple JWS decode success`, {
+      originalTxId,
+      transactionId: decodedTransactionId,
+      productId: decodedProductId,
+      expiresAt: new Date(decodedExpiresDate).toISOString(),
+    });
+
     return {
       originalTxId,
       productId: decodedProductId,
       expiresAt: new Date(decodedExpiresDate),
     };
   } catch (error) {
-    console.error("JWS verification failed:", error);
+    console.error(
+      `[verifyReceipt:${reqId ?? "n/a"}] JWS verification failed:`,
+      error,
+    );
     throw new Error(
       `Apple JWS verification failed: ${(error as Error).message}`,
     );
@@ -216,6 +235,7 @@ async function verifyWithGoogleMock(productId: string, purchaseToken: string) {
 export const verifyReceipt = protectedProcedure
   .input(verifyReceiptSchema)
   .mutation(async ({ input, ctx }) => {
+    const reqId = Math.random().toString(36).slice(2, 10);
     const {
       platform,
       productId,
@@ -225,106 +245,134 @@ export const verifyReceipt = protectedProcedure
       signedTransactionJWS,
     } = input;
 
-    console.log("📦 Purchase data from app:", {
+    console.log(`[verifyReceipt:${reqId}] 📦 Purchase data from app`, {
+      reqId,
+      userId: ctx.user.id,
       platform,
       productId,
       transactionId,
-      purchaseToken: purchaseToken ? `${purchaseToken.slice(0, 8)}...` : null,
-      transactionReceipt: transactionReceipt
-        ? `${transactionReceipt.slice(0, 10)}...`
-        : null,
-      signedTransactionJWS: signedTransactionJWS
-        ? `${signedTransactionJWS.slice(0, 10)}...`
-        : null,
+      hasPurchaseToken: !!purchaseToken,
+      hasTransactionReceipt: !!transactionReceipt,
+      hasSignedTransactionJWS: !!signedTransactionJWS,
     });
 
-    let verificationResult: {
-      originalTxId: string;
-      productId: string;
-      expiresAt: Date;
-      purchaseToken?: string;
-    };
+    try {
+      let verificationResult: {
+        originalTxId: string;
+        productId: string;
+        expiresAt: Date;
+        purchaseToken?: string;
+      };
 
-    if (platform === "ANDROID") {
-      if (!purchaseToken) {
-        throw new Error("Purchase token is required for Android verification");
-      }
-
-      if (env.IS_LOCAL_MODE) {
-        verificationResult = await verifyWithGoogleMock(
-          productId,
-          purchaseToken,
-        );
-      } else {
-        if (!env.GOOGLE_PLAY_SERVICE_ACCOUNT) {
+      if (platform === "ANDROID") {
+        if (!purchaseToken) {
           throw new Error(
-            "Google Play Service Account is required for non-local Android verification",
+            "Purchase token is required for Android verification",
           );
         }
-        verificationResult = await verifyWithGoogle(productId, purchaseToken);
+
+        if (env.IS_LOCAL_MODE) {
+          verificationResult = await verifyWithGoogleMock(
+            productId,
+            purchaseToken,
+          );
+        } else {
+          if (!env.GOOGLE_PLAY_SERVICE_ACCOUNT) {
+            throw new Error(
+              "Google Play Service Account is required for non-local Android verification",
+            );
+          }
+          verificationResult = await verifyWithGoogle(productId, purchaseToken);
+        }
+      } else if (platform === "IOS") {
+        // Trust boundary: prefer signed JWS over legacy receipt field
+        const jwsToVerify = signedTransactionJWS;
+        if (!jwsToVerify) {
+          throw new Error(
+            "signedTransactionJWS is required for iOS verification",
+          );
+        }
+
+        if (env.IS_LOCAL_MODE) {
+          verificationResult = await verifyWithAppleMock(productId);
+        } else {
+          verificationResult = await verifyWithApple(
+            jwsToVerify,
+            productId,
+            reqId,
+          );
+        }
+      } else {
+        throw new Error(`Platform ${platform} verification not implemented`);
       }
-    } else if (platform === "IOS") {
-      // Trust boundary: prefer signed JWS over legacy receipt field
-      const jwsToVerify = signedTransactionJWS;
-      if (!jwsToVerify) {
+
+      console.log(`[verifyReceipt:${reqId}] verification success`, {
+        decodedOriginalTxId: verificationResult.originalTxId,
+        decodedProductId: verificationResult.productId,
+        expiresAt: verificationResult.expiresAt.toISOString(),
+      });
+
+      const existingSubscription = await prisma.subscription.findFirst({
+        where: {
+          OR: [
+            { originalTxId: verificationResult.originalTxId },
+            ...(verificationResult.purchaseToken
+              ? [{ purchaseToken: verificationResult.purchaseToken }]
+              : []),
+          ],
+        },
+      });
+
+      // If the token/txId is already linked to a different user, block restore
+      if (existingSubscription && existingSubscription.userId !== ctx.user.id) {
         throw new Error(
-          "signedTransactionJWS is required for iOS verification",
+          "This purchase is already linked to another account. Please contact support if you believe this is an error.",
         );
       }
 
-      if (env.IS_LOCAL_MODE) {
-        verificationResult = await verifyWithAppleMock(productId);
-      } else {
-        verificationResult = await verifyWithApple(jwsToVerify, productId);
-      }
-    } else {
-      throw new Error(`Platform ${platform} verification not implemented`);
+      const subscription = existingSubscription
+        ? await prisma.subscription.update({
+            where: { id: existingSubscription.id },
+            data: {
+              productId: verificationResult.productId,
+              platform,
+              userId: ctx.user.id,
+              currentPeriodEnd: verificationResult.expiresAt,
+              originalTxId: verificationResult.originalTxId,
+              purchaseToken: verificationResult.purchaseToken ?? undefined,
+            },
+          })
+        : await prisma.subscription.create({
+            data: {
+              originalTxId: verificationResult.originalTxId,
+              purchaseToken: verificationResult.purchaseToken ?? null,
+              productId: verificationResult.productId,
+              platform,
+              userId: ctx.user.id,
+              currentPeriodEnd: verificationResult.expiresAt,
+            },
+          });
+
+      console.log(`[verifyReceipt:${reqId}] db write success`, {
+        subscriptionId: subscription.id,
+      });
+
+      return {
+        ok: true,
+        subscriptionId: subscription.id,
+        expiresAt: verificationResult.expiresAt,
+      };
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Unknown verifyReceipt error";
+      console.error(`[verifyReceipt:${reqId}] structured error`, {
+        reqId,
+        platform,
+        userId: ctx.user.id,
+        productId,
+        hasSignedTransactionJWS: !!signedTransactionJWS,
+        message,
+      });
+      throw new Error(`${message} (reqId: ${reqId})`);
     }
-
-    const existingSubscription = await prisma.subscription.findFirst({
-      where: {
-        OR: [
-          { originalTxId: verificationResult.originalTxId },
-          ...(verificationResult.purchaseToken
-            ? [{ purchaseToken: verificationResult.purchaseToken }]
-            : []),
-        ],
-      },
-    });
-
-    // If the token/txId is already linked to a different user, block restore
-    if (existingSubscription && existingSubscription.userId !== ctx.user.id) {
-      throw new Error(
-        "This purchase is already linked to another account. Please contact support if you believe this is an error.",
-      );
-    }
-
-    const subscription = existingSubscription
-      ? await prisma.subscription.update({
-          where: { id: existingSubscription.id },
-          data: {
-            productId: verificationResult.productId,
-            platform,
-            userId: ctx.user.id,
-            currentPeriodEnd: verificationResult.expiresAt,
-            originalTxId: verificationResult.originalTxId,
-            purchaseToken: verificationResult.purchaseToken ?? undefined,
-          },
-        })
-      : await prisma.subscription.create({
-          data: {
-            originalTxId: verificationResult.originalTxId,
-            purchaseToken: verificationResult.purchaseToken ?? null,
-            productId: verificationResult.productId,
-            platform,
-            userId: ctx.user.id,
-            currentPeriodEnd: verificationResult.expiresAt,
-          },
-        });
-
-    return {
-      ok: true,
-      subscriptionId: subscription.id,
-      expiresAt: verificationResult.expiresAt,
-    };
   });
