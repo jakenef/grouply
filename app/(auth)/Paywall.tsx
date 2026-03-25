@@ -69,8 +69,11 @@ const Paywall = () => {
         purchaseToken: isAndroid ? (purchase as any).purchaseToken : null,
         transactionReceipt: !isAndroid
           ? (purchase as any).transactionReceipt
-          : null,
-      });
+           : null,
+         signedTransactionJWS: !isAndroid
+           ? (purchase as any).jwsRepresentation
+           : null,
+       });
 
       // Mark entitlement-related queries stale so navigation checks refetch.
       await Promise.all([
@@ -191,8 +194,11 @@ const Paywall = () => {
             purchaseToken: isAndroid ? (purchase as any).purchaseToken : null,
             transactionReceipt: !isAndroid
               ? (purchase as any).transactionReceipt
-              : null,
-          });
+               : null,
+             signedTransactionJWS: !isAndroid
+               ? (purchase as any).jwsRepresentation
+               : null,
+           });
           await finishTransaction({ purchase });
           restored++;
         } catch (err) {

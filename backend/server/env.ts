@@ -63,6 +63,19 @@ export const env = {
 
   IS_LOCAL_MODE: isLocalRuntime(),
 
+  // Apple IAP config
+  APPLE_APP_STORE_ENV:
+    (process.env.APPLE_APP_STORE_ENV as "SANDBOX" | "PRODUCTION") || "SANDBOX",
+  APPLE_ROOT_CA_PATHS: process.env.APPLE_ROOT_CA_PATHS
+    ? process.env.APPLE_ROOT_CA_PATHS.split(",")
+        .map((value) => value.trim())
+        .filter(Boolean)
+    : undefined,
+  APPLE_ROOT_CA_PATH: process.env.APPLE_ROOT_CA_PATH,
+  APPLE_APP_ID: process.env.APPLE_APP_ID
+    ? parseInt(process.env.APPLE_APP_ID, 10)
+    : undefined,
+
   // Server config
   PORT: process.env.PORT || 3001,
 };
@@ -81,3 +94,17 @@ if (!env.GOOGLE_PLAY_SERVICE_ACCOUNT) {
 console.log(
   `[IAP] Backend verification mode: ${env.IS_LOCAL_MODE ? "LOCAL_MOCK" : "REAL_VERIFY"}`,
 );
+
+if (env.APPLE_APP_STORE_ENV === "PRODUCTION" && !env.APPLE_APP_ID) {
+  console.warn("APPLE_APP_ID is required in PRODUCTION environment");
+}
+
+if (
+  !env.APPLE_ROOT_CA_PATHS?.length &&
+  !env.APPLE_ROOT_CA_PATH &&
+  !env.IS_LOCAL_MODE
+) {
+  console.warn(
+    "APPLE_ROOT_CA_PATHS or APPLE_ROOT_CA_PATH is required for non-local iOS verification",
+  );
+}

@@ -1,32 +1,140 @@
+import {
+  Environment,
+  SignedDataVerifier,
+} from "@apple/app-store-server-library";
+import fs from "fs";
 import { google } from "googleapis";
+import path from "path";
 import { env } from "../../env";
 import { prisma } from "../../prisma";
 import { verifyReceiptSchema } from "../../schemas/validation";
 import { protectedProcedure } from "../../trpc";
 
-/**
- * Stub for Apple receipt verification
- */
-async function verifyWithApple(receipt: string, productId: string) {
-  console.log(
-    "Stub: Verifying with Apple...",
-    receipt.substring(0, 10) + "...",
-  );
+const APPLE_BUNDLE_ID = "com.grouply.grouplyapp";
 
-  // For testing purposes, we'll look for product IDs in the mock "receipt"
+/**
+ * Mock for Apple receipt verification (local development)
+ */
+async function verifyWithAppleMock(productId: string) {
+  console.log("Mock: Verifying with Apple (local mode)...", { productId });
+
   let durationDays = 30;
 
-  if (receipt.includes("trial") || productId.includes("trial")) {
+  if (productId.includes("trial")) {
     durationDays = 7;
-  } else if (receipt.includes("yearly") || productId.includes("yearly")) {
+  } else if (productId.includes("yearly")) {
     durationDays = 365;
   }
 
   return {
-    originalTxId: "ios_tx_" + Math.random().toString(36).substring(7),
+    originalTxId: "ios_local_" + Math.random().toString(36).substring(7),
     productId: productId,
     expiresAt: new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000),
   };
+}
+
+/**
+ * Real implementation for Apple receipt verification via JWS
+ */
+async function verifyWithApple(
+  signedTransactionJWS: string,
+  productId: string,
+) {
+  console.log("Verifying with Apple (JWS)...", {
+    productId,
+    jws: `${signedTransactionJWS.substring(0, 10)}...`,
+  });
+
+  const rootCaPaths =
+    env.APPLE_ROOT_CA_PATHS?.length
+      ? env.APPLE_ROOT_CA_PATHS
+      : env.APPLE_ROOT_CA_PATH
+        ? [env.APPLE_ROOT_CA_PATH]
+        : [];
+
+  if (!rootCaPaths.length) {
+    throw new Error(
+      "APPLE_ROOT_CA_PATHS or APPLE_ROOT_CA_PATH not configured",
+    );
+  }
+
+  // Load one or more Apple root CA certificates.
+  const appleRootCAs = rootCaPaths.map((certPath) =>
+    fs.readFileSync(path.resolve(certPath)),
+  );
+
+  // Create verifier with environment config
+  const environment =
+    env.APPLE_APP_STORE_ENV === "PRODUCTION"
+      ? Environment.PRODUCTION
+      : Environment.SANDBOX;
+
+  const verifier = new SignedDataVerifier(
+    appleRootCAs,
+    true, // enableOnlineChecks
+    environment,
+    APPLE_BUNDLE_ID,
+    env.APPLE_APP_ID,
+  );
+
+  try {
+    // Decode and verify the JWS transaction
+    const decodedTransaction =
+      await verifier.verifyAndDecodeTransaction(signedTransactionJWS);
+
+    // Extract critical fields from decoded transaction
+    const decodedProductId = decodedTransaction.productId;
+    const decodedBundleId = decodedTransaction.bundleId;
+    const decodedOriginalTransactionId =
+      decodedTransaction.originalTransactionId;
+    const decodedTransactionId = decodedTransaction.transactionId;
+    const decodedExpiresDate = decodedTransaction.expiresDate;
+
+    if (!decodedProductId) {
+      throw new Error("Apple transaction missing productId");
+    }
+
+    if (!decodedBundleId) {
+      throw new Error("Apple transaction missing bundleId");
+    }
+
+    const originalTxId = decodedOriginalTransactionId || decodedTransactionId;
+    if (!originalTxId) {
+      throw new Error(
+        "Apple transaction missing both originalTransactionId and transactionId",
+      );
+    }
+
+    if (!decodedExpiresDate) {
+      throw new Error("Apple transaction missing expiresDate");
+    }
+
+    // Validate bundle ID matches
+    if (decodedBundleId !== APPLE_BUNDLE_ID) {
+      throw new Error(
+        `Bundle ID mismatch: expected ${APPLE_BUNDLE_ID}, got ${decodedBundleId}`,
+      );
+    }
+
+    // Validate product ID matches (trust decoded value, not frontend)
+    if (decodedProductId !== productId) {
+      console.warn(
+        `Product ID mismatch: frontend sent ${productId}, Apple decoded ${decodedProductId}. Using Apple value.`,
+      );
+    }
+
+    // Use decoded product ID and original transaction ID as source of truth
+    return {
+      originalTxId,
+      productId: decodedProductId,
+      expiresAt: new Date(decodedExpiresDate),
+    };
+  } catch (error) {
+    console.error("JWS verification failed:", error);
+    throw new Error(
+      `Apple JWS verification failed: ${(error as Error).message}`,
+    );
+  }
 }
 
 /**
@@ -114,6 +222,7 @@ export const verifyReceipt = protectedProcedure
       transactionId,
       purchaseToken,
       transactionReceipt,
+      signedTransactionJWS,
     } = input;
 
     console.log("📦 Purchase data from app:", {
@@ -123,6 +232,9 @@ export const verifyReceipt = protectedProcedure
       purchaseToken: purchaseToken ? `${purchaseToken.slice(0, 8)}...` : null,
       transactionReceipt: transactionReceipt
         ? `${transactionReceipt.slice(0, 10)}...`
+        : null,
+      signedTransactionJWS: signedTransactionJWS
+        ? `${signedTransactionJWS.slice(0, 10)}...`
         : null,
     });
 
@@ -152,10 +264,19 @@ export const verifyReceipt = protectedProcedure
         verificationResult = await verifyWithGoogle(productId, purchaseToken);
       }
     } else if (platform === "IOS") {
-      if (!transactionReceipt) {
-        throw new Error("Transaction receipt is required for iOS verification");
+      // Trust boundary: prefer signed JWS over legacy receipt field
+      const jwsToVerify = signedTransactionJWS;
+      if (!jwsToVerify) {
+        throw new Error(
+          "signedTransactionJWS is required for iOS verification",
+        );
       }
-      verificationResult = await verifyWithApple(transactionReceipt, productId);
+
+      if (env.IS_LOCAL_MODE) {
+        verificationResult = await verifyWithAppleMock(productId);
+      } else {
+        verificationResult = await verifyWithApple(jwsToVerify, productId);
+      }
     } else {
       throw new Error(`Platform ${platform} verification not implemented`);
     }
