@@ -1,4 +1,4 @@
-import Constants from "expo-constants";
+import { getAppEnvironment } from "@/lib/environmentMode";
 import { Text, View } from "react-native";
 
 /**
@@ -7,30 +7,9 @@ import { Text, View } from "react-native";
  * Hidden in production.
  */
 export default function EnvironmentIndicator() {
-  // Use Constants.expoConfig for runtime value (works with EAS updates)
-  // instead of process.env which is inlined at build time
-  const trpcUrl =
-    Constants.expoConfig?.extra?.env?.EXPO_PUBLIC_TRPC_URL ||
-    process.env.EXPO_PUBLIC_TRPC_URL ||
-    "";
+  const environment = getAppEnvironment();
 
-  // Determine environment based on TRPC URL
-  let environment: "LOCAL" | "STAGING" | "PRODUCTION" | null = null;
-  let bgColor = "";
-  let textColor = "";
-
-  if (trpcUrl.includes("localhost") || trpcUrl.includes("127.0.0.1")) {
-    environment = "LOCAL";
-    bgColor = "#10b981"; // green
-    textColor = "#ffffff";
-  }
-  // } else if (trpcUrl.includes("render.com")) {
-  //   environment = "STAGING";
-  //   bgColor = "#f59e0b"; // amber
-  //   textColor = "#ffffff";
-  // }
-  // For production or if we can't determine, don't show anything
-  else {
+  if (environment !== "LOCAL") {
     return null;
   }
 
@@ -40,7 +19,7 @@ export default function EnvironmentIndicator() {
         position: "absolute",
         bottom: 60, // Just above the tab bar (55px height + 5px margin)
         right: 8,
-        backgroundColor: bgColor,
+        backgroundColor: "#10b981",
         paddingHorizontal: 8,
         paddingVertical: 3,
         borderRadius: 4,
@@ -50,7 +29,7 @@ export default function EnvironmentIndicator() {
     >
       <Text
         style={{
-          color: textColor,
+          color: "#ffffff",
           fontSize: 10,
           fontWeight: "600",
           letterSpacing: 0.5,

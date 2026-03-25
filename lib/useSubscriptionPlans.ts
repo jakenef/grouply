@@ -1,6 +1,7 @@
+import { isLocalDevelopmentMode } from "@/lib/environmentMode";
 import { useEffect, useMemo, useState } from "react";
 import { Platform } from "react-native";
-import { useIAP } from "react-native-iap";
+import { isEligibleForIntroOfferIOS, useIAP } from "react-native-iap";
 
 const REAL_SUBSCRIPTION_SKUS_IOS = [
   "grouply_subscription_monthly",
@@ -9,11 +10,77 @@ const REAL_SUBSCRIPTION_SKUS_IOS = [
 
 const REAL_SUBSCRIPTION_SKUS_ANDROID = ["grouply_subscription"];
 
+const IOS_EMPTY_SUBSCRIPTION_RETRY_MAX = 3;
+const IOS_EMPTY_SUBSCRIPTION_RETRY_DELAY_MS = 900;
+
 const REAL_SUBSCRIPTION_SKUS = Platform.select({
   ios: REAL_SUBSCRIPTION_SKUS_IOS,
   android: REAL_SUBSCRIPTION_SKUS_ANDROID,
   default: [],
 });
+
+const MOCK_ANDROID_STORE_ID = "grouply_subscription";
+
+const MOCK_PLANS_ANDROID: NormalizedPlan[] = [
+  {
+    id: "trial",
+    storeId: MOCK_ANDROID_STORE_ID,
+    offerToken: "local-offer-token-trial",
+    title: "7-Day Free Trial",
+    subtitle: "Then $9.99/month",
+    price: "Free",
+    description: "Try all features for free",
+    badge: "BEST FOR NEW USERS",
+  },
+  {
+    id: "monthly",
+    storeId: MOCK_ANDROID_STORE_ID,
+    offerToken: "local-offer-token-monthly",
+    title: "Monthly",
+    subtitle: "Billed monthly",
+    price: "$9.99",
+    description: "Flexible monthly access",
+  },
+  {
+    id: "yearly",
+    storeId: MOCK_ANDROID_STORE_ID,
+    offerToken: "local-offer-token-yearly",
+    title: "Yearly",
+    subtitle: "Billed annually",
+    price: "$79.99",
+    description: "Best value for long-term use",
+    badge: "BEST VALUE",
+  },
+];
+
+const MOCK_PLANS_IOS: NormalizedPlan[] = [
+  {
+    id: "grouply_subscription_monthly",
+    storeId: "grouply_subscription_monthly",
+    title: "Monthly",
+    subtitle: "Billed monthly",
+    price: "$9.99",
+    description: "Flexible monthly access",
+  },
+  {
+    id: "grouply_subscription_yearly",
+    storeId: "grouply_subscription_yearly",
+    title: "Yearly",
+    subtitle: "Billed annually",
+    price: "$79.99",
+    description: "$6.67/month - save 33%",
+    badge: "BEST VALUE",
+  },
+];
+
+type SubscriptionPlansResult = {
+  plans: NormalizedPlan[];
+  isLoading: boolean;
+  error: Error | null;
+  isIAPConnected: boolean;
+  isMockMode: boolean;
+  debugInfo: string;
+};
 
 export interface NormalizedPlan {
   id: string;
@@ -26,15 +93,74 @@ export interface NormalizedPlan {
   offerToken?: string; // Android only
 }
 
-export function useSubscriptionPlans() {
+const useMockSubscriptionPlans = (): SubscriptionPlansResult => {
+  const plans = useMemo((): NormalizedPlan[] => {
+    if (Platform.OS === "android") {
+      return MOCK_PLANS_ANDROID;
+    }
+
+    if (Platform.OS === "ios") {
+      return MOCK_PLANS_IOS;
+    }
+
+    return [];
+  }, []);
+
+  return {
+    plans,
+    isLoading: false,
+    error: null,
+    isIAPConnected: true,
+    isMockMode: true,
+    debugInfo: JSON.stringify(
+      {
+        mode: "mock",
+        platform: Platform.OS,
+        skus: REAL_SUBSCRIPTION_SKUS,
+        plans,
+      },
+      null,
+      2,
+    ),
+  };
+};
+
+const useRealSubscriptionPlans = (): SubscriptionPlansResult => {
   const [isFetching, setIsFetching] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [iosEmptyRetryCount, setIosEmptyRetryCount] = useState(0);
+  const [isIntroOfferEligibleIOS, setIsIntroOfferEligibleIOS] = useState<
+    boolean | null
+  >(null);
+  const [introEligibilityGroupIdIOS, setIntroEligibilityGroupIdIOS] = useState<
+    string | null
+  >(null);
 
   const {
     connected: isIAPConnected,
     subscriptions: realSubscriptions,
     fetchProducts: fetchRealProducts,
   } = useIAP();
+
+  const subscriptionsDebug = useMemo(() => {
+    return (realSubscriptions as any[]).map((p) => ({
+      id: p?.id,
+      productId: p?.productId,
+      title: p?.title,
+      displayNameIOS: p?.displayNameIOS,
+      displayPrice: p?.displayPrice,
+      localizedPrice: p?.localizedPrice,
+      currency: p?.currency,
+      type: p?.type,
+      platform: p?.platform,
+      introOfferFromStandardized: Array.isArray(p?.subscriptionOffers)
+        ? p.subscriptionOffers.find(
+            (offer: any) => offer?.type === "introductory",
+          )
+        : null,
+      introOfferFromLegacy: p?.subscriptionInfoIOS?.introductoryOffer ?? null,
+    }));
+  }, [realSubscriptions]);
 
   useEffect(() => {
     let isMounted = true;
@@ -49,6 +175,9 @@ export function useSubscriptionPlans() {
 
       setIsFetching(true);
       setError(null);
+      if (Platform.OS === "ios") {
+        setIosEmptyRetryCount(0);
+      }
 
       try {
         await fetchRealProducts({ skus: REAL_SUBSCRIPTION_SKUS, type: "subs" });
@@ -67,23 +196,176 @@ export function useSubscriptionPlans() {
     };
   }, [isIAPConnected, fetchRealProducts]);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const shouldRetryIOSFetch =
+      Platform.OS === "ios" &&
+      isIAPConnected &&
+      !isFetching &&
+      !error &&
+      (realSubscriptions?.length ?? 0) === 0 &&
+      iosEmptyRetryCount < IOS_EMPTY_SUBSCRIPTION_RETRY_MAX;
+
+    if (!shouldRetryIOSFetch) {
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      setIsFetching(true);
+      setError(null);
+
+      try {
+        await fetchRealProducts({ skus: REAL_SUBSCRIPTION_SKUS, type: "subs" });
+      } catch (err: any) {
+        console.error("❌ [Real IAP] Retry fetch products error:", err);
+        if (isMounted) setError(err);
+      } finally {
+        if (isMounted) {
+          setIsFetching(false);
+          setIosEmptyRetryCount((count) => count + 1);
+        }
+      }
+    }, IOS_EMPTY_SUBSCRIPTION_RETRY_DELAY_MS);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+    };
+  }, [
+    isIAPConnected,
+    isFetching,
+    error,
+    realSubscriptions,
+    iosEmptyRetryCount,
+    fetchRealProducts,
+  ]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const resolveIntroEligibility = async () => {
+      if (Platform.OS !== "ios") {
+        if (isMounted) {
+          setIsIntroOfferEligibleIOS(null);
+          setIntroEligibilityGroupIdIOS(null);
+        }
+        return;
+      }
+
+      const iosSubscriptions = (realSubscriptions as any[]) ?? [];
+
+      const monthlySubscription = iosSubscriptions.find((product) => {
+        const sku = (product?.id ?? product?.productId ?? "")
+          .toString()
+          .toLowerCase();
+        return sku.includes("monthly");
+      });
+
+      const groupId =
+        monthlySubscription?.subscriptionInfoIOS?.subscriptionGroupId ?? null;
+
+      if (!groupId) {
+        if (isMounted) {
+          setIsIntroOfferEligibleIOS(null);
+          setIntroEligibilityGroupIdIOS(null);
+        }
+        return;
+      }
+
+      if (isMounted) {
+        setIntroEligibilityGroupIdIOS(groupId);
+      }
+
+      try {
+        const eligible = await isEligibleForIntroOfferIOS(groupId);
+        if (isMounted) {
+          setIsIntroOfferEligibleIOS(eligible);
+        }
+      } catch (eligibilityError) {
+        console.error(
+          "[IAP] Failed to resolve iOS intro-offer eligibility:",
+          eligibilityError,
+        );
+        if (isMounted) {
+          setIsIntroOfferEligibleIOS(null);
+        }
+      }
+    };
+
+    resolveIntroEligibility();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [realSubscriptions]);
+
   const plans = useMemo((): NormalizedPlan[] => {
     if (!realSubscriptions || realSubscriptions.length === 0) return [];
 
     if (Platform.OS === "ios") {
+      const getSku = (product: any): string => {
+        return product?.id ?? product?.productId ?? "";
+      };
+
+      const isMonthlySku = (sku: string): boolean => {
+        return sku.toLowerCase().includes("monthly");
+      };
+
+      const isYearlySku = (sku: string): boolean => {
+        return sku.toLowerCase().includes("yearly");
+      };
+
+      const formatTrialPeriod = (offer: any): string | null => {
+        const period = offer?.period;
+        const value = period?.value;
+        const unit = period?.unit;
+
+        if (!value || !unit) return null;
+
+        const unitLabel = String(unit).toLowerCase();
+        return `${value}-${value === 1 ? unitLabel : `${unitLabel}s`}`;
+      };
+
+      const getIntroOffer = (product: any): any | null => {
+        const standardizedOffers = Array.isArray(product?.subscriptionOffers)
+          ? product.subscriptionOffers
+          : [];
+
+        const introFromStandardized = standardizedOffers.find(
+          (offer: any) => offer?.type === "introductory",
+        );
+
+        if (introFromStandardized) return introFromStandardized;
+
+        return product?.subscriptionInfoIOS?.introductoryOffer ?? null;
+      };
+
       const monthlyProduct = (realSubscriptions as any[]).find((p) =>
-        p.productId.includes("monthly"),
+        isMonthlySku(getSku(p)),
       );
       const yearlyProduct = (realSubscriptions as any[]).find((p) =>
-        p.productId.includes("yearly"),
+        isYearlySku(getSku(p)),
       );
 
-      return (realSubscriptions as any[])
-        .map((p) => {
-          const isYearly = p.productId.includes("yearly");
+      const iosPlans = (realSubscriptions as any[]).reduce<NormalizedPlan[]>(
+        (acc, p) => {
+          const sku = getSku(p);
+
+          if (!sku) {
+            console.warn("[IAP] iOS subscription missing id/productId", p);
+            return acc;
+          }
+
+          const isYearly = isYearlySku(sku);
+          const introOffer = !isYearly ? getIntroOffer(p) : null;
+
           let description = isYearly
             ? "Annual access"
             : "Flexible monthly access";
+
+          let subtitle = isYearly ? "Billed annually" : "Billed monthly";
+          let badge: string | undefined = isYearly ? "BEST VALUE" : undefined;
 
           if (isYearly && monthlyProduct && yearlyProduct) {
             const yPrice =
@@ -105,17 +387,60 @@ export function useSubscriptionPlans() {
             }
           }
 
-          return {
-            id: p.productId,
-            storeId: p.productId,
+          const hasIntroOffer = !!introOffer;
+          const shouldHideTrialOnIOS =
+            hasIntroOffer && isIntroOfferEligibleIOS === false;
+
+          if (!isYearly && hasIntroOffer && !shouldHideTrialOnIOS) {
+            const trialPeriod = formatTrialPeriod(introOffer);
+            acc.push({
+              id: `${sku}:trial`,
+              storeId: sku,
+              title: trialPeriod ? `${trialPeriod} Free Trial` : "Free Trial",
+              subtitle: `Then ${p.localizedPrice ?? p.displayPrice ?? ""}/month`,
+              price: "Free",
+              description: "Try all features for free",
+              badge: "BEST FOR NEW USERS",
+            });
+          }
+
+          acc.push({
+            id: sku,
+            storeId: sku,
             title: isYearly ? "Yearly" : "Monthly",
-            subtitle: isYearly ? "Billed annually" : "Billed monthly",
+            subtitle,
             price: p.localizedPrice ?? p.displayPrice ?? "",
             description: description,
-            badge: isYearly ? "BEST VALUE" : undefined,
-          };
-        })
-        .sort((a, b) => (a.title === "Monthly" ? -1 : 1));
+            badge,
+          });
+
+          return acc;
+        },
+        [],
+      );
+
+      return iosPlans.sort((a, b) => {
+        const getOrder = (plan: NormalizedPlan): number => {
+          if (
+            plan.badge === "BEST FOR NEW USERS" ||
+            plan.id.includes(":trial")
+          ) {
+            return 0;
+          }
+
+          if (plan.title === "Monthly") {
+            return 1;
+          }
+
+          if (plan.title === "Yearly") {
+            return 2;
+          }
+
+          return 3;
+        };
+
+        return getOrder(a) - getOrder(b);
+      });
     }
 
     // Android
@@ -182,12 +507,90 @@ export function useSubscriptionPlans() {
         });
       })
       .filter((p): p is NormalizedPlan => p !== null);
-  }, [realSubscriptions]);
+  }, [realSubscriptions, isIntroOfferEligibleIOS, introEligibilityGroupIdIOS]);
+
+  const monthlySubscriptionDebug = useMemo(() => {
+    if (Platform.OS !== "ios") {
+      return null;
+    }
+
+    const iosSubscriptions = (realSubscriptions as any[]) ?? [];
+    const monthlySubscription = iosSubscriptions.find((product) => {
+      const sku = (product?.id ?? product?.productId ?? "")
+        .toString()
+        .toLowerCase();
+      return sku.includes("monthly");
+    });
+
+    const hasIntroOffer = Array.isArray(monthlySubscription?.subscriptionOffers)
+      ? monthlySubscription.subscriptionOffers.some(
+          (offer: any) => offer?.type === "introductory",
+        )
+      : !!monthlySubscription?.subscriptionInfoIOS?.introductoryOffer;
+
+    return {
+      sku: monthlySubscription?.id ?? monthlySubscription?.productId ?? null,
+      hasIntroOffer,
+      introOfferVisibilityDecision:
+        hasIntroOffer && isIntroOfferEligibleIOS === false
+          ? "hidden_explicitly_ineligible"
+          : hasIntroOffer
+            ? "shown_intro_available_or_unknown_eligibility"
+            : "hidden_no_intro_offer",
+    };
+  }, [realSubscriptions, isIntroOfferEligibleIOS]);
+
+  const hasPendingIOSRetry =
+    Platform.OS === "ios" &&
+    isIAPConnected &&
+    !error &&
+    !isFetching &&
+    (realSubscriptions?.length ?? 0) === 0 &&
+    iosEmptyRetryCount < IOS_EMPTY_SUBSCRIPTION_RETRY_MAX;
+
+  const shouldShowPlansLoading =
+    plans.length === 0 &&
+    (isFetching || (!isIAPConnected && !error) || hasPendingIOSRetry);
 
   return {
     plans,
-    isLoading: isFetching || (!isIAPConnected && !error),
+    isLoading: shouldShowPlansLoading,
     error,
     isIAPConnected,
+    isMockMode: false,
+    debugInfo: JSON.stringify(
+      {
+        mode: "real",
+        platform: Platform.OS,
+        isIAPConnected,
+        isFetching,
+        configuredSkus: REAL_SUBSCRIPTION_SKUS,
+        subscriptionsCount: realSubscriptions?.length ?? 0,
+        mappedPlansCount: plans.length,
+        iosEmptyRetryCount,
+        iosEmptyRetryMax: IOS_EMPTY_SUBSCRIPTION_RETRY_MAX,
+        hasPendingIOSRetry,
+        introEligibilityGroupIdIOS,
+        isIntroOfferEligibleIOS,
+        monthlySubscriptionDebug,
+        error: error
+          ? {
+              name: error.name,
+              message: error.message,
+            }
+          : null,
+        subscriptionsDebug,
+      },
+      null,
+      2,
+    ),
   };
+};
+
+const useSubscriptionPlansImpl = isLocalDevelopmentMode()
+  ? useMockSubscriptionPlans
+  : useRealSubscriptionPlans;
+
+export function useSubscriptionPlans(): SubscriptionPlansResult {
+  return useSubscriptionPlansImpl();
 }

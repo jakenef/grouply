@@ -115,6 +115,7 @@ export const verifyReceiptSchema = z.object({
   transactionId: z.string().nullable().optional(),
   purchaseToken: z.string().nullable().optional(),
   transactionReceipt: z.string().nullable().optional(),
+  signedTransactionJWS: z.string().nullable().optional(),
   platform: subscriptionPlatformEnum,
 });
 
