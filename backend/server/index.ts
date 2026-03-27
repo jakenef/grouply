@@ -34,11 +34,4 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
   console.log(`📡 tRPC endpoint: http://localhost:${PORT}/trpc`);
-
-  // TEMP DEBUG: Confirms logs continue flowing after startup banner output.
-  setTimeout(() => {
-    console.log(
-      `[TEMP DEBUG] post-start heartbeat ts=${new Date().toISOString()} pid=${process.pid} env=${process.env.NODE_ENV ?? "unknown"}`,
-    );
-  }, 3000);
 });
