@@ -62,6 +62,8 @@ function validateEventForm({
 
   if (!maxAttendees || isNaN(Number(maxAttendees)) || Number(maxAttendees) <= 0)
     errors.maxAttendees = "Must be a positive number";
+  if (maxAttendees && Number(maxAttendees) > 50)
+    errors.maxAttendees = "Maximum 50 attendees allowed per event";
   if (!minAttendees || isNaN(Number(minAttendees)) || Number(minAttendees) <= 0)
     errors.minAttendees = "Must be a positive number";
 
@@ -79,10 +81,14 @@ function validateEventForm({
       errors.maxAttendees = `Cannot be less than current attendees (${currentAttendees})`;
   }
 
-  if (!minAge || isNaN(Number(minAge)) || Number(minAge) <= 0)
-    errors.minAge = "Must be a positive number";
-  if (!maxAge || isNaN(Number(maxAge)) || Number(maxAge) <= 0)
-    errors.maxAge = "Must be a positive number";
+  if (!minAge || isNaN(Number(minAge)) || Number(minAge) < 18)
+    errors.minAge = "Minimum age must be at least 18";
+  if (minAge && Number(minAge) > 99)
+    errors.minAge = "Minimum age cannot exceed 99";
+  if (!maxAge || isNaN(Number(maxAge)) || Number(maxAge) < 18)
+    errors.maxAge = "Maximum age must be at least 18";
+  if (maxAge && Number(maxAge) > 99)
+    errors.maxAge = "Maximum age cannot exceed 99";
 
   if (minAge && maxAge && Number(minAge) > Number(maxAge))
     errors.ageRange = "Min age cannot be greater than max age";
@@ -128,8 +134,6 @@ interface EventDetails {
   coverImageUrl: string;
   locationId?: string;
 }
-
-//TODO: cap at 99 people for event
 
 export const EventDetailsForm = (props: EventDetailsFormProps) => {
   const { user } = useCurrentUser();
@@ -255,9 +259,14 @@ export const EventDetailsForm = (props: EventDetailsFormProps) => {
           : "Event created successfully",
       );
       router.back();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving event:", error);
-      Alert.alert("Error", "Failed to save event. Please try again.");
+
+      // Extract the error message from tRPC error
+      const errorMessage =
+        error?.message || "Failed to save event. Please try again.";
+
+      Alert.alert("Error", errorMessage);
       setIsLoading(false);
     }
   };

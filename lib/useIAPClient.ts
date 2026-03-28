@@ -31,6 +31,13 @@ const createMockPurchase = (productId: string): Purchase => {
   const now = Date.now();
   const mockToken = `local-token-${productId}-${now}`;
 
+  // Create a fake JWT structure for iOS development
+  // Format: header.payload.signature (just needs to be a 3-part dot-separated string)
+  const mockJWS =
+    Platform.OS === "ios"
+      ? `mock-header-${now}.mock-payload-${productId}.mock-signature-${now}`
+      : undefined;
+
   return {
     productId,
     transactionId: `local-tx-${now}`,
@@ -43,6 +50,11 @@ const createMockPurchase = (productId: string): Purchase => {
     purchaseStateAndroid: 1,
     acknowledgedAndroid: false,
     autoRenewingAndroid: true,
+    // iOS-specific mock fields
+    ...(Platform.OS === "ios" && {
+      signedTransactionJWS: mockJWS,
+      jwsRepresentation: mockJWS,
+    }),
   } as unknown as Purchase;
 };
 

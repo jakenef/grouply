@@ -21,7 +21,6 @@ import {
   Pressable,
   ScrollView,
   Text,
-  TouchableWithoutFeedback,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -75,17 +74,25 @@ const AboutYouSetup = () => {
   });
 
   const onBirthdayChange = (event: any, selectedDate?: Date) => {
-    // Only proceed if picker is open
-    if (!showDatePicker) return;
-    setShowDatePicker(false);
+    // On iOS, the spinner fires onChange continuously as you scroll
+    // We should update the date in real-time but NOT close the picker
+    if (Platform.OS === "ios" && selectedDate) {
+      setDate(selectedDate);
+      const formattedDate = format(selectedDate, "MMMM d, yyyy");
+      setBirthday(formattedDate);
+      // Don't close the picker - let handleOutsideTouch handle that
+      return;
+    }
 
-    // Only update date/birthday if user confirmed selection
+    // On Android, only update when user confirms
     if (event.type === "set" && selectedDate) {
-      const currentDate = selectedDate;
-      setDate(currentDate);
-      const formattedDate = format(currentDate, "MMMM d, yyyy");
+      setDate(selectedDate);
+      const formattedDate = format(selectedDate, "MMMM d, yyyy");
       setBirthday(formattedDate);
     }
+    
+    // Close picker after Android confirmation or dismissal
+    setShowDatePicker(false);
   };
 
   const toggleDatePicker = () => {
@@ -216,11 +223,9 @@ const AboutYouSetup = () => {
           ],
         );
       } else {
-        // Generic error
-        Alert.alert(
-          "Error",
-          error.message || "Failed to create your profile. Please try again.",
-        );
+        // Show the actual error message from backend (includes profanity errors)
+        const errorMessage = error.message || "Failed to create your profile. Please try again.";
+        Alert.alert("Error", errorMessage);
       }
     } finally {
       setIsSubmitting(false);
@@ -228,13 +233,6 @@ const AboutYouSetup = () => {
   };
   const genderOptions: Gender[] = ["MALE", "FEMALE", "OTHER"];
 
-  // Handle outside touch to dismiss date picker
-  const handleOutsideTouch = () => {
-    if (showDatePicker) {
-      setShowDatePicker(false);
-    }
-  };
-  // TODO: birthday selector on ios closes when new year scrolled to
   return (
     <View className="flex-1 bg-background">
       <Pressable onPress={() => router.push("/(app)/Home")} />
@@ -243,12 +241,11 @@ const AboutYouSetup = () => {
         behavior="padding"
         keyboardVerticalOffset={insets.top}
       >
-        <TouchableWithoutFeedback onPress={handleOutsideTouch}>
-          <ScrollView
-            className="flex-1 px-8"
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-          >
+        <ScrollView
+          className="flex-1 px-8"
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
             {/* Header */}
             <View className="items-center mt-8 mb-8">
               <Text className="text-4xl font-bold text-primary">About You</Text>
@@ -429,7 +426,6 @@ const AboutYouSetup = () => {
               />
             </View>
           </ScrollView>
-        </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
     </View>
   );

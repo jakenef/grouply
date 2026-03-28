@@ -69,7 +69,9 @@ export const trpcClient = trpc.createClient({
         const {
           data: { session },
         } = await supabase.auth.getSession().catch((error) => {
-          console.error("[TRPC] Failed to get session:", error);
+          console.error("❌ [TRPC] SUPABASE AUTH FAILED - Is Docker/Supabase running?");
+          console.error("[TRPC] Supabase error details:", error);
+          console.error("[TRPC] All tRPC requests will fail until Supabase is available");
           return { data: { session: null }, error: null };
         });
 

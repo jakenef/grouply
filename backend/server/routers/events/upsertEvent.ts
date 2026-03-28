@@ -19,10 +19,10 @@ export const upsertEvent = paidProcedure
       locationData: locationDataSchema,
       additionalImageUrls: z.array(z.string().trim().min(0)),
       coverImageUrl: z.string().trim().min(0),
-      maxAttendees: z.number(),
-      minAttendees: z.number(),
-      minAge: z.number(),
-      maxAge: z.number(),
+      maxAttendees: z.number().min(1).max(50),
+      minAttendees: z.number().min(2),
+      minAge: z.number().min(18).max(99),
+      maxAge: z.number().min(18).max(99),
     }),
   )
   .mutation(async ({ ctx, input }) => {
