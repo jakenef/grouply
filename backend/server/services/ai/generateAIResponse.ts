@@ -8,7 +8,6 @@ export async function generateAIResponse(params: {
   userId: string;
   numContextMessages?: number;
 }) {
-  // TODO: clean this upp
   // maybe have options for find by activity first or type of people first? filter / sort optionality
   // 1) Fetch last N messages for context
   const contextMessages = await prisma.chatMessage.findMany({

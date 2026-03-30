@@ -1,17 +1,21 @@
-import { getAppEnvironment } from "@/lib/environmentMode";
+import { getAppEnv } from "@/lib/environmentMode";
 import { Text, View } from "react-native";
 
 /**
  * Shows a small indicator of which environment the app is running in.
- * Only displays in development (LOCAL) and staging environments.
+ * Green for local, orange for staging.
  * Hidden in production.
  */
 export default function EnvironmentIndicator() {
-  const environment = getAppEnvironment();
+  const env = getAppEnv();
 
-  if (environment !== "LOCAL") {
+  // Only show in local and staging, not production
+  if (env === "prod") {
     return null;
   }
+
+  const bgColor = env === "local" ? "#10b981" : "#f59e0b";
+  const label = env.toUpperCase();
 
   return (
     <View
@@ -19,7 +23,7 @@ export default function EnvironmentIndicator() {
         position: "absolute",
         bottom: 60, // Just above the tab bar (55px height + 5px margin)
         right: 8,
-        backgroundColor: "#10b981",
+        backgroundColor: bgColor,
         paddingHorizontal: 8,
         paddingVertical: 3,
         borderRadius: 4,
@@ -35,7 +39,7 @@ export default function EnvironmentIndicator() {
           letterSpacing: 0.5,
         }}
       >
-        {environment}
+        {label}
       </Text>
     </View>
   );

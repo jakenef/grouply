@@ -5,7 +5,6 @@ import { getSuggestedEventsFromUser } from "../getSuggestedEventsFromUser/getSug
 type EventWithScore = Awaited<
   ReturnType<typeof getSuggestedEventsFromUser>
 >[number];
-// TODO: fix the fact that it only uses top 10 events anywhere for ai search
 /**
  * Retrieves a list of suggested events based on the provided activity description, group size, time window, and user ID.
  *
