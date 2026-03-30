@@ -1,3 +1,4 @@
+import EnvironmentIndicator from "@/app-components/dev/EnvironmentIndicator";
 import { useAuth } from "@/lib/auth";
 import { colors } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";
@@ -106,7 +107,7 @@ export default function AppLayout() {
 
   return (
     <>
-      {/* <EnvironmentIndicator /> */}
+      <EnvironmentIndicator />
       <Tabs
         screenOptions={{
           headerShown: false,
