@@ -8,7 +8,7 @@ export async function getValidEventsFromUser(user: UserWithTraitsAndInterests) {
   if (!user.location) return [];
 
   const { lat, lng } = user.location;
-  const radiusKm = user.maxTravelKm ?? 50;
+  const radiusKm = Math.min(user.maxTravelKm ?? 50, 200);
 
   // Bounding box deltas (for location filtering)
   const latDelta = radiusKm / 111;

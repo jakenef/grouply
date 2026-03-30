@@ -13,10 +13,10 @@ export const updateMyUser = protectedProcedure
       traitIds: z.array(z.string()).min(3).optional(),
       preferredGroupSizeMin: z.number().optional(),
       preferredGroupSizeMax: z.number().optional(),
-      maxTravelKm: z.number().optional(),
+      maxTravelKm: z.number().min(1).max(200).optional(),
       minAgePref: z.number().optional(),
       maxAgePref: z.number().optional(),
-    })
+    }),
   )
   .mutation(async ({ ctx, input }) => {
     // Validate event name and description for profanity

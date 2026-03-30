@@ -84,13 +84,35 @@ const Home = () => {
         );
         setMessages((prev) => [...prev, assistantMessage]);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error communicating with AI:", error);
-      Alert.alert(
-        "Something went wrong",
-        "We couldn't process your message. Please try again.",
-        [{ text: "OK" }],
-      );
+
+      // Handle rate limiting specifically
+      if (
+        error?.message?.includes("AI message limit exceeded") ||
+        error?.message?.includes("Too many requests")
+      ) {
+        Alert.alert(
+          "Rate Limit Reached",
+          "You've reached the limit of AI messages per hour. Please try again later.",
+          [{ text: "OK" }],
+        );
+      } else if (
+        error?.message?.includes("AI service is temporarily unavailable")
+      ) {
+        Alert.alert(
+          "AI Temporarily Unavailable",
+          "Our AI service is experiencing issues. Please try again in a few minutes.",
+          [{ text: "OK" }],
+        );
+      } else {
+        Alert.alert(
+          "Something went wrong",
+          "We couldn't process your message. Please try again.",
+          [{ text: "OK" }],
+        );
+      }
+
       // Remove the user message since we couldn't get a response
       setMessages((prev) => prev.slice(0, -1));
     }

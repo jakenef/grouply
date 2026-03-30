@@ -203,6 +203,26 @@ export const upsertEvent = paidProcedure
     };
 
     if (input.eventId) {
+      // Check ownership before allowing update
+      const existingEvent = await prisma.event.findUnique({
+        where: { id: input.eventId },
+        select: { id: true, organizerId: true }
+      });
+
+      if (!existingEvent) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Event not found'
+        });
+      }
+
+      if (existingEvent.organizerId !== ctx.user.id) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'You can only edit events you created'
+        });
+      }
+
       const updateData: Prisma.EventUpdateInput = {
         ...baseEventData,
         activity: { connect: { id: input.activityId } },
