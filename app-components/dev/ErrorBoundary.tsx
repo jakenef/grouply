@@ -1,6 +1,6 @@
 import React, { Component, ReactNode } from 'react';
 import { View, Text, Alert } from 'react-native';
-import { GrouplyButton } from './shared/GrouplyButton';
+import { GrouplyButton } from '../shared/GrouplyButton';
 
 interface Props {
   children: ReactNode;
