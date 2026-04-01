@@ -1,6 +1,7 @@
 import EventSuggestions from "@/app-components/home/EventSuggestions";
 import HomeChatSection from "@/app-components/home/HomeChatSection";
 import { useAuth } from "@/lib/auth";
+import { posthog } from "@/lib/posthog";
 import { colors } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";
 import { ChatMessage, ChatMessageRole } from "@/shared/types/Chat";
@@ -39,6 +40,18 @@ const Home = () => {
     setChannelId("");
     isChatExpandedRef.current = isChatExpanded;
   }, [isChatExpanded]);
+
+  // Track app open for retention measurement
+  useEffect(() => {
+    // Identify the user first so the event is attributed correctly
+    if (user?.id) {
+      posthog.identify(user.id);
+    }
+
+    posthog.capture("app_opened", {
+      screen: "home",
+    });
+  }, [user?.id]); // Include dependencies to fix React hooks warning
 
   const handleSendMessage = async (text: string) => {
     const newMessage: ChatMessage = {
