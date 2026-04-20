@@ -104,9 +104,46 @@ Database access via Prisma
 
 ### Environment Variables
 
-Create a .env file in the root with:
-DATABASE_URL=postgresql://...
-OPENAI_API_KEY=sk-...
-SUPABASE_URL=...
-SUPABASE_ANON_KEY=...
-GOOGLE_PLACES_API_KEY=...
+Grouply uses a single `APP_ENV` variable to determine the environment (local, staging, prod):
+
+- **`APP_ENV`**: Must be `"local"`, `"staging"`, or `"prod"`
+- **Local development**: Use `.env.dev` (automatically copied by npm scripts)
+- **Staging**: Use `.env.stg` (automatically copied by npm scripts)
+- **Production**: Set `APP_ENV=prod` in your deployment environment
+
+#### Environment Files
+
+| File | Purpose | APP_ENV | URLs |
+|------|---------|---------|------|
+| `.env.dev` | Local development | `local` | localhost:3001, 127.0.0.1:54321 |
+| `.env.stg` | Staging deployment | `staging` | Render staging, Supabase staging |
+| Production | Environment variables | `prod` | Production URLs |
+
+#### Required Variables (all environments)
+
+```bash
+APP_ENV=local                    # "local", "staging", or "prod"
+DATABASE_URL=postgresql://...    # PostgreSQL connection
+OPENAI_API_KEY=sk-...           # OpenAI API key
+EXPO_PUBLIC_SUPABASE_URL=...    # Supabase URL
+EXPO_PUBLIC_SUPABASE_KEY=...    # Supabase anon key
+SUPABASE_SERVICE_ROLE_KEY=...   # Supabase service role key
+EXPO_PUBLIC_TRPC_URL=...        # Backend API URL
+GOOGLE_PLACES_API_KEY=...       # Google Places API
+```
+
+#### Environment Detection
+
+- **Frontend**: Reads `APP_ENV` from `Constants.expoConfig.extra.env.APP_ENV`
+- **Backend**: Reads `APP_ENV` from `process.env.APP_ENV`
+- **Apple IAP**: Automatically sets to `"PRODUCTION"` for prod, `"SANDBOX"` otherwise
+- **IAP Mode**: Local uses mock receipts, staging/prod use real verification
+
+#### Scripts
+
+```bash
+npm start              # Local development (copies .env.dev to .env)
+npm start:staging      # Staging mode (copies .env.stg to .env)
+npm run dev:server     # Local backend (uses .env.dev)
+npm run dev:server:staging  # Staging backend (uses .env.stg)
+```

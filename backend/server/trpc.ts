@@ -5,7 +5,7 @@ import { prisma } from "./prisma";
 
 // Create Supabase client for server-side operations
 const supabaseAdmin = createClient(
-  process.env.EXPO_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!, // Server-side key, not anon key
   {
     auth: {

@@ -1,13 +1,16 @@
+import { ErrorBoundary } from "@/app-components/dev/ErrorBoundary";
 import { AuthProvider } from "@/lib/auth";
 import { DeepLinkHandler } from "@/lib/DeepLinkHandler";
+import { posthog } from "@/lib/posthog";
 import {
   MutationCache,
   QueryCache,
   QueryClient,
   QueryClientProvider,
 } from "@tanstack/react-query";
-import { Stack } from "expo-router";
+import { Stack, router } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import { PostHogProvider } from "posthog-react-native";
 import { useEffect, useState } from "react";
 import { Alert } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -94,25 +97,34 @@ export default function RootLayout() {
     checkBackendHealth();
   }, []);
 
+  const handleAppRestart = () => {
+    // Reset to home screen
+    router.replace("/(app)/Home");
+  };
+
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <trpc.Provider client={trpcClient} queryClient={queryClient}>
-        <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <DeepLinkHandler />
-            <SafeAreaProvider>
-              <SafeAreaView className="flex-1 bg-background">
-                <Stack
-                  screenOptions={{
-                    headerShown: false,
-                    contentStyle: { backgroundColor: "#ffffff" },
-                  }}
-                ></Stack>
-              </SafeAreaView>
-            </SafeAreaProvider>
-          </AuthProvider>
-        </QueryClientProvider>
-      </trpc.Provider>
-    </GestureHandlerRootView>
+    <ErrorBoundary onRestart={handleAppRestart}>
+      <PostHogProvider client={posthog}>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <trpc.Provider client={trpcClient} queryClient={queryClient}>
+            <QueryClientProvider client={queryClient}>
+              <AuthProvider>
+                <DeepLinkHandler />
+                <SafeAreaProvider>
+                  <SafeAreaView className="flex-1 bg-background">
+                    <Stack
+                      screenOptions={{
+                        headerShown: false,
+                        contentStyle: { backgroundColor: "#ffffff" },
+                      }}
+                    ></Stack>
+                  </SafeAreaView>
+                </SafeAreaProvider>
+              </AuthProvider>
+            </QueryClientProvider>
+          </trpc.Provider>
+        </GestureHandlerRootView>
+      </PostHogProvider>
+    </ErrorBoundary>
   );
 }

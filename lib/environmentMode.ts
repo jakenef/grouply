@@ -1,25 +1,26 @@
 import Constants from "expo-constants";
 
-export type AppEnvironment = "LOCAL" | "REMOTE";
+export type AppEnv = "local" | "staging" | "prod";
 
-export const getConfiguredTrpcUrl = (): string => {
-  return (
-    Constants.expoConfig?.extra?.env?.EXPO_PUBLIC_TRPC_URL ||
-    process.env.EXPO_PUBLIC_TRPC_URL ||
-    ""
-  );
+const getAppEnvFromConstants = (): string | undefined => {
+  return Constants.expoConfig?.extra?.env?.APP_ENV;
 };
 
-export const isLocalTrpcUrl = (url: string): boolean => {
-  return /localhost|127\.0\.0\.1|10\.0\.2\.2/i.test(url);
-};
+export const getAppEnv = (): AppEnv => {
+  const appEnv = getAppEnvFromConstants();
 
-export const getAppEnvironment = (): AppEnvironment => {
-  return isLocalTrpcUrl(getConfiguredTrpcUrl()) ? "LOCAL" : "REMOTE";
+  if (!appEnv || !["local", "staging", "prod"].includes(appEnv)) {
+    throw new Error(
+      `Invalid or missing APP_ENV: "${appEnv}". Expected "local", "staging", or "prod". ` +
+        `Make sure APP_ENV is set in your .env file and baked into app.config.ts.`
+    );
+  }
+
+  return appEnv as AppEnv;
 };
 
 export const isLocalDevelopmentMode = (): boolean => {
-  return getAppEnvironment() === "LOCAL";
+  return getAppEnv() === "local";
 };
 
 export const getIAPMode = (): "MOCK" | "REAL" => {

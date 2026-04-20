@@ -2,49 +2,62 @@
 
 ## Overview
 
-Grouply uses separate environment configurations for local development, staging, and production.
+Grouply uses a single `APP_ENV` environment variable to manage three distinct environments:
 
-## Environment Files
+- **`local`** - Local development with localhost services
+- **`staging`** - Staging deployment with remote services
+- **`prod`** - Production deployment
 
-- **`.env.local`** - Local development with local database and backend
-- **`.env.staging`** - Staging environment with Render backend and Supabase DB
-- **`.env.production`** - Production environment (to be configured later)
+## APP_ENV Detection System
+
+### How It Works
+
+1. **Single Source of Truth**: `APP_ENV` determines all environment behavior
+2. **Frontend Detection**: Reads from `Constants.expoConfig.extra.env.APP_ENV`
+3. **Backend Detection**: Reads from `process.env.APP_ENV`
+4. **Auto-Configuration**: Apple IAP, IAP verification mode, logging levels all derived from APP_ENV
+
+### Environment Files
+
+| File | APP_ENV Value | Usage | URLs |
+|------|---------------|-------|------|
+| `.env.dev` | `local` | Local development | localhost:3001, 127.0.0.1:54321 |
+| `.env.stg` | `staging` | Staging deployment | Render staging, Supabase staging |
+| `.env` (deployed) | `prod` | Production | Production URLs |
 
 ## Local Development Workflow
 
-### 1. Start Local Backend & Frontend
-
-You need to start a local supabase instance with this command:
+### 1. Setup Local Services
 
 ```bash
-# Start local supabase (use this for mailpit and other services)
+# Start local Supabase (for auth, storage, database)
 supabase start
 
-# Apply Prisma migrations to this new local supabase db
+# Apply Prisma migrations to local database
 npx prisma migrate dev
 ```
 
+### 2. Start Development Servers
+
 ```bash
-# Start local backend server (copies .env.local to .env)
+# Start local backend server (uses .env.dev)
 npm run dev:server
 
-# In another terminal, start Expo (copies .env.local to .env)
+# In another terminal, start Expo frontend (uses .env.dev)
 npm start
 ```
 
-This uses:
+**What this does:**
+- Copies `.env.dev` to `.env` (sets `APP_ENV=local`)
+- Backend connects to local PostgreSQL (port 54322)
+- Frontend connects to localhost:3001 backend
+- IAP uses mock receipts, Apple uses SANDBOX
 
-- Local PostgreSQL database at `localhost:5432`
-- Local backend at `http://localhost:3001`
-
-### 2. Running on Device/Simulator
+### 3. Running on Device/Simulator
 
 ```bash
-# iOS
-npm run ios
-
-# Android
-npm run android
+npm run ios      # iOS Simulator
+npm run android  # Android Emulator
 ```
 
 ## Staging Workflow
@@ -52,133 +65,135 @@ npm run android
 ### Option 1: Local App → Staging Backend
 
 ```bash
-# Start Expo with staging environment
+# Start Expo with staging configuration
 npm run start:staging
-
-# Or for specific platform
-npm run ios:staging
-npm run android:staging
 ```
 
-This connects your local app to:
+**What this does:**
+- Copies `.env.stg` to `.env` (sets `APP_ENV=staging`)
+- App connects to staging Render backend
+- Uses staging Supabase database
+- IAP uses real verification, Apple uses SANDBOX
 
-- Staging backend on Render: `https://grouply-fdpg.onrender.com`
-- Staging Supabase database
-
-### Option 2: Push to Internal Build with EAS Update
+### Option 2: EAS Internal Build
 
 ```bash
-# Build once for staging (only needed first time or when native code changes)
+# Build for staging (first time only)
 eas build --platform ios --profile staging
 
-# For subsequent updates, use EAS Update (much faster)
-eas update --channel staging --message "your update message"
+# Push updates to staging builds (much faster)
+npm run deploy:internal
 ```
 
-Your staging build will automatically receive the update!
+## Production Deployment
 
-## EAS Build Profiles
+### Backend (Render)
+Set these environment variables in Render dashboard:
+```bash
+APP_ENV=prod
+DATABASE_URL=your-prod-database-url
+# ... other prod variables
+```
 
-### `development`
-
-- Local development build with dev client
-- Uses localhost URLs
-- For testing native modules locally
-
-### `preview`
-
-- Internal distribution
-- Quick preview builds
-
-### `production`
-
-- Production builds (to be configured)
-
-## Environment Variables
-
-### Frontend (Expo) Variables
-
-These must be prefixed with `EXPO_PUBLIC_` to be accessible in your React Native code:
-
-- `EXPO_PUBLIC_TRPC_URL` - Backend API URL
-- `EXPO_PUBLIC_SUPABASE_URL` - Supabase project URL
-- `EXPO_PUBLIC_SUPABASE_KEY` - Supabase anon/public key
-
-### Backend Variables
-
-- `DATABASE_URL` - PostgreSQL connection string (with pooling)
-- `DIRECT_URL` - Direct PostgreSQL connection (for migrations)
-- `SUPABASE_SERVICE_ROLE_KEY` - Supabase admin key
-- `GOOGLE_PLACES_API_KEY` - Google Places API key
-- `OPENAI_API_KEY` - OpenAI API key
+### Mobile App (EAS)
+```bash
+# Production builds and updates
+npm run eas:build:ios         # Build for App Store
+npm run update:production     # Push updates to production
+```
 
 ## Database Migrations
 
 ### Local
-
 ```bash
-# Ensure .env.local is active
-cp .env.local .env
-
-# Run migrations
-npx prisma migrate dev --name your_migration_name
+npm run migrate:dev           # Migrates local database
 ```
 
 ### Staging
-
 ```bash
-# Ensure .env.staging is active
-cp .env.staging .env
+npm run migrate:staging       # Migrates staging database
+```
 
-# Run migrations (be careful!)
+### Production
+```bash
+# Set APP_ENV=prod in deployment environment first
 npx prisma migrate deploy
 ```
 
-## Common Commands
+## Environment Variables Reference
+
+### Required in All Environments
 
 ```bash
-# Local development (default)
-npm start                    # Start Expo with local env
-npm run dev:server           # Start backend with local env
+APP_ENV=local                    # "local", "staging", or "prod" 
+DATABASE_URL=postgresql://...    # PostgreSQL connection
+DIRECT_URL=postgresql://...      # Direct PostgreSQL (for migrations)
+EXPO_PUBLIC_TRPC_URL=...        # Backend API URL
+EXPO_PUBLIC_SUPABASE_URL=...    # Supabase project URL  
+EXPO_PUBLIC_SUPABASE_KEY=...    # Supabase anon key
+SUPABASE_SERVICE_ROLE_KEY=...   # Supabase admin key
+OPENAI_API_KEY=sk-...           # OpenAI API key
+GOOGLE_PLACES_API_KEY=...       # Google Places API key
+```
 
-# Staging
-npm run start:staging        # Start Expo with staging env
-npm run dev:server:staging   # Start backend with staging env
+### Auto-Derived from APP_ENV
 
-# EAS Updates
-eas update --channel staging # Push update to staging build
-eas build --profile staging  # Create new staging build
+- **`APPLE_APP_STORE_ENV`**: `"PRODUCTION"` for prod, `"SANDBOX"` otherwise
+- **IAP Verification Mode**: Mock for local, real for staging/prod
+- **Logging Level**: Verbose for local, minimal for prod
+
+## Script Reference
+
+```bash
+# Local Development
+npm start                     # Frontend (local env)
+npm run dev:server           # Backend (local env)
+
+# Staging 
+npm start:staging            # Frontend (staging env)
+npm run dev:server:staging   # Backend (staging env)
+
+# Production Updates
+npm run update:production    # Push updates to prod builds
+
+# Database
+npm run migrate:dev          # Local migrations
+npm run migrate:staging      # Staging migrations
+```
+
+## Environment Validation
+
+Both frontend and backend will throw clear errors if `APP_ENV` is missing or invalid:
+
+```bash
+Error: Invalid or missing APP_ENV: "". Expected "local", "staging", or "prod".
+Make sure APP_ENV is set in your .env file.
 ```
 
 ## Best Practices
 
-1. **Always work on local first** - Make changes and test locally before pushing to staging
-2. **Use EAS Update for quick iterations** - Much faster than rebuilding
-3. **Be careful with staging DB** - It's shared, so migrations affect everyone
-4. **Never commit `.env`, `.env.local`, or `.env.staging`** - These contain secrets
-5. **Keep `.env.*.example` files updated** - So others know what variables are needed
+1. **Never commit `.env` files** - They contain secrets and are auto-generated
+2. **Keep example files updated** - Update `.env.*.example` when adding new variables  
+3. **Test locally first** - Always develop and test in `local` before staging
+4. **Use staging for integration testing** - Test with real services before production
+5. **Set production APP_ENV correctly** - Ensure `APP_ENV=prod` in deployment configs
 
 ## Troubleshooting
 
-### Wrong environment being used?
-
-Check which `.env` file is currently active:
-
+### Check Current Environment
 ```bash
-cat .env
+# Frontend: Look for APP_ENV in the EnvDebugger component
+# Backend: Check console logs for "[ENV] Running in {env} mode"
 ```
 
-Manually switch if needed:
-
+### Wrong Environment?
 ```bash
-cp .env.local .env    # Switch to local
-cp .env.staging .env  # Switch to staging
+cat .env                     # Check which .env file is active
+npm start                    # Re-copies .env.dev to .env (local)
+npm start:staging           # Re-copies .env.stg to .env (staging)
 ```
 
-### EAS Update not working?
-
-Make sure your build was created with the correct channel:
-
-```bash
-eas build:list --platform ios
-```
+### APP_ENV Error?
+1. Verify `APP_ENV` is set in your `.env.dev` and `.env.stg` files
+2. Check `app.config.ts` includes APP_ENV in the extra.env section
+3. For backend, ensure your `.env` file is being loaded by the server

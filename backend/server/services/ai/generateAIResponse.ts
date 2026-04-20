@@ -1,14 +1,63 @@
 import { ChatMessageRole } from "@/backend/generated/prisma/client";
+import { TRPCError } from "@trpc/server";
 import { openai } from "../../openai";
 import { prisma } from "../../prisma";
 import { getSuggestedEventsFromActivityDesc } from "../event/getSuggestedEventsFromActivityDesc/getSuggestedEventsFromActivityDesc";
+
+/**
+ * Call OpenAI API with retry logic and proper error handling
+ */
+async function callOpenAIWithRetry(
+  requestData: any, 
+  maxRetries: number = 3
+): Promise<any> {
+  let lastError: any;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`[AI] Attempt ${attempt}/${maxRetries} - Calling OpenAI...`);
+      
+      const response = await openai.responses.create(requestData);
+      console.log(`[AI] ✅ OpenAI call successful on attempt ${attempt}`);
+      return response;
+      
+    } catch (error: any) {
+      lastError = error;
+      console.error(`[AI] ❌ Attempt ${attempt}/${maxRetries} failed:`, error.message);
+      
+      // Don't retry on certain errors
+      if (error.status === 400 || error.status === 401 || error.status === 403) {
+        console.error(`[AI] Non-retryable error (${error.status}), aborting`);
+        break;
+      }
+      
+      // Don't retry on final attempt
+      if (attempt === maxRetries) {
+        console.error(`[AI] All ${maxRetries} attempts failed`);
+        break;
+      }
+      
+      // Calculate exponential backoff delay
+      const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000); // Max 10s
+      console.log(`[AI] Retrying in ${delay}ms...`);
+      
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  
+  // All retries failed, throw structured error
+  throw new TRPCError({
+    code: 'INTERNAL_SERVER_ERROR',
+    message: 'AI service is temporarily unavailable. Please try again later.',
+    cause: lastError?.message || 'Unknown AI service error'
+  });
+}
 
 export async function generateAIResponse(params: {
   channelId: string;
   userId: string;
   numContextMessages?: number;
 }) {
-  // TODO: clean this upp
   // maybe have options for find by activity first or type of people first? filter / sort optionality
   // 1) Fetch last N messages for context
   const contextMessages = await prisma.chatMessage.findMany({
@@ -89,17 +138,14 @@ export async function generateAIResponse(params: {
   // 2) Call AI, decide if needs Tools
   let aiResponse;
   try {
-    aiResponse = await openai.responses.create({
+    aiResponse = await callOpenAIWithRetry({
       model: "gpt-4o-mini",
       input,
       instructions,
       tools: tools,
     });
   } catch (error) {
-    console.error("!!! Error calling OpenAI:", error);
-    console.error("!!! Input was:", JSON.stringify(input, null, 2));
-    console.error("!!! Instructions:", instructions);
-    console.error("!!! Tools:", JSON.stringify(tools, null, 2));
+    // Error already properly structured by callOpenAIWithRetry
     throw error;
   }
 
@@ -158,15 +204,14 @@ export async function generateAIResponse(params: {
     }
 
     try {
-      aiResponse = await openai.responses.create({
+      aiResponse = await callOpenAIWithRetry({
         model: "gpt-4o-mini",
         input,
         tools,
         instructions,
       });
     } catch (error) {
-      console.error("!!! Error making second API call:", error);
-      console.error("!!! Input was:", JSON.stringify(input, null, 2));
+      // Error already properly structured by callOpenAIWithRetry
       throw error;
     }
   }

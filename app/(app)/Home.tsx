@@ -1,6 +1,7 @@
 import EventSuggestions from "@/app-components/home/EventSuggestions";
 import HomeChatSection from "@/app-components/home/HomeChatSection";
 import { useAuth } from "@/lib/auth";
+import { posthog } from "@/lib/posthog";
 import { colors } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";
 import { ChatMessage, ChatMessageRole } from "@/shared/types/Chat";
@@ -39,6 +40,18 @@ const Home = () => {
     setChannelId("");
     isChatExpandedRef.current = isChatExpanded;
   }, [isChatExpanded]);
+
+  // Track app open for retention measurement
+  useEffect(() => {
+    // Identify the user first so the event is attributed correctly
+    if (user?.id) {
+      posthog.identify(user.id);
+    }
+
+    posthog.capture("app_opened", {
+      screen: "home",
+    });
+  }, [user?.id]); // Include dependencies to fix React hooks warning
 
   const handleSendMessage = async (text: string) => {
     const newMessage: ChatMessage = {
@@ -84,13 +97,35 @@ const Home = () => {
         );
         setMessages((prev) => [...prev, assistantMessage]);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error communicating with AI:", error);
-      Alert.alert(
-        "Something went wrong",
-        "We couldn't process your message. Please try again.",
-        [{ text: "OK" }],
-      );
+
+      // Handle rate limiting specifically
+      if (
+        error?.message?.includes("AI message limit exceeded") ||
+        error?.message?.includes("Too many requests")
+      ) {
+        Alert.alert(
+          "Rate Limit Reached",
+          "You've reached the limit of AI messages per hour. Please try again later.",
+          [{ text: "OK" }],
+        );
+      } else if (
+        error?.message?.includes("AI service is temporarily unavailable")
+      ) {
+        Alert.alert(
+          "AI Temporarily Unavailable",
+          "Our AI service is experiencing issues. Please try again in a few minutes.",
+          [{ text: "OK" }],
+        );
+      } else {
+        Alert.alert(
+          "Something went wrong",
+          "We couldn't process your message. Please try again.",
+          [{ text: "OK" }],
+        );
+      }
+
       // Remove the user message since we couldn't get a response
       setMessages((prev) => prev.slice(0, -1));
     }

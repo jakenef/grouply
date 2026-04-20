@@ -71,6 +71,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     "expo-web-browser",
+    "expo-localization",
   ],
   experiments: {
     typedRoutes: true,
@@ -84,6 +85,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // Bake environment variables into the app config
     // These will be available via Constants.expoConfig.extra
     env: {
+      APP_ENV: process.env.APP_ENV || "",
       EXPO_PUBLIC_TRPC_URL: process.env.EXPO_PUBLIC_TRPC_URL || "",
       EXPO_PUBLIC_SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL || "",
       EXPO_PUBLIC_SUPABASE_KEY: process.env.EXPO_PUBLIC_SUPABASE_KEY || "",

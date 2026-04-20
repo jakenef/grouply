@@ -12,7 +12,7 @@ export const saveUserPreferences = protectedProcedure
       preferredGroupSizeMax: z.number().min(2),
       preferredAgeMin: z.number().min(18),
       preferredAgeMax: z.number().min(18),
-      maxTravelDist: z.number().positive(),
+      maxTravelDist: z.number().min(1).max(200),
       personalityAnswers: z
         .object({
           eventEnergy: z.array(z.string()).optional(),
@@ -175,8 +175,11 @@ export const saveUserPreferences = protectedProcedure
         ];
 
         // Build final trait scores: manually selected get score 1, personality-derived use accumulated weights
-        const traitScoreData: { userId: string; traitId: string; score: number }[] =
-          [];
+        const traitScoreData: {
+          userId: string;
+          traitId: string;
+          score: number;
+        }[] = [];
 
         // Add manually selected traits with score 1
         for (const traitId of allTraitIds) {

@@ -1,6 +1,5 @@
 import {
-  getAppEnvironment,
-  getConfiguredTrpcUrl,
+  getAppEnv,
   getIAPMode,
 } from "@/lib/environmentMode";
 import Constants from "expo-constants";
@@ -14,12 +13,11 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 export function EnvDebugger() {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const resolvedTrpcUrl = getConfiguredTrpcUrl();
-  const appEnvironment = getAppEnvironment();
+  const appEnv = getAppEnv();
   const iapMode = getIAPMode();
 
   const envVars = {
-    "TRPC URL": resolvedTrpcUrl || "NOT SET",
+    "TRPC URL": Constants.expoConfig?.extra?.env?.EXPO_PUBLIC_TRPC_URL || "NOT SET",
     "Supabase URL":
       Constants.expoConfig?.extra?.env?.EXPO_PUBLIC_SUPABASE_URL || "NOT SET",
     "Supabase Key": Constants.expoConfig?.extra?.env?.EXPO_PUBLIC_SUPABASE_KEY
@@ -33,7 +31,7 @@ export function EnvDebugger() {
       typeof Constants.expoConfig?.runtimeVersion === "string"
         ? Constants.expoConfig.runtimeVersion
         : Constants.expoConfig?.runtimeVersion?.policy || "unknown",
-    Environment: appEnvironment,
+    "App Environment": appEnv,
     "IAP Mode": iapMode,
     "Updates URL": Constants.expoConfig?.updates?.url || "NOT SET",
     "EAS Project ID": Constants.expoConfig?.extra?.eas?.projectId || "NOT SET",
