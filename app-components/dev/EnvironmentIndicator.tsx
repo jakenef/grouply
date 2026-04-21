@@ -1,5 +1,6 @@
 import { getAppEnv } from "@/lib/environmentMode";
-import { Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import { Alert, Text, View } from "react-native";
 
 /**
  * Shows a small indicator of which environment the app is running in.
@@ -7,7 +8,29 @@ import { Text, View } from "react-native";
  * Hidden in production.
  */
 export default function EnvironmentIndicator() {
-  const env = getAppEnv();
+  const [hasError, setHasError] = useState(false);
+  const [env, setEnv] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const appEnv = getAppEnv();
+      setEnv(appEnv);
+    } catch (error: any) {
+      console.error("[EnvironmentIndicator] Error retrieving APP_ENV:", error);
+      setHasError(true);
+      // Show alert to user so they know what's wrong
+      Alert.alert(
+        "Environment Configuration Error",
+        `Failed to load environment configuration.\n\nReason: ${error?.message || "Unknown error"}\n\nPlease ensure APP_ENV is properly set in your .env file.`,
+        [{ text: "OK" }],
+      );
+    }
+  }, []);
+
+  // If there's an error or env is not set, don't render anything
+  if (hasError || !env) {
+    return null;
+  }
 
   // Only show in local and staging, not production
   if (env === "prod") {
