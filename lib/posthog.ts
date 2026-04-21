@@ -1,4 +1,4 @@
-import Constants from "expo-constants";
+import { getAppEnv } from "@/lib/environmentMode";
 import PostHog from "posthog-react-native";
 
 // Initialize PostHog client with error handling
@@ -10,11 +10,19 @@ try {
     host: "https://us.i.posthog.com",
   });
 
-  // Register global properties
-  const appEnv = Constants.expoConfig?.extra?.env?.APP_ENV || "unknown";
+  // Register global properties using consistent environment detection
+  let appEnv: string;
+  try {
+    appEnv = getAppEnv();
+  } catch {
+    appEnv = "unknown";
+    console.warn(
+      "[PostHog] Could not determine APP_ENV, defaulting to 'unknown'",
+    );
+  }
 
   // Map your environment values to development/production
-  const environment = appEnv === "production" ? "production" : "development";
+  const environment = appEnv === "prod" ? "production" : "development";
 
   posthog.register({
     environment,

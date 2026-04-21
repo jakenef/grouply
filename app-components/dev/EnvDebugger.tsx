@@ -13,8 +13,22 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 export function EnvDebugger() {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const appEnv = getAppEnv();
-  const iapMode = getIAPMode();
+  let appEnv = "ERROR";
+  let iapMode = "ERROR";
+  let envError: string | null = null;
+
+  try {
+    appEnv = getAppEnv();
+  } catch (error: any) {
+    envError = error?.message || "Unknown error";
+    console.error("[EnvDebugger] Failed to get APP_ENV:", envError);
+  }
+
+  try {
+    iapMode = getIAPMode();
+  } catch (error: any) {
+    console.error("[EnvDebugger] Failed to get IAP mode:", error?.message);
+  }
 
   const envVars = {
     "TRPC URL": Constants.expoConfig?.extra?.env?.EXPO_PUBLIC_TRPC_URL || "NOT SET",
@@ -36,6 +50,7 @@ export function EnvDebugger() {
     "Updates URL": Constants.expoConfig?.updates?.url || "NOT SET",
     "EAS Project ID": Constants.expoConfig?.extra?.eas?.projectId || "NOT SET",
     __DEV__: String(__DEV__),
+    ...(envError && { "Environment Error": envError }),
   };
 
   return (
@@ -71,12 +86,26 @@ export function EnvDebugger() {
           {Object.entries(configInfo).map(([key, value]) => (
             <View
               key={key}
-              className="mb-2 bg-white dark:bg-gray-700 p-2 rounded"
+              className={`mb-2 bg-white dark:bg-gray-700 p-2 rounded ${
+                key === "Environment Error" ? "border-2 border-red-500" : ""
+              }`}
             >
-              <Text className="text-xs font-semibold text-gray-600 dark:text-gray-400">
+              <Text
+                className={`text-xs font-semibold ${
+                  key === "Environment Error"
+                    ? "text-red-600 dark:text-red-400"
+                    : "text-gray-600 dark:text-gray-400"
+                }`}
+              >
                 {key}
               </Text>
-              <Text className="text-sm text-gray-900 dark:text-white font-mono">
+              <Text
+                className={`text-sm font-mono ${
+                  key === "Environment Error"
+                    ? "text-red-600 dark:text-red-400"
+                    : "text-gray-900 dark:text-white"
+                }`}
+              >
                 {value}
               </Text>
             </View>
