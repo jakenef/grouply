@@ -1,3 +1,4 @@
+import { DateTimePicker } from "@/app-components/shared/DateTimePicker";
 import FormField from "@/app-components/shared/FormField";
 import LocationPicker, {
   LocationData,
@@ -6,19 +7,15 @@ import ProfileImagePicker from "@/app-components/shared/ProfileImagePicker";
 import { useAuth } from "@/lib/auth";
 import { posthog } from "@/lib/posthog";
 import uploadImageUri from "@/lib/storage";
-import { colors } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";
 import calculateAge from "@/shared/utils/calculateAge";
 import { Ionicons } from "@expo/vector-icons";
-import DateTimePicker from "@react-native-community/datetimepicker";
-import { format } from "date-fns";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
   Linking,
-  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -35,12 +32,10 @@ const AboutYouSetup = () => {
   const [givenName, setGivenName] = useState("");
   const [familyName, setFamilyName] = useState("");
   const [bio, setBio] = useState("");
-  const [birthday, setBirthday] = useState("");
+  const [birthday, setBirthday] = useState(new Date());
   const [gender, setGender] = useState<Gender>(null);
   const [location, setLocation] = useState<LocationData | null>(null);
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
-  const [date, setDate] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [errors, setErrors] = useState<{
@@ -74,30 +69,8 @@ const AboutYouSetup = () => {
     },
   });
 
-  const onBirthdayChange = (event: any, selectedDate?: Date) => {
-    // On iOS, the spinner fires onChange continuously as you scroll
-    // We should update the date in real-time but NOT close the picker
-    if (Platform.OS === "ios" && selectedDate) {
-      setDate(selectedDate);
-      const formattedDate = format(selectedDate, "MMMM d, yyyy");
-      setBirthday(formattedDate);
-      // Don't close the picker - let handleOutsideTouch handle that
-      return;
-    }
-
-    // On Android, only update when user confirms
-    if (event.type === "set" && selectedDate) {
-      setDate(selectedDate);
-      const formattedDate = format(selectedDate, "MMMM d, yyyy");
-      setBirthday(formattedDate);
-    }
-
-    // Close picker after Android confirmation or dismissal
-    setShowDatePicker(false);
-  };
-
-  const toggleDatePicker = () => {
-    setShowDatePicker((prevState) => !prevState);
+  const handleBirthdayChange = (date: Date) => {
+    setBirthday(date);
   };
 
   const handleLocationChange = (locationData: LocationData | null) => {
@@ -130,7 +103,7 @@ const AboutYouSetup = () => {
 
     if (!birthday) {
       newErrors.birthday = "Birthday is required";
-    } else if ((calculateAge(date) ?? 0) < 18) {
+    } else if ((calculateAge(birthday) ?? 0) < 18) {
       newErrors.birthday = "User must be at least 18 to use Grouply";
     }
 
@@ -199,7 +172,7 @@ const AboutYouSetup = () => {
       await createUserMutation.mutateAsync({
         givenName: givenName,
         familyName: familyName,
-        birthday: date, // Send the actual Date object, not the formatted string
+        birthday: birthday,
         gender: gender as "MALE" | "FEMALE" | "OTHER", // Type assertion since we validated gender is not null
         location: location as LocationData, // Type assertion since we validated location is not null
         bio: bio || undefined, // Only send if not empty
@@ -238,7 +211,6 @@ const AboutYouSetup = () => {
     }
   };
   const genderOptions: Gender[] = ["MALE", "FEMALE", "OTHER"];
-
   return (
     <View className="flex-1 bg-background">
       <Pressable onPress={() => router.push("/(app)/Home")} />
@@ -284,51 +256,17 @@ const AboutYouSetup = () => {
           />
 
           {/* Birthday */}
-          <View className="mb-6 flex-col">
-            <Text className="text-base font-semibold text-foreground mb-2">
-              Birthday
+          <DateTimePicker
+            label="Birthday"
+            value={birthday}
+            onChange={handleBirthdayChange}
+            mode="date"
+          />
+          {errors.birthday && (
+            <Text className="text-sm text-danger mt-1 mb-4">
+              {errors.birthday}
             </Text>
-            <Pressable
-              className={`bg-white border rounded-xl px-4 py-3 flex-row items-center justify-between ${
-                errors.birthday ? "border-danger" : "border-border"
-              }`}
-              onPress={toggleDatePicker}
-            >
-              <Text
-                className={`text-base ${
-                  birthday ? "text-foreground" : "text-muted"
-                }`}
-              >
-                {birthday || "Select your birthday"}
-              </Text>
-              <Ionicons
-                name="calendar-outline"
-                size={20}
-                color={colors.muted.DEFAULT}
-              />
-            </Pressable>
-
-            {showDatePicker && (
-              <DateTimePicker
-                testID="dateTimePicker"
-                value={date}
-                mode="date"
-                display={Platform.OS === "ios" ? "spinner" : "default"}
-                onChange={onBirthdayChange}
-                maximumDate={new Date()} // Can't select future dates
-                minimumDate={
-                  new Date(
-                    new Date().setFullYear(new Date().getFullYear() - 100),
-                  )
-                } // Can't select dates more than 100 years ago
-              />
-            )}
-            {errors.birthday && (
-              <Text className="text-sm text-danger mt-1">
-                {errors.birthday}
-              </Text>
-            )}
-          </View>
+          )}
 
           {/* Gender */}
           <View className="mb-6">

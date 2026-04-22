@@ -46,6 +46,7 @@ const LandingPage = () => {
               label="Create Account"
               variant="outline"
               size="large"
+              className="mb-4"
               fullWidth
               className="mb-4"
               onPress={() => {
