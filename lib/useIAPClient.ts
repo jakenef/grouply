@@ -53,6 +53,7 @@ const createMockPurchase = (productId: string): Purchase => {
       transactionReceipt: mockJws,
       purchaseToken: mockToken,
       signedTransactionInfo: mockJws,
+      signedTransactionJWS: mockJws,
       jwsRepresentation: mockJws,
     } as unknown as Purchase;
   }
@@ -70,11 +71,6 @@ const createMockPurchase = (productId: string): Purchase => {
     purchaseStateAndroid: 1,
     acknowledgedAndroid: false,
     autoRenewingAndroid: true,
-    // iOS-specific mock fields
-    ...(Platform.OS === "ios" && {
-      signedTransactionJWS: mockJWS,
-      jwsRepresentation: mockJWS,
-    }),
   } as unknown as Purchase;
 };
 

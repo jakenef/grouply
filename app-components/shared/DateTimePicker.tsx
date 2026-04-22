@@ -26,13 +26,15 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
     value instanceof Date && !isNaN(value.getTime()) ? value : new Date(value);
 
   const handleChange = (event: any, selectedDate?: Date) => {
-    if (event.type === "dismissed") {
+    if (event?.type === "dismissed") {
       setShowPicker(false);
       return;
     }
     if (selectedDate) {
       onChange(selectedDate);
-      setShowPicker(false);
+      if (Platform.OS !== "ios") {
+        setShowPicker(false);
+      }
     }
   };
 
