@@ -6,6 +6,7 @@ import {
   NormalizedPlan,
   useSubscriptionPlans,
 } from "@/lib/useSubscriptionPlans";
+import { trpc } from "@/lib/trpc";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -24,6 +25,7 @@ const Paywall = () => {
   const [selectedPlan, setSelectedPlan] = useState<NormalizedPlan | null>(null);
   const [selectedPlanKey, setSelectedPlanKey] = useState<string | null>(null);
   const { isProcessing, subscribe, restore } = usePaywallPurchaseFlow();
+  const deleteUserMutation = trpc.users.deleteMyUser.useMutation();
 
   // Use new hook for data
   const {
@@ -48,6 +50,33 @@ const Paywall = () => {
     Linking.openURL(url).catch(() => {
       Alert.alert("Error", "Could not open link.");
     });
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      "Delete Account",
+      "Are you sure you want to delete your account? This action cannot be undone.",
+      [
+        {
+          text: "No, Keep Account",
+          style: "cancel",
+        },
+        {
+          text: "Yes, Delete Account",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteUserMutation.mutateAsync();
+              await signOut();
+              router.replace("/(auth)/LandingPage");
+            } catch (error) {
+              console.error(error);
+              Alert.alert("Error", "Failed to delete account. Please try again.");
+            }
+          },
+        },
+      ],
+    );
   };
 
   const features = [
@@ -249,6 +278,12 @@ const Paywall = () => {
             }}
           >
             <Text className="text-primary text-xs font-medium">Log Out</Text>
+          </Pressable>
+        </View>
+        {/* Delete Account */}
+        <View className="mt-4 items-center">
+          <Pressable onPress={handleDeleteAccount}>
+            <Text className="text-danger text-xs font-medium">Delete My Account</Text>
           </Pressable>
         </View>
       </View>
