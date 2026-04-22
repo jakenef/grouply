@@ -4,7 +4,6 @@ import RNDateTimePicker from "@react-native-community/datetimepicker";
 import { format } from "date-fns";
 import React, { useState } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
-import { AndroidDateTimePicker } from "./AndroidDateTimePicker";
 
 interface DateTimePickerProps {
   label: string;
@@ -15,12 +14,6 @@ interface DateTimePickerProps {
 }
 
 export const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
-  if (Platform.OS === "android" && (props.mode === "datetime" || !props.mode)) {
-    // Use custom Android datetime picker
-    return <AndroidDateTimePicker {...props} />;
-  }
-
-  // Fallback to original for iOS/web
   const {
     label,
     value,
