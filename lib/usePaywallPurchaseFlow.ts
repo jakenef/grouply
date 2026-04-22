@@ -18,6 +18,7 @@ export function usePaywallPurchaseFlow() {
   const [isProcessing, setIsProcessing] = useState(false);
   const seenIosTxKeysRef = useRef<Set<string>>(new Set());
   const purchaseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const purchaseInFlightRef = useRef(false);
 
   const clearPurchaseTimeout = () => {
     if (purchaseTimeoutRef.current) {
@@ -49,9 +50,11 @@ export function usePaywallPurchaseFlow() {
   const { requestPurchase, finishTransaction, getAvailablePurchases } =
     useIAPClient({
       onPurchaseSuccess: async (purchase) => {
+        if (!purchaseInFlightRef.current) return;
         clearPurchaseTimeout();
         try {
           const result = await handleVerifyPurchase(purchase, "listener");
+          purchaseInFlightRef.current = false;
           setIsProcessing(false);
 
           if (result.verified && !result.isDuplicate) {
@@ -66,6 +69,7 @@ export function usePaywallPurchaseFlow() {
             );
           }
         } catch {
+          purchaseInFlightRef.current = false;
           setIsProcessing(false);
           Alert.alert(
             "Verification Failed",
@@ -74,7 +78,9 @@ export function usePaywallPurchaseFlow() {
         }
       },
       onPurchaseError: (error) => {
+        if (!purchaseInFlightRef.current) return;
         clearPurchaseTimeout();
+        purchaseInFlightRef.current = false;
         setIsProcessing(false);
 
         const code = (error as any)?.code;
@@ -199,9 +205,11 @@ export function usePaywallPurchaseFlow() {
     if (!selectedPlan) return;
 
     setIsProcessing(true);
+    purchaseInFlightRef.current = true;
 
     purchaseTimeoutRef.current = setTimeout(() => {
       purchaseTimeoutRef.current = null;
+      purchaseInFlightRef.current = false;
       setIsProcessing(false);
       Alert.alert(
         "Purchase Timed Out",
@@ -215,6 +223,7 @@ export function usePaywallPurchaseFlow() {
 
       if (Platform.OS === "android" && !androidOfferToken) {
         clearPurchaseTimeout();
+        purchaseInFlightRef.current = false;
         Alert.alert(
           "Plan Unavailable",
           "This plan is missing its Android offer token. Please refresh and try again.",
@@ -246,6 +255,7 @@ export function usePaywallPurchaseFlow() {
       });
     } catch (error: any) {
       clearPurchaseTimeout();
+      purchaseInFlightRef.current = false;
       setIsProcessing(false);
 
       if (error?.code === "E_USER_CANCELLED") return;
