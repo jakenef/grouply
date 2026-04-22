@@ -30,10 +30,35 @@ let mockPurchaseHistory: Purchase[] = [];
 const createMockPurchase = (productId: string): Purchase => {
   const now = Date.now();
   const mockToken = `local-token-${productId}-${now}`;
+  const txId = `local-tx-${now}`;
 
+  if (Platform.OS === "ios") {
+    // Create a mock iOS purchase with proper JWS format
+    // The JWS needs to be a valid JWT-like string (3 parts separated by dots)
+    const payload = btoa(JSON.stringify({
+      productId,
+      transactionId: txId,
+      originalTransactionId: txId,
+      bundleId: "com.grouply.grouply",
+      purchaseDate: now,
+    }));
+    const mockJws = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.${payload}.mock_signature_${now}`;
+
+    return {
+      productId,
+      transactionId: txId,
+      transactionDate: String(now),
+      transactionReceipt: mockJws,
+      purchaseToken: mockToken,
+      signedTransactionInfo: mockJws,
+      jwsRepresentation: mockJws,
+    } as unknown as Purchase;
+  }
+
+  // Android purchase
   return {
     productId,
-    transactionId: `local-tx-${now}`,
+    transactionId: txId,
     transactionDate: String(now),
     transactionReceipt: `local-receipt-${productId}-${now}`,
     purchaseToken: mockToken,
@@ -60,6 +85,9 @@ const useMockIAPClient = ({
       if (!productId) {
         throw new Error("Missing product SKU for mock purchase");
       }
+
+      // Simulate network delay to allow state updates to settle
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       const purchase = createMockPurchase(productId);
       mockPurchaseHistory = [purchase];

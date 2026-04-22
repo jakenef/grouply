@@ -1,3 +1,4 @@
+import { DateTimePicker } from "@/app-components/shared/DateTimePicker";
 import FormField from "@/app-components/shared/FormField";
 import LocationPicker, {
   LocationData,
@@ -5,23 +6,18 @@ import LocationPicker, {
 import ProfileImagePicker from "@/app-components/shared/ProfileImagePicker";
 import { useAuth } from "@/lib/auth";
 import uploadImageUri from "@/lib/storage";
-import { colors } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";
 import calculateAge from "@/shared/utils/calculateAge";
 import { Ionicons } from "@expo/vector-icons";
-import DateTimePicker from "@react-native-community/datetimepicker";
-import { format } from "date-fns";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
   Linking,
-  Platform,
   Pressable,
   ScrollView,
   Text,
-  TouchableWithoutFeedback,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -35,12 +31,10 @@ const AboutYouSetup = () => {
   const [givenName, setGivenName] = useState("");
   const [familyName, setFamilyName] = useState("");
   const [bio, setBio] = useState("");
-  const [birthday, setBirthday] = useState("");
+  const [birthday, setBirthday] = useState(new Date());
   const [gender, setGender] = useState<Gender>(null);
   const [location, setLocation] = useState<LocationData | null>(null);
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
-  const [date, setDate] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [errors, setErrors] = useState<{
@@ -74,22 +68,8 @@ const AboutYouSetup = () => {
     },
   });
 
-  const onBirthdayChange = (event: any, selectedDate?: Date) => {
-    // Only proceed if picker is open
-    if (!showDatePicker) return;
-    setShowDatePicker(false);
-
-    // Only update date/birthday if user confirmed selection
-    if (event.type === "set" && selectedDate) {
-      const currentDate = selectedDate;
-      setDate(currentDate);
-      const formattedDate = format(currentDate, "MMMM d, yyyy");
-      setBirthday(formattedDate);
-    }
-  };
-
-  const toggleDatePicker = () => {
-    setShowDatePicker((prevState) => !prevState);
+  const handleBirthdayChange = (date: Date) => {
+    setBirthday(date);
   };
 
   const handleLocationChange = (locationData: LocationData | null) => {
@@ -122,7 +102,7 @@ const AboutYouSetup = () => {
 
     if (!birthday) {
       newErrors.birthday = "Birthday is required";
-    } else if ((calculateAge(date) ?? 0) < 18) {
+    } else if ((calculateAge(birthday) ?? 0) < 18) {
       newErrors.birthday = "User must be at least 18 to use Grouply";
     }
 
@@ -191,7 +171,7 @@ const AboutYouSetup = () => {
       await createUserMutation.mutateAsync({
         givenName: givenName,
         familyName: familyName,
-        birthday: date, // Send the actual Date object, not the formatted string
+        birthday: birthday,
         gender: gender as "MALE" | "FEMALE" | "OTHER", // Type assertion since we validated gender is not null
         location: location as LocationData, // Type assertion since we validated location is not null
         bio: bio || undefined, // Only send if not empty
@@ -227,14 +207,6 @@ const AboutYouSetup = () => {
     }
   };
   const genderOptions: Gender[] = ["MALE", "FEMALE", "OTHER"];
-
-  // Handle outside touch to dismiss date picker
-  const handleOutsideTouch = () => {
-    if (showDatePicker) {
-      setShowDatePicker(false);
-    }
-  };
-  // TODO: birthday selector on ios closes when new year scrolled to
   return (
     <View className="flex-1 bg-background">
       <Pressable onPress={() => router.push("/(app)/Home")} />
@@ -243,193 +215,155 @@ const AboutYouSetup = () => {
         behavior="padding"
         keyboardVerticalOffset={insets.top}
       >
-        <TouchableWithoutFeedback onPress={handleOutsideTouch}>
-          <ScrollView
-            className="flex-1 px-8"
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-          >
-            {/* Header */}
-            <View className="items-center mt-8 mb-8">
-              <Text className="text-4xl font-bold text-primary">About You</Text>
-              <Text className="text-base text-muted mt-2 text-center">
-                Tell us a bit about yourself to get started
-              </Text>
-            </View>
+        <ScrollView
+          className="flex-1 px-8"
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Header */}
+          <View className="items-center mt-8 mb-8">
+            <Text className="text-4xl font-bold text-primary">About You</Text>
+            <Text className="text-base text-muted mt-2 text-center">
+              Tell us a bit about yourself to get started
+            </Text>
+          </View>
 
-            {/* Avatar Upload */}
-            <View className="items-center mb-8">
-              <ProfileImagePicker value={avatarUri} onChange={setAvatarUri} />
-            </View>
+          {/* Avatar Upload */}
+          <View className="items-center mb-8">
+            <ProfileImagePicker value={avatarUri} onChange={setAvatarUri} />
+          </View>
 
-            {/* Given Name */}
-            <FormField
-              label="First Name"
-              value={givenName}
-              onChangeText={setGivenName}
-              placeholder="John"
-              error={errors.displayName}
-            />
+          {/* Given Name */}
+          <FormField
+            label="First Name"
+            value={givenName}
+            onChangeText={setGivenName}
+            placeholder="John"
+            error={errors.displayName}
+          />
 
-            {/* Family Name */}
-            <FormField
-              label="Last Name"
-              value={familyName}
-              onChangeText={setFamilyName}
-              placeholder="Doe"
-              error={errors.displayName}
-            />
+          {/* Family Name */}
+          <FormField
+            label="Last Name"
+            value={familyName}
+            onChangeText={setFamilyName}
+            placeholder="Doe"
+            error={errors.displayName}
+          />
 
-            {/* Birthday */}
-            <View className="mb-6 flex-col">
-              <Text className="text-base font-semibold text-foreground mb-2">
-                Birthday
-              </Text>
-              <Pressable
-                className={`bg-white border rounded-xl px-4 py-3 flex-row items-center justify-between ${
-                  errors.birthday ? "border-danger" : "border-border"
-                }`}
-                onPress={toggleDatePicker}
-              >
-                <Text
-                  className={`text-base ${
-                    birthday ? "text-foreground" : "text-muted"
+          {/* Birthday */}
+          <DateTimePicker
+            label="Birthday"
+            value={birthday}
+            onChange={handleBirthdayChange}
+            mode="date"
+          />
+          {errors.birthday && (
+            <Text className="text-sm text-danger mt-1 mb-4">
+              {errors.birthday}
+            </Text>
+          )}
+
+          {/* Gender */}
+          <View className="mb-6">
+            <Text className="text-base font-semibold text-foreground mb-2">
+              Gender
+            </Text>
+            <View className="flex-row flex-wrap gap-3">
+              {genderOptions.map((option) => (
+                <Pressable
+                  key={option}
+                  onPress={() => setGender(option)}
+                  className={`px-4 py-2 rounded-full border ${
+                    gender === option
+                      ? "bg-primary border-primary"
+                      : "bg-white border-border"
                   }`}
                 >
-                  {birthday || "Select your birthday"}
-                </Text>
-                <Ionicons
-                  name="calendar-outline"
-                  size={20}
-                  color={colors.muted.DEFAULT}
-                />
-              </Pressable>
-
-              {showDatePicker && (
-                <DateTimePicker
-                  testID="dateTimePicker"
-                  value={date}
-                  mode="date"
-                  display={Platform.OS === "ios" ? "spinner" : "default"}
-                  onChange={onBirthdayChange}
-                  maximumDate={new Date()} // Can't select future dates
-                  minimumDate={
-                    new Date(
-                      new Date().setFullYear(new Date().getFullYear() - 100),
-                    )
-                  } // Can't select dates more than 100 years ago
-                />
-              )}
-              {errors.birthday && (
-                <Text className="text-sm text-danger mt-1">
-                  {errors.birthday}
-                </Text>
-              )}
-            </View>
-
-            {/* Gender */}
-            <View className="mb-6">
-              <Text className="text-base font-semibold text-foreground mb-2">
-                Gender
-              </Text>
-              <View className="flex-row flex-wrap gap-3">
-                {genderOptions.map((option) => (
-                  <Pressable
-                    key={option}
-                    onPress={() => setGender(option)}
-                    className={`px-4 py-2 rounded-full border ${
-                      gender === option
-                        ? "bg-primary border-primary"
-                        : "bg-white border-border"
+                  <Text
+                    className={`text-base ${
+                      gender === option ? "text-white" : "text-foreground"
                     }`}
                   >
-                    <Text
-                      className={`text-base ${
-                        gender === option ? "text-white" : "text-foreground"
-                      }`}
-                    >
-                      {option?.charAt(0)! + option?.slice(1).toLowerCase()}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-              {errors.gender && (
-                <Text className="text-sm text-danger mt-1">
-                  {errors.gender}
-                </Text>
+                    {option?.charAt(0)! + option?.slice(1).toLowerCase()}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+            {errors.gender && (
+              <Text className="text-sm text-danger mt-1">{errors.gender}</Text>
+            )}
+          </View>
+
+          {/* Location */}
+          <LocationPicker
+            mode="city"
+            onChange={handleLocationChange}
+            placeholder={location ? location.formatted : undefined}
+            error={errors.location}
+          />
+
+          {/* Bio (Optional) */}
+          <FormField
+            label="Bio (Optional)"
+            value={bio}
+            onChangeText={setBio}
+            placeholder="Tell people a bit about yourself..."
+            multiline
+            numberOfLines={4}
+            containerClassName="mb-8"
+            style={{ minHeight: 100 }}
+          />
+
+          {/* Terms and Conditions Checkbox */}
+          <View className="flex-row items-center mb-6 px-1">
+            <Pressable
+              onPress={() => setAgreedToTerms(!agreedToTerms)}
+              className={`w-6 h-6 rounded border items-center justify-center mr-3 ${
+                agreedToTerms
+                  ? "bg-primary border-primary"
+                  : "border-border bg-white"
+              }`}
+            >
+              {agreedToTerms && (
+                <Ionicons name="checkmark" size={18} color="white" />
               )}
-            </View>
-
-            {/* Location */}
-            <LocationPicker
-              mode="city"
-              onChange={handleLocationChange}
-              placeholder={location ? location.formatted : undefined}
-              error={errors.location}
-            />
-
-            {/* Bio (Optional) */}
-            <FormField
-              label="Bio (Optional)"
-              value={bio}
-              onChangeText={setBio}
-              placeholder="Tell people a bit about yourself..."
-              multiline
-              numberOfLines={4}
-              containerClassName="mb-8"
-              style={{ minHeight: 100 }}
-            />
-
-            {/* Terms and Conditions Checkbox */}
-            <View className="flex-row items-center mb-6 px-1">
-              <Pressable
-                onPress={() => setAgreedToTerms(!agreedToTerms)}
-                className={`w-6 h-6 rounded border items-center justify-center mr-3 ${
-                  agreedToTerms
-                    ? "bg-primary border-primary"
-                    : "border-border bg-white"
-                }`}
-              >
-                {agreedToTerms && (
-                  <Ionicons name="checkmark" size={18} color="white" />
-                )}
-              </Pressable>
-              <View className="flex-1 flex-row flex-wrap">
-                <Text className="text-sm text-muted">I agree to Grouply's </Text>
-                <Text
-                  className="text-sm text-primary font-semibold underline"
-                  onPress={() =>
-                    Linking.openURL(
-                      "https://grouply.carrd.co/#termsandconditions",
-                    )
-                  }
-                >
-                  Terms & Conditions
-                </Text>
-              </View>
-            </View>
-
-            {/* Save and Continue Button */}
-            <View className="mb-8">
-              <GrouplyButton
-                label={isSubmitting ? "Creating Profile..." : "Save & Continue"}
-                variant="primary"
-                size="large"
-                fullWidth
-                onPress={handleSaveAndContinue}
-                disabled={
-                  !givenName ||
-                  !birthday ||
-                  !gender ||
-                  !location ||
-                  !agreedToTerms ||
-                  isSubmitting
+            </Pressable>
+            <View className="flex-1 flex-row flex-wrap">
+              <Text className="text-sm text-muted">I agree to Grouply's </Text>
+              <Text
+                className="text-sm text-primary font-semibold underline"
+                onPress={() =>
+                  Linking.openURL(
+                    "https://grouply.carrd.co/#termsandconditions",
+                  )
                 }
-                isLoading={isSubmitting}
-              />
+              >
+                Terms & Conditions
+              </Text>
             </View>
-          </ScrollView>
-        </TouchableWithoutFeedback>
+          </View>
+
+          {/* Save and Continue Button */}
+          <View className="mb-8">
+            <GrouplyButton
+              label={isSubmitting ? "Creating Profile..." : "Save & Continue"}
+              variant="primary"
+              size="large"
+              fullWidth
+              onPress={handleSaveAndContinue}
+              disabled={
+                !givenName ||
+                !birthday ||
+                !gender ||
+                !location ||
+                !agreedToTerms ||
+                isSubmitting
+              }
+              isLoading={isSubmitting}
+            />
+          </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </View>
   );
