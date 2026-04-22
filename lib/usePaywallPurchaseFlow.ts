@@ -42,13 +42,14 @@ export function usePaywallPurchaseFlow() {
         const result = await handleVerifyPurchase(purchase, "listener");
 
         if (result.verified && !result.isDuplicate) {
+          setIsProcessing(false);
           router.replace("/(app)/Home");
           return;
         }
 
         setIsProcessing(false);
       },
-      onPurchaseError: () => {
+      onPurchaseError: (error) => {
         setIsProcessing(false);
       },
     });

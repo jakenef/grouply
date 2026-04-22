@@ -20,8 +20,10 @@ const DemoLogin = () => {
   const handleSuccess = async () => {
     try {
       const result = await utils.client.users.checkUserExists.query();
-      if (result.exists) {
+      if (result.exists && result.hasCompletedPreferences) {
         router.replace("/(app)/Home");
+      } else if (result.exists) {
+        router.replace("/(auth)/PreferencesSetup");
       } else {
         router.replace("/(auth)/AboutYouSetup");
       }

@@ -285,12 +285,13 @@ const useRealSubscriptionPlans = (): SubscriptionPlansResult => {
   }, [realSubscriptions]);
 
   const plans = useMemo((): NormalizedPlan[] => {
-    if (!realSubscriptions || realSubscriptions.length === 0) return [];
+    try {
+      if (!realSubscriptions || realSubscriptions.length === 0) return [];
 
-    if (Platform.OS === "ios") {
-      const getSku = (product: any): string => {
-        return product?.id ?? product?.productId ?? "";
-      };
+      if (Platform.OS === "ios") {
+        const getSku = (product: any): string => {
+          return product?.id ?? product?.productId ?? "";
+        };
 
       const isMonthlySku = (sku: string): boolean => {
         return sku.toLowerCase().includes("monthly");
@@ -367,12 +368,19 @@ const useRealSubscriptionPlans = (): SubscriptionPlansResult => {
                 : monthlyProduct.price;
 
             if (yPrice && mPrice) {
-              const monthlyEquiv = (yPrice / 12).toLocaleString(undefined, {
-                style: "currency",
-                currency: yearlyProduct.currency || "USD",
-              });
-              const savings = Math.round((1 - yPrice / (mPrice * 12)) * 100);
-              description = `${monthlyEquiv}/month — save ${savings}%`;
+              try {
+                const monthlyEquiv = (yPrice / 12).toLocaleString(undefined, {
+                  style: "currency",
+                  currency: yearlyProduct.currency || "USD",
+                });
+                const savings = Math.round((1 - yPrice / (mPrice * 12)) * 100);
+                description = `${monthlyEquiv}/month — save ${savings}%`;
+              } catch (formatCurrencyError) {
+                console.error(
+                  "[IAP] Failed to format yearly price comparison:",
+                  formatCurrencyError,
+                );
+              }
             }
           }
 
@@ -407,14 +415,14 @@ const useRealSubscriptionPlans = (): SubscriptionPlansResult => {
         [],
       );
 
-      return iosPlans.sort((a, b) => {
-        const getOrder = (plan: NormalizedPlan): number => {
-          if (
-            plan.badge === "BEST FOR NEW USERS" ||
-            plan.id.includes(":trial")
-          ) {
-            return 0;
-          }
+        return iosPlans.sort((a, b) => {
+          const getOrder = (plan: NormalizedPlan): number => {
+            if (
+              plan.badge === "BEST FOR NEW USERS" ||
+              plan.id.includes(":trial")
+            ) {
+              return 0;
+            }
 
           if (plan.title === "Monthly") {
             return 1;
@@ -427,15 +435,15 @@ const useRealSubscriptionPlans = (): SubscriptionPlansResult => {
           return 3;
         };
 
-        return getOrder(a) - getOrder(b);
-      });
-    }
+          return getOrder(a) - getOrder(b);
+        });
+      }
 
-    // Android
-    return (realSubscriptions as any[])
-      .flatMap((product) => {
-        const productId = product.productId || product.id;
-        const offers = product.subscriptionOfferDetailsAndroid || [];
+      // Android
+      return (realSubscriptions as any[])
+        .flatMap((product) => {
+          const productId = product.productId || product.id;
+          const offers = product.subscriptionOfferDetailsAndroid || [];
 
         return offers.map((offer: any) => {
           const phases = offer.pricingPhases?.pricingPhaseList || [];
@@ -493,8 +501,15 @@ const useRealSubscriptionPlans = (): SubscriptionPlansResult => {
 
           return null;
         });
-      })
-      .filter((p): p is NormalizedPlan => p !== null);
+        })
+        .filter((p): p is NormalizedPlan => p !== null);
+    } catch (planNormalizationError) {
+      console.error(
+        "[IAP] Unexpected error while normalizing subscription plans:",
+        planNormalizationError,
+      );
+      return [];
+    }
   }, [realSubscriptions, isIntroOfferEligibleIOS, introEligibilityGroupIdIOS]);
 
   const hasPendingIOSRetry =

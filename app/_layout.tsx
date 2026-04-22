@@ -1,7 +1,7 @@
 import { ErrorBoundary } from "@/app-components/dev/ErrorBoundary";
 import { AuthProvider } from "@/lib/auth";
 import { DeepLinkHandler } from "@/lib/DeepLinkHandler";
-import { posthog } from "@/lib/posthog";
+import { SafePostHogProvider } from "@/lib/posthog";
 import {
   MutationCache,
   QueryCache,
@@ -10,7 +10,6 @@ import {
 } from "@tanstack/react-query";
 import { Stack, router } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { PostHogProvider } from "posthog-react-native";
 import { useEffect, useState } from "react";
 import { Alert } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -97,14 +96,9 @@ export default function RootLayout() {
     checkBackendHealth();
   }, []);
 
-  const handleAppRestart = () => {
-    // Reset to home screen
-    router.replace("/(app)/Home");
-  };
-
   return (
-    <ErrorBoundary onRestart={handleAppRestart}>
-      <PostHogProvider client={posthog}>
+    <ErrorBoundary>
+      <SafePostHogProvider>
         <GestureHandlerRootView style={{ flex: 1 }}>
           <trpc.Provider client={trpcClient} queryClient={queryClient}>
             <QueryClientProvider client={queryClient}>
@@ -124,7 +118,7 @@ export default function RootLayout() {
             </QueryClientProvider>
           </trpc.Provider>
         </GestureHandlerRootView>
-      </PostHogProvider>
+      </SafePostHogProvider>
     </ErrorBoundary>
   );
 }

@@ -46,8 +46,8 @@ const LandingPage = () => {
               label="Create Account"
               variant="outline"
               size="large"
-              fullWidth
               className="mb-4"
+              fullWidth
               onPress={() => {
                 router.push("/SignupEmail");
               }}

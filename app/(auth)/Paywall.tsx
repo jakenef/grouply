@@ -26,7 +26,11 @@ const Paywall = () => {
   const { isProcessing, subscribe, restore } = usePaywallPurchaseFlow();
 
   // Use new hook for data
-  const { plans, isLoading: isPlansLoading } = useSubscriptionPlans();
+  const {
+    plans,
+    isLoading: isPlansLoading,
+    error: plansError,
+  } = useSubscriptionPlans();
 
   // Set default selection once plans load
   useEffect(() => {
@@ -104,7 +108,13 @@ const Paywall = () => {
 
       {/* Pricing Plans */}
       <View className="mb-8">
-        {isPlansLoading ? (
+        {plansError ? (
+          <View className="py-10 items-center">
+            <Text className="text-danger text-center px-4">
+              We couldn't load subscription plans. Please try reopening the app.
+            </Text>
+          </View>
+        ) : isPlansLoading ? (
           <View className="py-10 items-center">
             <Text className="text-gray-400">Loading plans...</Text>
           </View>
@@ -174,25 +184,25 @@ const Paywall = () => {
         label={
           isProcessing
             ? "Processing..."
-            : selectedPlan
-              ? selectedPlan.id === "trial" ||
-                selectedPlan.id.includes(":trial")
-                ? "Try Free & Subscribe"
-                : `Subscribe for ${selectedPlan.price}`
-              : "Select a Plan"
+                 : selectedPlan
+               ? selectedPlan.id === "trial" ||
+                 selectedPlan.id.includes(":trial")
+                 ? "Try Free & Subscribe"
+                 : `Subscribe for ${selectedPlan.price}`
+               : "Select a Plan"
         }
         variant="primary"
         size="large"
         fullWidth
         onPress={() => subscribe(selectedPlan)}
         isLoading={isProcessing}
-        disabled={isLoading || !selectedPlan}
+        disabled={isLoading || !selectedPlan || !!plansError}
       />
 
       <View className="mt-4 mb-8">
         <Pressable
-          onPress={restore}
-          disabled={isProcessing}
+            onPress={restore}
+            disabled={isProcessing || !!plansError}
           style={({ pressed }) => ({
             opacity: isProcessing ? 0.55 : pressed ? 0.9 : 1,
           })}

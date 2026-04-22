@@ -7,22 +7,37 @@ const getAppEnvFromConstants = (): string | undefined => {
 };
 
 export const getAppEnv = (): AppEnv => {
-  const appEnv = getAppEnvFromConstants();
+  try {
+    const appEnv = getAppEnvFromConstants();
 
-  if (!appEnv || !["local", "staging", "prod"].includes(appEnv)) {
-    throw new Error(
-      `Invalid or missing APP_ENV: "${appEnv}". Expected "local", "staging", or "prod". ` +
-        `Make sure APP_ENV is set in your .env file and baked into app.config.ts.`
-    );
+    if (!appEnv || !["local", "staging", "prod"].includes(appEnv)) {
+      throw new Error(
+        `Invalid or missing APP_ENV: "${appEnv}". Expected "local", "staging", or "prod". ` +
+          `Make sure APP_ENV is set in your .env file and baked into app.config.ts.`
+      );
+    }
+
+    return appEnv as AppEnv;
+  } catch (error) {
+    console.error("[getAppEnv] Error:", error);
+    throw error;
   }
-
-  return appEnv as AppEnv;
 };
 
 export const isLocalDevelopmentMode = (): boolean => {
-  return getAppEnv() === "local";
+  try {
+    return getAppEnv() === "local";
+  } catch {
+    // If getAppEnv throws, assume non-local (safer default)
+    return false;
+  }
 };
 
 export const getIAPMode = (): "MOCK" | "REAL" => {
-  return isLocalDevelopmentMode() ? "MOCK" : "REAL";
+  try {
+    return isLocalDevelopmentMode() ? "MOCK" : "REAL";
+  } catch {
+    // If we can't determine env, use REAL (safer default for production)
+    return "REAL";
+  }
 };

@@ -246,13 +246,17 @@ export default function EventDetails(props: EventDetailsProps) {
           <Text className="text-3xl font-bold">{props.event.name}</Text>
           <View className="flex-row items-center pt-3">
             <View style={{ width: 30, height: 30, marginRight: 5 }}>
-              {host?.avatarUrl && (
+              {host === undefined ? null : host?.avatarUrl ? (
                 <Image
                   source={{ uri: host.avatarUrl }}
                   height={30}
                   width={30}
                   className="rounded-full"
                 />
+              ) : (
+                <View className="h-full w-full rounded-full bg-gray-300 items-center justify-center">
+                  <Text className="text-xs text-gray-600">?</Text>
+                </View>
               )}
             </View>
             <Text className="text-muted">
