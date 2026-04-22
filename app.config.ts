@@ -5,7 +5,7 @@ const variant = process.env.APP_VARIANT ?? "development";
 
 const envFile =
   variant === "production"
-    ? ".env.stg"
+    ? ".env.production"
     : variant === "staging"
       ? ".env.stg"
       : ".env.dev";
