@@ -60,6 +60,8 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = (props) => {
           value={dateValue}
           mode={mode}
           display={Platform.OS === "ios" ? "spinner" : "default"}
+          themeVariant={Platform.OS === "ios" ? "light" : undefined}
+          textColor={Platform.OS === "ios" ? colors.foreground : undefined}
           onChange={handleChange}
         />
       )}
