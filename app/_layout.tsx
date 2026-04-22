@@ -96,13 +96,8 @@ export default function RootLayout() {
     checkBackendHealth();
   }, []);
 
-  const handleAppRestart = () => {
-    // Reset to home screen
-    router.replace("/(app)/Home");
-  };
-
   return (
-    <ErrorBoundary onRestart={handleAppRestart}>
+    <ErrorBoundary>
       <SafePostHogProvider>
         <GestureHandlerRootView style={{ flex: 1 }}>
           <trpc.Provider client={trpcClient} queryClient={queryClient}>
