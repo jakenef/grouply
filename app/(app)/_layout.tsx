@@ -27,6 +27,14 @@ export default function AppLayout() {
 
   const isLoading =
     isProfileLoading || (!!profile && (isSubLoading || isSubFetching));
+  const hasCompletedPreferences = !!(
+    profile &&
+    profile.minGroupSize != null &&
+    profile.maxGroupSize != null &&
+    profile.maxTravelKm != null &&
+    profile.minAgePreference != null &&
+    profile.maxAgePreference != null
+  );
 
   // Start timeout timer when loading profile
   // Must be before conditional returns (Rules of Hooks)
@@ -96,6 +104,11 @@ export default function AppLayout() {
   // Keep showing nothing while loading (splash is still visible from index.tsx)
   if (isLoading) {
     return null;
+  }
+
+  // If profile exists but onboarding preferences are incomplete, route back to setup.
+  if (profile && !hasCompletedPreferences) {
+    return <Redirect href="/(auth)/PreferencesSetup" />;
   }
 
   // If profile exists but no active subscription, redirect to paywall

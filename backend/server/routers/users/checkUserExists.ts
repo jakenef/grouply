@@ -12,7 +12,7 @@ export const checkUserExists = authProcedure.query(async ({ ctx }) => {
     console.log(
       `[checkUserExists:${requestId}] No Supabase user, returning exists: false`,
     );
-    return { exists: false };
+    return { exists: false, hasCompletedPreferences: false };
   }
 
   try {
@@ -22,12 +22,20 @@ export const checkUserExists = authProcedure.query(async ({ ctx }) => {
 
     const duration = Date.now() - startTime;
     const exists = !!user;
-
-    console.log(
-      `[checkUserExists:${requestId}] ✅ Query completed in ${duration}ms, exists: ${exists}${user ? `, userId: ${user.id}` : ""}`,
+    const hasCompletedPreferences = !!(
+      user &&
+      user.minGroupSize != null &&
+      user.maxGroupSize != null &&
+      user.maxTravelKm != null &&
+      user.minAgePreference != null &&
+      user.maxAgePreference != null
     );
 
-    return { exists };
+    console.log(
+      `[checkUserExists:${requestId}] ✅ Query completed in ${duration}ms, exists: ${exists}, hasCompletedPreferences: ${hasCompletedPreferences}${user ? `, userId: ${user.id}` : ""}`,
+    );
+
+    return { exists, hasCompletedPreferences };
   } catch (error: any) {
     const duration = Date.now() - startTime;
     console.error(

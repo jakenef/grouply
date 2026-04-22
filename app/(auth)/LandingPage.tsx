@@ -48,7 +48,6 @@ const LandingPage = () => {
               size="large"
               className="mb-4"
               fullWidth
-              className="mb-4"
               onPress={() => {
                 router.push("/SignupEmail");
               }}

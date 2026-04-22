@@ -248,7 +248,15 @@ const PreferencesSetup = () => {
       });
 
       // Navigate to Paywall
-      router.replace("/(auth)/Paywall");
+      try {
+        router.replace("/(auth)/Paywall");
+      } catch (navigationError: any) {
+        console.error("Error navigating to paywall:", navigationError);
+        Alert.alert(
+          "Navigation Error",
+          "Preferences were saved, but we couldn't open the paywall. Please reopen the app.",
+        );
+      }
     } catch (error: any) {
       console.error("Error saving preferences:", error);
       Alert.alert(
