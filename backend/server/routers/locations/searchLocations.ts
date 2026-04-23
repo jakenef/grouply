@@ -11,9 +11,12 @@ export const searchLocations = publicProcedure
     })
   )
   .query(async ({ input }) => {
-    const { query, precision } = input;
-    console.log(`[searchLocations] query="${query}" precision=${precision}`);
     try {
+      const { query, precision } = input;
+
+      // Map precision to Google Places API types
+      // For cities: restrict to (cities)
+      // For venues: no type filter allows addresses, establishments, and all place types
       const types = precision === "city" ? "(cities)" : undefined;
 
       const predictions = await googlePlacesApi.getPlaceAutocomplete(
@@ -21,8 +24,7 @@ export const searchLocations = publicProcedure
         types
       );
 
-      console.log(`[searchLocations] ${predictions.length} result(s) for "${query}"`);
-
+      // Format the predictions to return only what we need
       return predictions.map((prediction) => ({
         placeId: prediction.place_id,
         description: prediction.description,
@@ -30,7 +32,7 @@ export const searchLocations = publicProcedure
         secondaryText: prediction.structured_formatting?.secondary_text || "",
       }));
     } catch (error) {
-      console.error(`[searchLocations] error for query="${query}":`, error);
+      console.error("Error searching locations:", error);
       throw new TRPCError({
         code: "INTERNAL_SERVER_ERROR",
         message: "Failed to search locations",

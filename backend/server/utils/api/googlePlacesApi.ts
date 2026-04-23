@@ -72,8 +72,6 @@ export class GooglePlacesApi {
       url
     );
 
-    console.log(`[GooglePlacesApi] autocomplete status=${response.status} predictions=${response.predictions?.length ?? 0}`);
-
     // Handle "ZERO_RESULTS" as a normal case - just return empty predictions
     if (response.status === "ZERO_RESULTS") {
       return [];
