@@ -5,12 +5,14 @@ import React from "react";
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
   Linking,
   ScrollView,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EnvDebugger } from "../../app-components/dev/EnvDebugger";
 import TroubleshootDropdown from "../../app-components/dev/TroubleshootDropdown";
 import TroubleshootItem from "../../app-components/dev/TroubleshootItem";
@@ -19,6 +21,7 @@ import { EventCard } from "../../app-components/events/EventCard";
 const Dev = () => {
   const { user } = useCurrentUser();
   const utils = trpc.useUtils();
+  const insets = useSafeAreaInsets();
 
   // Only allow in development mode OR for admin users
   if (!__DEV__ && user?.role !== "ADMIN") {
@@ -138,7 +141,11 @@ const Dev = () => {
   };
 
   return (
-    <View className="flex-1 bg-background">
+    <KeyboardAvoidingView
+      className="flex-1"
+      behavior="padding"
+      keyboardVerticalOffset={insets.top}
+    >
       <ScrollView className="flex-1 bg-background">
         <View className="p-4">
           {/* Environment Variables Debugger */}
@@ -362,7 +369,7 @@ const Dev = () => {
           </TroubleshootDropdown>
         </View>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
