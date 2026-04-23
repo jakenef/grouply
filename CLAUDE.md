@@ -5,34 +5,37 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ### Frontend (Expo)
+
 ```bash
 npm start                  # Local dev — copies .env.dev → .env, starts Expo with --clear
-npm run start:staging      # Staging dev — copies .env.stg → .env
 npm run ios                # Run on iOS simulator
 npm run android            # Run on Android emulator
 npm run lint               # Expo lint
 ```
 
 ### Backend (Express/tRPC)
+
 ```bash
 npm run dev:server         # Local backend with nodemon (uses .env.dev)
-npm run dev:server:staging # Staging backend (uses .env.stg)
 npm run server-lint        # Type-check backend only (tsconfig.server.json)
 ```
 
 ### Database
+
 ```bash
 npm run migrate:dev        # Run Prisma migrations against local DB
 npx prisma generate        # Regenerate Prisma client (outputs to backend/generated/prisma)
 ```
 
 ### Testing
+
 ```bash
 npm test                   # Run all Jest tests
 npm test -- --testPathPattern=<path>  # Run a single test file
 ```
 
 ### Deployment
+
 ```bash
 npm run deploy:internal    # EAS OTA update → staging (iOS)
 npm run update:production  # EAS OTA update → production (iOS + Android)
