@@ -1,12 +1,19 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Pressable, ActivityIndicator } from 'react-native';
 
+interface FieldDef {
+  key: string;
+  placeholder: string;
+  required?: boolean;
+}
+
 interface TroubleshootItemProps {
   title: string;
   description: string;
-  onRun: (value?: number) => Promise<void>;
+  onRun: (value?: number, fields?: Record<string, string>) => Promise<void>;
   requiresInput?: boolean;
   inputPlaceholder?: string;
+  fields?: FieldDef[];
 }
 
 type Status = {
@@ -19,9 +26,11 @@ const TroubleshootItem = ({
   description,
   onRun,
   requiresInput = false,
-  inputPlaceholder = "Enter value..."
+  inputPlaceholder = "Enter value...",
+  fields,
 }: TroubleshootItemProps) => {
   const [inputValue, setInputValue] = useState<string>("");
+  const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<Status>({ type: null });
 
   const handleRun = async () => {
@@ -30,13 +39,21 @@ const TroubleshootItem = ({
       if (requiresInput && !inputValue) {
         throw new Error('Please enter a value');
       }
-      
-      await onRun(requiresInput ? Number(inputValue) : undefined);
+      if (fields) {
+        for (const f of fields) {
+          if (f.required && !fieldValues[f.key]?.trim()) {
+            throw new Error(`${f.placeholder} is required`);
+          }
+        }
+        await onRun(undefined, fieldValues);
+      } else {
+        await onRun(requiresInput ? Number(inputValue) : undefined);
+      }
       setStatus({ type: 'success', message: 'Operation completed successfully' });
     } catch (error) {
-      setStatus({ 
-        type: 'error', 
-        message: error instanceof Error ? error.message : 'An error occurred' 
+      setStatus({
+        type: 'error',
+        message: error instanceof Error ? error.message : 'An error occurred'
       });
     }
   };
@@ -45,8 +62,8 @@ const TroubleshootItem = ({
     <View className="p-4 bg-white rounded-lg shadow-sm mb-4">
       <Text className="text-lg font-semibold text-gray-800">{title}</Text>
       <Text className="text-sm text-gray-600 mt-1 mb-3">{description}</Text>
-      
-      {requiresInput && (
+
+      {requiresInput && !fields && (
         <TextInput
           className="border border-gray-300 rounded-md p-2 mb-3"
           placeholder={inputPlaceholder}
@@ -55,6 +72,17 @@ const TroubleshootItem = ({
           keyboardType="numeric"
         />
       )}
+
+      {fields && fields.map((f) => (
+        <TextInput
+          key={f.key}
+          className="border border-gray-300 rounded-md p-2 mb-2"
+          placeholder={f.placeholder + (f.required ? ' *' : '')}
+          value={fieldValues[f.key] ?? ''}
+          onChangeText={(v) => setFieldValues((prev) => ({ ...prev, [f.key]: v }))}
+          autoCapitalize="none"
+        />
+      ))}
 
       {status.type && (
         <View className={`p-2 rounded-md mb-3 ${
