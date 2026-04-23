@@ -1,6 +1,6 @@
 import { colors } from "@/lib/theme";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useRef, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import {
   Pressable,
   Text,
@@ -21,6 +21,7 @@ interface OptionsSelectorProps {
   error?: string;
   onCustomOptionAdded?: (option: { id: string; label: string }) => void;
   initialDisplayCount?: number;
+  sortSelectedFirst?: boolean;
 }
 
 const OptionsSelector = ({
@@ -34,6 +35,7 @@ const OptionsSelector = ({
   error,
   onCustomOptionAdded,
   initialDisplayCount = 12,
+  sortSelectedFirst = false,
 }: OptionsSelectorProps) => {
   const [displayCount, setDisplayCount] = useState(initialDisplayCount);
   const [otherValue, setOtherValue] = useState("");
@@ -43,6 +45,7 @@ const OptionsSelector = ({
   >([]);
   const [maxReached, setMaxReached] = useState(false);
   const otherInputRef = useRef<TextInput>(null);
+  const initialSelectedRef = useRef(selectedOptions);
 
   // Only reset display count if the options array meaningfully changes
   const optionsKey = options.map((o) => o.id).join(",");
@@ -50,7 +53,18 @@ const OptionsSelector = ({
     setDisplayCount(initialDisplayCount);
   }, [optionsKey, initialDisplayCount]);
 
-  const displayedOptions = options.slice(0, displayCount);
+  const sortedOptions = useMemo(() => {
+    if (!sortSelectedFirst) return options;
+    return [...options].sort((a, b) => {
+      const aSelected = initialSelectedRef.current.includes(a.id);
+      const bSelected = initialSelectedRef.current.includes(b.id);
+      if (aSelected && !bSelected) return -1;
+      if (!aSelected && bSelected) return 1;
+      return 0;
+    });
+  }, [options, sortSelectedFirst]);
+
+  const displayedOptions = sortedOptions.slice(0, displayCount);
 
   // Focus the text input whenever "Other" is selected
   React.useEffect(() => {

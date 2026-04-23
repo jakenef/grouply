@@ -81,31 +81,33 @@ const RangeSlider = ({
 
       <View className="h-px bg-border mb-3" />
 
-      <MultiSlider
-        values={[values[0], values[1]]}
-        min={minLimit}
-        max={maxLimit}
-        step={step}
-        allowOverlap={false}
-        snapped
-        sliderLength={sliderWidth}
-        onValuesChange={handleValuesChange}
-        selectedStyle={{ backgroundColor: colors.primary }}
-        unselectedStyle={{ backgroundColor: colors.border }}
-        markerStyle={{
-          backgroundColor: colors.primary,
-          height: 20,
-          width: 20,
-          borderRadius: 10,
-        }}
-        pressedMarkerStyle={{
-          backgroundColor: colors.primary,
-          height: 24,
-          width: 24,
-          borderRadius: 12,
-        }}
-        containerStyle={{ height: 40 }}
-      />
+      <View style={{ paddingHorizontal: 12 }}>
+        <MultiSlider
+          values={[values[0], values[1]]}
+          min={minLimit}
+          max={maxLimit}
+          step={step}
+          allowOverlap={false}
+          snapped
+          sliderLength={sliderWidth - 24}
+          onValuesChange={handleValuesChange}
+          selectedStyle={{ backgroundColor: colors.primary }}
+          unselectedStyle={{ backgroundColor: colors.border }}
+          markerStyle={{
+            backgroundColor: colors.primary,
+            height: 20,
+            width: 20,
+            borderRadius: 10,
+          }}
+          pressedMarkerStyle={{
+            backgroundColor: colors.primary,
+            height: 24,
+            width: 24,
+            borderRadius: 12,
+          }}
+          containerStyle={{ height: 40 }}
+        />
+      </View>
 
       <View className="flex-row justify-between">
         <Text className="text-xs text-muted">{formatEndLabel(minLimit)}</Text>
