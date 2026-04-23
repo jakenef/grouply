@@ -1,4 +1,5 @@
 import { openInMaps } from "@/lib/maps";
+import { maybeRequestReview } from "@/lib/useStoreReview";
 import { colors } from "@/lib/theme";
 import { trpc } from "@/lib/trpc";
 import { useCurrentUser } from "@/lib/useCurrentUserHook";
@@ -102,6 +103,7 @@ export default function EventDetails(props: EventDetailsProps) {
       await joinMutation.mutateAsync({
         eventId: props.event.id,
       });
+      maybeRequestReview();
     } catch (error: any) {
       console.error(error);
       Alert.alert("Error", "Failed to join event. Please try again.");

@@ -17,7 +17,7 @@ The event suggestion algorithm takes a user's natural language activity descript
   - [See Similarity Matching Details](../matchingAlgorithm/SIMILARITY_MATCHING.md)
   - Scoring logic: [`getMatchScore`](../../../backend/server/services/event/getMatchScore/getMatchScore.ts)
 
-- Discard events with very low match scores (bad matches).
+- Does NOT discard events with very low match scores (bad matches).
 
 ### Step 2: Semantic Activity Matching
 

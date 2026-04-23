@@ -264,6 +264,7 @@ const EditProfile = () => {
             minRequired={5}
             maxAllowed={15}
             allowOther={false}
+            sortSelectedFirst
             error={errors.interests}
             // onCustomOptionAdded={(customOption) => {
             //   setCustomInterests((prev) => [...prev, customOption]);
@@ -284,47 +285,50 @@ const EditProfile = () => {
             minRequired={5}
             maxAllowed={15}
             allowOther={false}
+            sortSelectedFirst
             error={errors.traits}
             // onCustomOptionAdded={(customOption) => {
             //   setCustomTraits((prev) => [...prev, customOption]);
             // }}
           />
 
-          {/* Group Size Range */}
-          <RangeSlider
-            label="What is your preferred group size?"
-            minValue={user?.minGroupSize ?? 3}
-            maxValue={user?.maxGroupSize ?? 6}
-            minLimit={2}
-            maxLimit={12}
-            step={1}
-            onValuesChange={(values) => setGroupSizeRange(values)}
-            formatLabel={(value) => (value === 9 ? "9" : String(value))}
-          />
+          <View className="gap-12">
+            {/* Group Size Range */}
+            <RangeSlider
+              label="What is your preferred group size?"
+              minValue={user?.minGroupSize ?? 3}
+              maxValue={user?.maxGroupSize ?? 6}
+              minLimit={2}
+              maxLimit={12}
+              step={1}
+              onValuesChange={(values) => setGroupSizeRange(values)}
+              formatLabel={(value) => (value === 9 ? "9" : String(value))}
+            />
 
-          {/* Max Travel Distance */}
-          <SliderSingle
-            label="How far are you willing to travel for an event?"
-            value={travelDistance}
-            minLimit={10}
-            maxLimit={100}
-            step={1}
-            onValueChange={(value) => setTravelDistance(value)}
-            formatLabel={(value) => `${value} mi (${milesToKm(value)} km)`}
-          />
+            {/* Max Travel Distance */}
+            <SliderSingle
+              label="How far are you willing to travel for an event?"
+              value={travelDistance}
+              minLimit={10}
+              maxLimit={100}
+              step={1}
+              onValueChange={(value) => setTravelDistance(value)}
+              formatLabel={(value) => `${value} mi (${milesToKm(value)} km)`}
+            />
 
-          {/* Age Range */}
-          <RangeSlider
-            label="What is your preferred age range of other attendees?"
-            minValue={user?.minAgePreference ?? 18}
-            maxValue={user?.maxAgePreference ?? 25}
-            minLimit={18}
-            maxLimit={60}
-            step={1}
-            onValuesChange={(values) => setAgeRange(values)}
-            formatLabel={(value) => (value === 60 ? "60" : String(value))}
-            error={errors.ageRange}
-          />
+            {/* Age Range */}
+            <RangeSlider
+              label="What is your preferred age range of other attendees?"
+              minValue={user?.minAgePreference ?? 18}
+              maxValue={user?.maxAgePreference ?? 25}
+              minLimit={18}
+              maxLimit={60}
+              step={1}
+              onValuesChange={(values) => setAgeRange(values)}
+              formatLabel={(value) => (value === 60 ? "60" : String(value))}
+              error={errors.ageRange}
+            />
+          </View>
         </ScrollView>
       </View>
     </KeyboardAvoidingView>

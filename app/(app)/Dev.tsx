@@ -84,6 +84,13 @@ const Dev = () => {
   const { mutateAsync: deleteInterests } =
     trpc.troubleshooting.interestsRouter.TRB_deleteInterests.useMutation();
 
+  const { mutateAsync: addInterest } =
+    trpc.troubleshooting.interestsRouter.TRB_addInterest.useMutation();
+  const { mutateAsync: addTrait } =
+    trpc.troubleshooting.troubleshootingTraitsRouter.TRB_addTrait.useMutation();
+  const { mutateAsync: addActivity } =
+    trpc.troubleshooting.troubleshootingActivityRouter.TRB_addActivity.useMutation();
+
   const { mutateAsync: generateLoginLink } =
     trpc.troubleshooting.troubleshootingAuthRouter.generateUserLoginLink.useMutation();
 
@@ -312,6 +319,44 @@ const Dev = () => {
               inputPlaceholder="Number of events to create"
               onRun={async (value?: number) => {
                 await createEvents({ numEvents: value ?? 0 });
+              }}
+            />
+          </TroubleshootDropdown>
+
+          <TroubleshootDropdown title="Add Content">
+            <TroubleshootItem
+              title="Add Interest"
+              description="Add a new interest to the database"
+              fields={[
+                { key: 'slug', placeholder: 'slug (e.g. pottery)', required: true },
+                { key: 'label', placeholder: 'label (e.g. Pottery)', required: true },
+              ]}
+              onRun={async (_v, f) => {
+                await addInterest({ slug: f!.slug, label: f!.label });
+              }}
+            />
+            <TroubleshootItem
+              title="Add Trait"
+              description="Add a new trait to the database"
+              fields={[
+                { key: 'slug', placeholder: 'slug (e.g. adventurous)', required: true },
+                { key: 'label', placeholder: 'label (e.g. Adventurous)', required: true },
+                { key: 'desc', placeholder: 'description (optional)' },
+              ]}
+              onRun={async (_v, f) => {
+                await addTrait({ slug: f!.slug, label: f!.label, desc: f!.desc || undefined });
+              }}
+            />
+            <TroubleshootItem
+              title="Add Activity"
+              description="Add a new activity with AI embedding to the database"
+              fields={[
+                { key: 'slug', placeholder: 'slug (e.g. rock-climbing)', required: true },
+                { key: 'label', placeholder: 'label (e.g. Rock Climbing)', required: true },
+                { key: 'description', placeholder: 'description (used for AI matching)', required: true },
+              ]}
+              onRun={async (_v, f) => {
+                await addActivity({ slug: f!.slug, label: f!.label, description: f!.description });
               }}
             />
           </TroubleshootDropdown>

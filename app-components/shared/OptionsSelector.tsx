@@ -1,6 +1,6 @@
 import { colors } from "@/lib/theme";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useRef, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import {
   Pressable,
   Text,
@@ -20,6 +20,8 @@ interface OptionsSelectorProps {
   allowOther?: boolean;
   error?: string;
   onCustomOptionAdded?: (option: { id: string; label: string }) => void;
+  initialDisplayCount?: number;
+  sortSelectedFirst?: boolean;
 }
 
 const OptionsSelector = ({
@@ -32,8 +34,10 @@ const OptionsSelector = ({
   allowOther = false,
   error,
   onCustomOptionAdded,
+  initialDisplayCount = 12,
+  sortSelectedFirst = false,
 }: OptionsSelectorProps) => {
-  const [displayCount, setDisplayCount] = useState(12);
+  const [displayCount, setDisplayCount] = useState(initialDisplayCount);
   const [otherValue, setOtherValue] = useState("");
   const [otherSelected, setOtherSelected] = useState(false);
   const [customOptions, setCustomOptions] = useState<
@@ -41,14 +45,26 @@ const OptionsSelector = ({
   >([]);
   const [maxReached, setMaxReached] = useState(false);
   const otherInputRef = useRef<TextInput>(null);
+  const initialSelectedRef = useRef(selectedOptions);
 
   // Only reset display count if the options array meaningfully changes
   const optionsKey = options.map((o) => o.id).join(",");
   React.useEffect(() => {
-    setDisplayCount(12);
-  }, [optionsKey]);
+    setDisplayCount(initialDisplayCount);
+  }, [optionsKey, initialDisplayCount]);
 
-  const displayedOptions = options.slice(0, displayCount);
+  const sortedOptions = useMemo(() => {
+    if (!sortSelectedFirst) return options;
+    return [...options].sort((a, b) => {
+      const aSelected = initialSelectedRef.current.includes(a.id);
+      const bSelected = initialSelectedRef.current.includes(b.id);
+      if (aSelected && !bSelected) return -1;
+      if (!aSelected && bSelected) return 1;
+      return 0;
+    });
+  }, [options, sortSelectedFirst]);
+
+  const displayedOptions = sortedOptions.slice(0, displayCount);
 
   // Focus the text input whenever "Other" is selected
   React.useEffect(() => {
@@ -78,8 +94,7 @@ const OptionsSelector = ({
   };
 
   const handleLoadMore = () => {
-    // Load more options (next 12)
-    setDisplayCount((prev) => Math.min(prev + 12, options.length));
+    setDisplayCount((prev) => Math.min(prev + initialDisplayCount, options.length));
   };
 
   const handleOtherToggle = () => {
@@ -245,9 +260,9 @@ const OptionsSelector = ({
       {displayCount < options.length && (
         <Pressable
           onPress={handleLoadMore}
-          className="flex-row items-center mt-3"
+          className="px-4 py-2 mb-2 mr-1 rounded-full border border-primary bg-white self-start flex-row items-center"
         >
-          <Text className="text-primary mr-1">Load more</Text>
+          <Text className="text-base text-primary mr-1">Load more</Text>
           <Ionicons name="chevron-down" size={16} color={colors.primary} />
         </Pressable>
       )}

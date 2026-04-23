@@ -13,6 +13,7 @@ interface SingleSelectProps {
   multiSelect?: false;
   selectedValue: string;
   onSelect: (value: string) => void;
+  error?: string;
 }
 
 interface MultiSelectProps {
@@ -23,6 +24,7 @@ interface MultiSelectProps {
   selectedValues: string[];
   onSelectMultiple: (values: string[]) => void;
   maxAllowedSelections?: number;
+  error?: string;
 }
 
 type MultipleChoiceSelectorProps = SingleSelectProps | MultiSelectProps;
@@ -30,7 +32,7 @@ type MultipleChoiceSelectorProps = SingleSelectProps | MultiSelectProps;
 export default function MultipleChoiceSelector(
   props: MultipleChoiceSelectorProps,
 ) {
-  const { question, description, options, multiSelect } = props;
+  const { question, description, options, multiSelect, error } = props;
 
   const isSelected = (value: string) => {
     if (multiSelect) {
@@ -107,6 +109,9 @@ export default function MultipleChoiceSelector(
             You can only select up to {props.maxAllowedSelections} options.
           </Text>
         )}
+      {error && (
+        <Text className="mt-2 text-xs text-danger font-medium">{error}</Text>
+      )}
     </View>
   );
 }
