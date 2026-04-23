@@ -12,10 +12,10 @@ interface SliderSingleProps {
   valueLabels?: string[];
   onValueChange?: (value: number) => void;
   formatLabel?: (value: number) => string;
+  formatRangeLabel?: (value: number) => string;
   error?: string;
   valuePrefix?: string;
   valueSuffix?: string;
-  sliderLength?: number;
 }
 
 const SliderSingle = ({
@@ -27,12 +27,13 @@ const SliderSingle = ({
   valueLabels,
   onValueChange,
   formatLabel,
+  formatRangeLabel,
   error,
   valuePrefix = "",
   valueSuffix = "",
-  sliderLength = 280,
 }: SliderSingleProps) => {
   const [sliderValue, setSliderValue] = useState<number>(value);
+  const [sliderWidth, setSliderWidth] = useState(280);
 
   useEffect(() => {
     setSliderValue(value);
@@ -46,66 +47,66 @@ const SliderSingle = ({
   };
 
   const formatValueLabel = (val: number): string => {
-    if (formatLabel) {
-      return formatLabel(val);
-    }
-
-    if (valueLabels && val - minLimit < valueLabels.length) {
+    if (formatLabel) return formatLabel(val);
+    if (valueLabels && val - minLimit < valueLabels.length)
       return valueLabels[val - minLimit];
-    }
-
-    return String(val);
+    return `${valuePrefix}${String(val)}${valueSuffix}`;
   };
 
-  const isMaxValue = (val: number): boolean => {
-    return val === maxLimit;
+  const formatEndLabel = (val: number): string => {
+    if (formatRangeLabel) return formatRangeLabel(val);
+    if (valueLabels && val - minLimit < valueLabels.length)
+      return valueLabels[val - minLimit];
+    return `${valuePrefix}${String(val)}${valueSuffix}`;
   };
+
+  const isMaxValue = (val: number) => val === maxLimit;
 
   return (
-    <View className="mb-6">
-      <Text className="text-base font-semibold text-foreground mb-2">
-        {label}
-      </Text>
+    <View
+      onLayout={(e) => setSliderWidth(e.nativeEvent.layout.width)}
+    >
+      <View className="flex-row justify-between items-baseline mb-1">
+        <Text className="text-base font-semibold text-foreground flex-1 mr-4">
+          {label}
+        </Text>
+        <Text className="text-base font-semibold text-primary flex-shrink-0">
+          {formatValueLabel(sliderValue)}
+          {isMaxValue(sliderValue) ? "+" : ""}
+        </Text>
+      </View>
 
-      <View className="bg-white border rounded-xl p-4 border-border">
-        <View className="flex-row justify-center mb-2">
-          <Text className="text-sm text-muted">
-            {valuePrefix}
-            {formatValueLabel(sliderValue)}
-            {valueSuffix}
-            {isMaxValue(sliderValue) ? "+" : ""}
-          </Text>
-        </View>
+      <View className="h-px bg-border mb-3" />
 
-        <View className="items-center">
-          <MultiSlider
-            values={[sliderValue]}
-            min={minLimit}
-            max={maxLimit}
-            step={step}
-            allowOverlap={false}
-            snapped
-            sliderLength={sliderLength}
-            onValuesChange={handleValueChange}
-            selectedStyle={{ backgroundColor: colors.primary }}
-            unselectedStyle={{ backgroundColor: colors.border }}
-            markerStyle={{
-              backgroundColor: colors.primary,
-              height: 20,
-              width: 20,
-              borderRadius: 10,
-            }}
-            pressedMarkerStyle={{
-              backgroundColor: colors.primary,
-              height: 24,
-              width: 24,
-              borderRadius: 12,
-            }}
-            containerStyle={{
-              height: 40,
-            }}
-          />
-        </View>
+      <MultiSlider
+        values={[sliderValue]}
+        min={minLimit}
+        max={maxLimit}
+        step={step}
+        allowOverlap={false}
+        snapped
+        sliderLength={sliderWidth}
+        onValuesChange={handleValueChange}
+        selectedStyle={{ backgroundColor: colors.primary }}
+        unselectedStyle={{ backgroundColor: colors.border }}
+        markerStyle={{
+          backgroundColor: colors.primary,
+          height: 20,
+          width: 20,
+          borderRadius: 10,
+        }}
+        pressedMarkerStyle={{
+          backgroundColor: colors.primary,
+          height: 24,
+          width: 24,
+          borderRadius: 12,
+        }}
+        containerStyle={{ height: 40 }}
+      />
+
+      <View className="flex-row justify-between">
+        <Text className="text-xs text-muted">{formatEndLabel(minLimit)}</Text>
+        <Text className="text-xs text-muted">{formatEndLabel(maxLimit)}</Text>
       </View>
 
       {error && <Text className="text-sm text-danger mt-1">{error}</Text>}

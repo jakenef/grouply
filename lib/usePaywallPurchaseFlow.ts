@@ -8,6 +8,8 @@ import type { Purchase } from "react-native-iap";
 
 type VerifySource = "listener" | "restore";
 
+const PURCHASE_TIMEOUT_MS = 30_000;
+
 export function usePaywallPurchaseFlow() {
   const router = useRouter();
   const utils = trpc.useUtils();
@@ -15,6 +17,15 @@ export function usePaywallPurchaseFlow() {
 
   const [isProcessing, setIsProcessing] = useState(false);
   const seenIosTxKeysRef = useRef<Set<string>>(new Set());
+  const purchaseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const purchaseInFlightRef = useRef(false);
+
+  const clearPurchaseTimeout = () => {
+    if (purchaseTimeoutRef.current) {
+      clearTimeout(purchaseTimeoutRef.current);
+      purchaseTimeoutRef.current = null;
+    }
+  };
 
   const isJwtShape = (value: unknown) => {
     return (
@@ -39,18 +50,54 @@ export function usePaywallPurchaseFlow() {
   const { requestPurchase, finishTransaction, getAvailablePurchases } =
     useIAPClient({
       onPurchaseSuccess: async (purchase) => {
-        const result = await handleVerifyPurchase(purchase, "listener");
-
-        if (result.verified && !result.isDuplicate) {
+        if (!purchaseInFlightRef.current) return;
+        clearPurchaseTimeout();
+        try {
+          const result = await handleVerifyPurchase(purchase, "listener");
+          purchaseInFlightRef.current = false;
           setIsProcessing(false);
-          router.replace("/(app)/Home");
+
+          if (result.verified && !result.isDuplicate) {
+            router.replace("/(app)/Home");
+            return;
+          }
+
+          if (!result.verified) {
+            Alert.alert(
+              "Verification Failed",
+              "Your payment was received by Apple, but we couldn't confirm it with our server. Tap \"Restore Purchase\" below to complete your access, or contact support if the issue persists.",
+            );
+          }
+        } catch {
+          purchaseInFlightRef.current = false;
+          setIsProcessing(false);
+          Alert.alert(
+            "Verification Failed",
+            "Your payment was received by Apple, but we couldn't confirm it with our server. Tap \"Restore Purchase\" below to complete your access, or contact support if the issue persists.",
+          );
+        }
+      },
+      onPurchaseError: (error) => {
+        if (!purchaseInFlightRef.current) return;
+        clearPurchaseTimeout();
+        purchaseInFlightRef.current = false;
+        setIsProcessing(false);
+
+        const code = (error as any)?.code;
+        if (code === "E_USER_CANCELLED") return;
+
+        if (code === "E_ALREADY_OWNED") {
+          Alert.alert(
+            "Already Subscribed",
+            "This Apple ID already has an active Grouply subscription. Tap \"Restore Purchase\" below to regain access.",
+          );
           return;
         }
 
-        setIsProcessing(false);
-      },
-      onPurchaseError: (error) => {
-        setIsProcessing(false);
+        Alert.alert(
+          "Purchase Failed",
+          (error as any)?.message || "Something went wrong. Please try again.",
+        );
       },
     });
 
@@ -158,12 +205,25 @@ export function usePaywallPurchaseFlow() {
     if (!selectedPlan) return;
 
     setIsProcessing(true);
+    purchaseInFlightRef.current = true;
+
+    purchaseTimeoutRef.current = setTimeout(() => {
+      purchaseTimeoutRef.current = null;
+      purchaseInFlightRef.current = false;
+      setIsProcessing(false);
+      Alert.alert(
+        "Purchase Timed Out",
+        "The purchase didn't complete. If you already have a subscription on this Apple ID, tap \"Restore Purchase\" below.",
+      );
+    }, PURCHASE_TIMEOUT_MS);
 
     try {
       const androidOfferToken =
         Platform.OS === "android" ? selectedPlan.offerToken?.trim() : null;
 
       if (Platform.OS === "android" && !androidOfferToken) {
+        clearPurchaseTimeout();
+        purchaseInFlightRef.current = false;
         Alert.alert(
           "Plan Unavailable",
           "This plan is missing its Android offer token. Please refresh and try again.",
@@ -194,6 +254,8 @@ export function usePaywallPurchaseFlow() {
         type: "subs",
       });
     } catch (error: any) {
+      clearPurchaseTimeout();
+      purchaseInFlightRef.current = false;
       setIsProcessing(false);
 
       if (error?.code === "E_USER_CANCELLED") return;

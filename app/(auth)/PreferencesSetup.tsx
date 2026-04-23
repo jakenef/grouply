@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Alert, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -10,28 +10,27 @@ import RangeSlider from "@/app-components/shared/RangeSlider";
 import SliderSingle from "@/app-components/shared/SliderSingle";
 import { useAuth } from "@/lib/auth";
 import { trpc } from "@/lib/trpc";
-
-// Use real data from the backend
-interface Interest {
-  id: string;
-  label: string;
-  slug: string;
-}
-
-interface Trait {
-  id: string;
-  label: string;
-  slug: string;
-  desc?: string;
-}
+import { useCurrentUser } from "@/lib/useCurrentUserHook";
+import calculateAge from "@/shared/utils/calculateAge";
 
 interface CustomOption {
   id: string;
   label: string;
 }
 
+const SectionDivider = ({ label }: { label: string }) => (
+  <View className="flex-row items-center my-6">
+    <View className="flex-1 h-px bg-border" />
+    <Text className="mx-3 text-xs text-muted font-semibold uppercase tracking-widest">
+      {label}
+    </Text>
+    <View className="flex-1 h-px bg-border" />
+  </View>
+);
+
 const PreferencesSetup = () => {
   const { user, session } = useAuth();
+  const { user: currentUser } = useCurrentUser();
 
   // Fetch interests and traits from the backend (approved only)
   const interestsQuery = trpc.interests.getAllApprovedInterests.useQuery();
@@ -125,14 +124,40 @@ const PreferencesSetup = () => {
   // State for travel distance (single value)
   const [travelDistance, setTravelDistance] = useState<number>(20);
 
-  // State for age preferences
+  // State for age preferences — centered ±5 years around the user's age
   const [ageRange, setAgeRange] = useState<[number, number]>([21, 35]);
+
+  useEffect(() => {
+    const age = calculateAge(
+      currentUser?.birthday ? new Date(currentUser.birthday) : null,
+    );
+    if (age) {
+      setAgeRange([Math.max(18, age - 5), Math.min(60, age + 5)]);
+    }
+  }, [currentUser?.birthday]);
 
   // Form validation errors
   const [errors, setErrors] = useState<{
     interests?: string;
     traits?: string;
+    eventEnergy?: string;
+    groupRole?: string;
+    preferredAtmosphere?: string;
+    downtimePreference?: string;
+    peopleVibe?: string;
   }>({});
+
+  const [scrollProgress, setScrollProgress] = useState(0);
+
+  const handleScroll = (event: any) => {
+    const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+    const totalScrollable = contentSize.height - layoutMeasurement.height;
+    if (totalScrollable > 0) {
+      setScrollProgress(
+        Math.max(0, Math.min(contentOffset.y / totalScrollable, 1)),
+      );
+    }
+  };
 
   // Set up tRPC mutation
   const utils = trpc.useUtils();
@@ -158,6 +183,27 @@ const PreferencesSetup = () => {
     }
   }, [session]);
 
+  const shuffled = <T,>(arr: T[]): T[] => {
+    const copy = [...arr];
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  };
+
+  const shuffledInterests = useMemo(
+    () => shuffled(interestsQuery.data ?? []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [interestsQuery.data],
+  );
+
+  const shuffledTraits = useMemo(
+    () => shuffled(traitsQuery.data ?? []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [traitsQuery.data],
+  );
+
   // Determine if data is still loading
   const isLoading = interestsQuery.isLoading || traitsQuery.isLoading;
 
@@ -181,20 +227,26 @@ const PreferencesSetup = () => {
   }, [interestsQuery.error, traitsQuery.error]);
 
   const validateForm = (): boolean => {
-    const newErrors: {
-      interests?: string;
-      traits?: string;
-    } = {};
+    const newErrors: typeof errors = {};
+
+    if (eventEnergy.length === 0)
+      newErrors.eventEnergy = "Please select at least one option";
+    if (!groupRole) newErrors.groupRole = "Please select an option";
+    if (!preferredAtmosphere)
+      newErrors.preferredAtmosphere = "Please select an option";
+    if (!downtimePreference)
+      newErrors.downtimePreference = "Please select an option";
+    if (!peopleVibe) newErrors.peopleVibe = "Please select an option";
 
     if (
       (interestsQuery.data?.length ?? 0) > 0 &&
-      selectedInterests.length < 3
+      selectedInterests.length < 5
     ) {
-      newErrors.interests = "Please select at least 3 interests";
+      newErrors.interests = "Please select at least 5 interests";
     }
 
-    if ((traitsQuery.data?.length ?? 0) > 0 && selectedTraits.length < 3) {
-      newErrors.traits = "Please select at least 3 traits";
+    if ((traitsQuery.data?.length ?? 0) > 0 && selectedTraits.length < 5) {
+      newErrors.traits = "Please select at least 5 traits";
     }
 
     setErrors(newErrors);
@@ -308,7 +360,20 @@ const PreferencesSetup = () => {
 
   return (
     <View className="flex-1 bg-background">
-      <ScrollView className="flex-1 px-8" showsVerticalScrollIndicator={false}>
+      {/* Scroll progress bar */}
+      <View className="h-1 w-full bg-border">
+        <View
+          className="h-full bg-primary"
+          style={{ width: `${scrollProgress * 100}%` }}
+        />
+      </View>
+
+      <ScrollView
+        className="flex-1 px-8"
+        showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+      >
         {/* Header */}
         <View className="items-center mt-8 mb-8">
           <Text className="text-4xl font-bold text-primary">
@@ -320,136 +385,147 @@ const PreferencesSetup = () => {
           </Text>
         </View>
 
-        {/* Interests Selection */}
-        <OptionsSelector
-          title="What kind of things do you enjoy doing? (Please choose the 10 that you enjoy most)"
-          options={
-            interestsQuery.data?.map((interest) => ({
-              id: interest.id,
-              label: interest.label,
-            })) || []
-          }
-          selectedOptions={selectedInterests}
-          onSelectionChange={setSelectedInterests}
-          minRequired={interestsQuery.data?.length! > 0 ? 10 : undefined}
-          maxAllowed={15}
-          allowOther={false}
-          error={errors.interests}
-          onCustomOptionAdded={(customOption) => {
-            setCustomInterests((prev) => [...prev, customOption]);
-          }}
-        />
+        <View className="pb-8">
+          <SectionDivider label="Your Vibe" />
 
-        {/* Traits Selection */}
-        <OptionsSelector
-          title="What's your vibe? (Please choose the 5 that best describe you)"
-          options={
-            traitsQuery.data?.map((trait) => ({
-              id: trait.id,
-              label: trait.label,
-            })) || []
-          }
-          selectedOptions={selectedTraits}
-          onSelectionChange={setSelectedTraits}
-          minRequired={traitsQuery.data?.length! > 0 ? 5 : undefined}
-          maxAllowed={10}
-          allowOther={false}
-          error={errors.traits}
-          onCustomOptionAdded={(customOption) => {
-            setCustomTraits((prev) => [...prev, customOption]);
-          }}
-        />
-
-        {/* Group Size Range */}
-        <RangeSlider
-          label="What is your preferred group size?"
-          minValue={3}
-          maxValue={6}
-          minLimit={2}
-          maxLimit={12}
-          step={1}
-          onValuesChange={(values) => setGroupSizeRange(values)}
-          formatLabel={(value) => (value === 9 ? "9" : String(value))}
-        />
-
-        {/* Max Travel Distance */}
-        <SliderSingle
-          label="How far are you willing to travel for an event?"
-          value={travelDistance}
-          minLimit={10}
-          maxLimit={100}
-          step={5}
-          onValueChange={(value) => setTravelDistance(value)}
-          formatLabel={(value) => `${value} mi (${milesToKm(value)} km)`}
-        />
-
-        {/* Age Range */}
-        <RangeSlider
-          label="What is your preferred age range of other attendees?"
-          minValue={18}
-          maxValue={25}
-          minLimit={18}
-          maxLimit={60}
-          step={1}
-          onValuesChange={(values) => setAgeRange(values)}
-          formatLabel={(value) => (value === 60 ? "60" : String(value))}
-        />
-
-        {/* Personality Questions */}
-        <View className="mt-6">
           <MultipleChoiceSelector
             {...personalityQuestions.eventEnergy}
             multiSelect
             maxAllowedSelections={2}
             selectedValues={eventEnergy}
             onSelectMultiple={setEventEnergy}
+            error={errors.eventEnergy}
           />
 
           <MultipleChoiceSelector
             {...personalityQuestions.groupRole}
             selectedValue={groupRole}
             onSelect={setGroupRole}
+            error={errors.groupRole}
           />
 
           <MultipleChoiceSelector
             {...personalityQuestions.preferredAtmosphere}
             selectedValue={preferredAtmosphere}
             onSelect={setPreferredAtmosphere}
+            error={errors.preferredAtmosphere}
           />
 
           <MultipleChoiceSelector
             {...personalityQuestions.downtimePreference}
             selectedValue={downtimePreference}
             onSelect={setDowntimePreference}
+            error={errors.downtimePreference}
           />
 
           <MultipleChoiceSelector
             {...personalityQuestions.peopleVibe}
             selectedValue={peopleVibe}
             onSelect={setPeopleVibe}
+            error={errors.peopleVibe}
           />
-        </View>
 
-        {/* Save and Continue Button */}
-        <View className="mb-8 mt-6">
-          <GrouplyButton
-            label={
-              savePreferencesMutation.isPending
-                ? "Saving Preferences..."
-                : "Save & Continue"
-            }
-            variant="primary"
-            size="large"
-            fullWidth
-            onPress={handleSaveAndContinue}
-            disabled={
-              savePreferencesMutation.isPending ||
-              ((interestsQuery.data?.length ?? 0) > 0 &&
-                selectedInterests.length < 3) ||
-              ((traitsQuery.data?.length ?? 0) > 0 && selectedTraits.length < 3)
-            }
-            isLoading={savePreferencesMutation.isPending}
+          <SectionDivider label="Your Interests" />
+
+          <OptionsSelector
+            title="What kind of things do you enjoy doing?"
+            options={shuffledInterests.map((interest) => ({
+              id: interest.id,
+              label: interest.label,
+            }))}
+            selectedOptions={selectedInterests}
+            onSelectionChange={setSelectedInterests}
+            minRequired={interestsQuery.data?.length! > 0 ? 5 : undefined}
+            maxAllowed={15}
+            allowOther={false}
+            error={errors.interests}
+            onCustomOptionAdded={(customOption) => {
+              setCustomInterests((prev) => [...prev, customOption]);
+            }}
           />
+
+          <SectionDivider label="Your Traits" />
+
+          <OptionsSelector
+            title="What's your vibe?"
+            options={shuffledTraits.map((trait) => ({
+              id: trait.id,
+              label: trait.label,
+            }))}
+            selectedOptions={selectedTraits}
+            onSelectionChange={setSelectedTraits}
+            minRequired={traitsQuery.data?.length! > 0 ? 5 : undefined}
+            maxAllowed={10}
+            allowOther={false}
+            error={errors.traits}
+            onCustomOptionAdded={(customOption) => {
+              setCustomTraits((prev) => [...prev, customOption]);
+            }}
+          />
+
+          <SectionDivider label="Event Preferences" />
+
+          <View className="gap-12">
+            <RangeSlider
+              label="What is your preferred group size?"
+              minValue={3}
+              maxValue={6}
+              minLimit={2}
+              maxLimit={12}
+              step={1}
+              onValuesChange={(values) => setGroupSizeRange(values)}
+              formatLabel={(value) => (value === 9 ? "9" : String(value))}
+            />
+
+            <SliderSingle
+              label="How far are you willing to travel for an event?"
+              value={travelDistance}
+              minLimit={10}
+              maxLimit={100}
+              step={5}
+              onValueChange={(value) => setTravelDistance(value)}
+              formatLabel={(value) => `${value} mi (${milesToKm(value)} km)`}
+              formatRangeLabel={(value) => `${value} mi`}
+            />
+
+            <RangeSlider
+              label="What is your preferred age range of other attendees?"
+              minValue={ageRange[0]}
+              maxValue={ageRange[1]}
+              minLimit={18}
+              maxLimit={60}
+              step={1}
+              onValuesChange={(values) => setAgeRange(values)}
+              formatLabel={(value) => (value === 60 ? "60" : String(value))}
+            />
+          </View>
+
+          <View className="mt-6">
+            <GrouplyButton
+              label={
+                savePreferencesMutation.isPending
+                  ? "Saving Preferences..."
+                  : "Save & Continue"
+              }
+              variant="primary"
+              size="large"
+              fullWidth
+              onPress={handleSaveAndContinue}
+              disabled={
+                savePreferencesMutation.isPending ||
+                eventEnergy.length === 0 ||
+                !groupRole ||
+                !preferredAtmosphere ||
+                !downtimePreference ||
+                !peopleVibe ||
+                ((interestsQuery.data?.length ?? 0) > 0 &&
+                  selectedInterests.length < 5) ||
+                ((traitsQuery.data?.length ?? 0) > 0 &&
+                  selectedTraits.length < 5)
+              }
+              isLoading={savePreferencesMutation.isPending}
+            />
+          </View>
         </View>
       </ScrollView>
     </View>

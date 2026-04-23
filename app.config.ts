@@ -1,22 +1,10 @@
-import * as dotenv from "dotenv";
 import { ConfigContext, ExpoConfig } from "expo/config";
-
-const variant = process.env.APP_VARIANT ?? "development";
-
-const envFile =
-  variant === "production"
-    ? ".env.production"
-    : variant === "staging"
-      ? ".env.stg"
-      : ".env.dev";
-
-dotenv.config({ path: envFile });
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "Grouply",
   slug: "grouply",
-  version: "1.0.2",
+  version: "1.0.3",
   orientation: "portrait",
   icon: "./assets/images/grouplyAppIcon.png",
   scheme: "grouply",

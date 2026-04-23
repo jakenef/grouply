@@ -326,7 +326,7 @@ const AboutYouSetup = () => {
               className={`w-6 h-6 rounded border items-center justify-center mr-3 ${
                 agreedToTerms
                   ? "bg-primary border-primary"
-                  : "border-border bg-white"
+                  : "border-muted-darker bg-white"
               }`}
             >
               {agreedToTerms && (

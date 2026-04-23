@@ -5,12 +5,14 @@ import React from "react";
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
   Linking,
   ScrollView,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { EnvDebugger } from "../../app-components/dev/EnvDebugger";
 import TroubleshootDropdown from "../../app-components/dev/TroubleshootDropdown";
 import TroubleshootItem from "../../app-components/dev/TroubleshootItem";
@@ -19,6 +21,7 @@ import { EventCard } from "../../app-components/events/EventCard";
 const Dev = () => {
   const { user } = useCurrentUser();
   const utils = trpc.useUtils();
+  const insets = useSafeAreaInsets();
 
   // Only allow in development mode OR for admin users
   if (!__DEV__ && user?.role !== "ADMIN") {
@@ -84,6 +87,13 @@ const Dev = () => {
   const { mutateAsync: deleteInterests } =
     trpc.troubleshooting.interestsRouter.TRB_deleteInterests.useMutation();
 
+  const { mutateAsync: addInterest } =
+    trpc.troubleshooting.interestsRouter.TRB_addInterest.useMutation();
+  const { mutateAsync: addTrait } =
+    trpc.troubleshooting.troubleshootingTraitsRouter.TRB_addTrait.useMutation();
+  const { mutateAsync: addActivity } =
+    trpc.troubleshooting.troubleshootingActivityRouter.TRB_addActivity.useMutation();
+
   const { mutateAsync: generateLoginLink } =
     trpc.troubleshooting.troubleshootingAuthRouter.generateUserLoginLink.useMutation();
 
@@ -131,7 +141,11 @@ const Dev = () => {
   };
 
   return (
-    <View className="flex-1 bg-background">
+    <KeyboardAvoidingView
+      className="flex-1"
+      behavior="padding"
+      keyboardVerticalOffset={insets.top}
+    >
       <ScrollView className="flex-1 bg-background">
         <View className="p-4">
           {/* Environment Variables Debugger */}
@@ -315,9 +329,47 @@ const Dev = () => {
               }}
             />
           </TroubleshootDropdown>
+
+          <TroubleshootDropdown title="Add Content">
+            <TroubleshootItem
+              title="Add Interest"
+              description="Add a new interest to the database"
+              fields={[
+                { key: 'slug', placeholder: 'slug (e.g. pottery)', required: true },
+                { key: 'label', placeholder: 'label (e.g. Pottery)', required: true },
+              ]}
+              onRun={async (_v, f) => {
+                await addInterest({ slug: f!.slug, label: f!.label });
+              }}
+            />
+            <TroubleshootItem
+              title="Add Trait"
+              description="Add a new trait to the database"
+              fields={[
+                { key: 'slug', placeholder: 'slug (e.g. adventurous)', required: true },
+                { key: 'label', placeholder: 'label (e.g. Adventurous)', required: true },
+                { key: 'desc', placeholder: 'description (optional)' },
+              ]}
+              onRun={async (_v, f) => {
+                await addTrait({ slug: f!.slug, label: f!.label, desc: f!.desc || undefined });
+              }}
+            />
+            <TroubleshootItem
+              title="Add Activity"
+              description="Add a new activity with AI embedding to the database"
+              fields={[
+                { key: 'slug', placeholder: 'slug (e.g. rock-climbing)', required: true },
+                { key: 'label', placeholder: 'label (e.g. Rock Climbing)', required: true },
+                { key: 'description', placeholder: 'description (used for AI matching)', required: true },
+              ]}
+              onRun={async (_v, f) => {
+                await addActivity({ slug: f!.slug, label: f!.label, description: f!.description });
+              }}
+            />
+          </TroubleshootDropdown>
         </View>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
