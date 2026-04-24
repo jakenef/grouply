@@ -26,7 +26,10 @@ export default function EventDetailsEdit() {
     isLoading: isLoadingGenerated,
     error: generatedError,
   } = trpc.events.generateEventFromChannel.useQuery(
-    { channelId: channelId! },
+    {
+      channelId: channelId!,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    },
     { enabled: !existingEventId && !!channelId && channelId.length > 0 },
   );
 
