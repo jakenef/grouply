@@ -1,3 +1,4 @@
+import { posthog } from "@/lib/posthog";
 import { trpc } from "@/lib/trpc";
 import { useIAPClient } from "@/lib/useIAPClient";
 import type { NormalizedPlan } from "@/lib/useSubscriptionPlans";
@@ -58,6 +59,7 @@ export function usePaywallPurchaseFlow() {
           setIsProcessing(false);
 
           if (result.verified && !result.isDuplicate) {
+            posthog.capture("onboarding_subscription_completed");
             router.replace("/(app)/Home");
             return;
           }

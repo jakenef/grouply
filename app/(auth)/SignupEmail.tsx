@@ -1,5 +1,6 @@
 import ConfirmEmail from "@/app-components/onboarding/ConfirmEmail";
 import { useAuth } from "@/lib/auth";
+import { posthog } from "@/lib/posthog";
 import { trpc } from "@/lib/trpc";
 import { router } from "expo-router";
 import React from "react";
@@ -8,6 +9,18 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Login = () => {
   const { sendSignUpOTP, verifyOTP } = useAuth();
+
+  const trackedSendOTP = async (email: string) => {
+    const result = await sendSignUpOTP(email);
+    if (!result.error) posthog.capture("onboarding_email_submitted");
+    return result;
+  };
+
+  const trackedVerifyOTP = async (email: string, code: string) => {
+    const result = await verifyOTP(email, code);
+    if (!result.error) posthog.capture("onboarding_otp_verified");
+    return result;
+  };
   const utils = trpc.useUtils();
   const insets = useSafeAreaInsets();
 
@@ -55,8 +68,8 @@ const Login = () => {
 
           {/* Email/OTP flow component */}
           <ConfirmEmail
-            onSendOTP={sendSignUpOTP}
-            onVerifyOTP={verifyOTP}
+            onSendOTP={trackedSendOTP}
+            onVerifyOTP={trackedVerifyOTP}
             onSuccess={handleSuccess}
             sendButtonLabel="Verify Email"
           />

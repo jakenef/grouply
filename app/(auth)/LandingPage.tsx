@@ -1,9 +1,16 @@
-import { router } from "expo-router";
-import React from "react";
+import { router, useFocusEffect } from "expo-router";
+import { posthog } from "@/lib/posthog";
+import React, { useCallback } from "react";
 import { Image, Linking, ScrollView, Text, View } from "react-native";
 import GrouplyButton from "../../app-components/shared/GrouplyButton";
 
 const LandingPage = () => {
+  useFocusEffect(
+    useCallback(() => {
+      posthog.capture("onboarding_landing_viewed");
+    }, []),
+  );
+
   return (
     <View className="flex-1 bg-background">
       <ScrollView
