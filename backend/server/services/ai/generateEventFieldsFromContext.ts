@@ -32,7 +32,6 @@ export async function generateEventFieldsFromContext(params: {
 
   const timezone = params.timezone ?? "UTC";
   const currentDate = new Date();
-  const formattedCurrentDate = currentDate.toISOString();
   const readableDate = currentDate.toLocaleString("en-US", {
     weekday: "long",
     year: "numeric",
@@ -47,7 +46,7 @@ export async function generateEventFieldsFromContext(params: {
   const aiResponse = await openai.responses.parse({
     model: "gpt-4o-mini",
     input,
-    instructions: `The current date and time is ${readableDate} (${formattedCurrentDate}).
+    instructions: `The current date and time is ${readableDate}.
     The user's local timezone is ${timezone}. All times mentioned by the user refer to this timezone.
 
     The user has had a conversation with you about what kind of event they would like to attend. They have decided to host their own event instead of searching for an existing one. You will generate this prospective event's fields for the user.
