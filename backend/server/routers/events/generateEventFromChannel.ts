@@ -9,6 +9,7 @@ export const generateEventFromChannel = paidProcedure
   .input(
     z.object({
       channelId: z.string(),
+      timezone: z.string().optional(),
     }),
   )
   .output(
@@ -41,7 +42,7 @@ export const generateEventFromChannel = paidProcedure
     const today = new Date();
     let age = today.getFullYear() - birthday.getFullYear();
 
-    const minAge = Math.max(age - 2, 0);
+    const minAge = Math.max(age - 2, 18);
     const maxAge = age + 2;
 
     if (!messages || messages.length == 0) {
@@ -51,7 +52,10 @@ export const generateEventFromChannel = paidProcedure
       });
     }
 
-    const eventDetails = await generateEventFieldsFromContext({ messages });
+    const eventDetails = await generateEventFieldsFromContext({
+      messages,
+      timezone: input.timezone,
+    });
 
     const activity =
       (await getActivitiesFromDesc(eventDetails.description))[0] ?? null;
