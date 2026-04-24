@@ -18,9 +18,15 @@ export const TRB_deleteTestUsers = adminProcedure.mutation(async ({ ctx }) => {
       },
     });
 
+    const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
     // Delete from Supabase Auth first
     let authDeletedCount = 0;
     for (const user of testUsers) {
+      if (!UUID_REGEX.test(user.authUserId)) {
+        // Old test users with non-UUID authUserId (e.g. "TRB_...") have no auth record to delete
+        continue;
+      }
       const { error } = await supabase.auth.admin.deleteUser(user.authUserId);
       if (!error) {
         authDeletedCount++;

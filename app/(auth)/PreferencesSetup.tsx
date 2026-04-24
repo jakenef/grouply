@@ -1,4 +1,5 @@
 import { router } from "expo-router";
+import { posthog } from "@/lib/posthog";
 import React, { useEffect, useMemo, useState } from "react";
 import { Alert, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -298,6 +299,8 @@ const PreferencesSetup = () => {
           peopleVibe,
         },
       });
+
+      posthog.capture("onboarding_preferences_submitted");
 
       // Navigate to Paywall
       try {
