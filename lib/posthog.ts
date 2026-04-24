@@ -39,11 +39,8 @@ try {
     throw new Error("PostHog constructor is unavailable");
   }
 
-  posthog = new PostHogCtor("phc_wbUe4mPgWWLHdQwTw6BT3QTsPW7RVZN5KWJv7neY9G56", {
-    host: "https://us.i.posthog.com",
-  });
-
-  // Register global properties using consistent environment detection
+  // Compute environment before constructing the client so it's included in
+  // the Application Installed event (which fires during construction).
   let appEnv: string;
   try {
     appEnv = getAppEnv();
@@ -54,12 +51,22 @@ try {
     );
   }
 
-  // Map your environment values to development/production
-  const environment = appEnv === "prod" ? "production" : "development";
+  const envMap: Record<string, string> = {
+    prod: "production",
+    staging: "staging",
+    local: "development",
+  };
+  const environment = envMap[appEnv] ?? "unknown";
 
-  posthog.register({
-    environment,
+  posthog = new PostHogCtor("phc_wbUe4mPgWWLHdQwTw6BT3QTsPW7RVZN5KWJv7neY9G56", {
+    host: "https://us.i.posthog.com",
+    customAppProperties: (defaults: Record<string, unknown>) => ({
+      ...defaults,
+      environment,
+    }),
   });
+
+  posthog.register({ environment });
 } catch (error) {
   console.warn("PostHog initialization failed:", error);
   posthogInitError = error as Error;

@@ -8,8 +8,9 @@ import {
 } from "@/lib/useSubscriptionPlans";
 import { trpc } from "@/lib/trpc";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { posthog } from "@/lib/posthog";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Alert,
   Linking,
@@ -22,6 +23,12 @@ import {
 const Paywall = () => {
   const router = useRouter();
   const { signOut } = useAuth();
+
+  useFocusEffect(
+    useCallback(() => {
+      posthog.capture("onboarding_paywall_viewed");
+    }, []),
+  );
   const [selectedPlan, setSelectedPlan] = useState<NormalizedPlan | null>(null);
   const [selectedPlanKey, setSelectedPlanKey] = useState<string | null>(null);
   const { isProcessing, subscribe, restore } = usePaywallPurchaseFlow();
