@@ -1,4 +1,5 @@
 import { ErrorBoundary } from "@/app-components/dev/ErrorBoundary";
+import { RenewalListener } from "@/app-components/shared/RenewalListener";
 import { AuthProvider } from "@/lib/auth";
 import { DeepLinkHandler } from "@/lib/DeepLinkHandler";
 import { SafePostHogProvider } from "@/lib/posthog";
@@ -104,6 +105,7 @@ export default function RootLayout() {
             <QueryClientProvider client={queryClient}>
               <AuthProvider>
                 <DeepLinkHandler />
+                <RenewalListener />
                 <SafeAreaProvider>
                   <SafeAreaView className="flex-1 bg-background">
                     <Stack
