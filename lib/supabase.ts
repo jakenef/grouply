@@ -28,6 +28,8 @@ const supabaseKey =
   process.env.EXPO_PUBLIC_SUPABASE_KEY ||
   "";
 
+export { supabaseUrl };
+
 export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
     storage: AsyncStorage,

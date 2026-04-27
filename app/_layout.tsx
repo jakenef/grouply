@@ -15,6 +15,7 @@ import { useEffect, useState } from "react";
 import { Alert } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import { supabaseUrl } from "../lib/supabase";
 import { getBaseUrl, trpc, trpcClient } from "../lib/trpc";
 import "./globals.css";
 
@@ -94,7 +95,44 @@ export default function RootLayout() {
       }
     };
 
+    const checkSupabaseHealth = async () => {
+      if (!__DEV__ || !supabaseUrl) return;
+      console.log("🔍 Checking Supabase health at:", `${supabaseUrl}/auth/v1/health`);
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        const response = await fetch(`${supabaseUrl}/auth/v1/health`, {
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          console.log("✅ Supabase health check SUCCESS");
+        } else {
+          console.error("❌ Supabase health check FAILED - Status:", response.status);
+          Alert.alert(
+            "Supabase Not Running",
+            "Supabase returned an error. Make sure Docker is running and run `supabase start`.",
+            [{ text: "OK" }],
+          );
+        }
+      } catch (error: any) {
+        const isTimeout = error.name === "AbortError";
+        console.error(
+          "❌ Supabase health check ERROR:",
+          isTimeout ? "timed out" : error.message,
+        );
+        Alert.alert(
+          "Supabase Not Running",
+          `Cannot reach Supabase${isTimeout ? " (timed out)" : ""}.\n\nMake sure Docker is running, then:\n  supabase start`,
+          [{ text: "OK" }],
+        );
+      }
+    };
+
     checkBackendHealth();
+    checkSupabaseHealth();
   }, []);
 
   return (
