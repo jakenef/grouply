@@ -34,6 +34,18 @@ const Paywall = () => {
   const { isProcessing, subscribe, restore } = usePaywallPurchaseFlow();
   const deleteUserMutation = trpc.users.deleteMyUser.useMutation();
 
+  // Watch for subscription becoming active (e.g. renewal processed by RenewalListener
+  // while user was redirected here during the gap between expiry and event delivery).
+  const { data: subscriptionStatus } = trpc.subscriptions.getStatus.useQuery(
+    undefined,
+    { staleTime: 0 },
+  );
+  useEffect(() => {
+    if (subscriptionStatus?.isActive) {
+      router.replace("/(app)/Home");
+    }
+  }, [subscriptionStatus?.isActive, router]);
+
   // Use new hook for data
   const {
     plans,
