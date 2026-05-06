@@ -9,10 +9,12 @@ import {
   QueryClient,
   QueryClientProvider,
 } from "@tanstack/react-query";
-import { Stack, router } from "expo-router";
+import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import { requestTrackingPermissionsAsync } from "expo-tracking-transparency";
 import { useEffect, useState } from "react";
-import { Alert } from "react-native";
+import { Alert, Platform } from "react-native";
+import { Settings } from "react-native-fbsdk-next";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { supabaseUrl } from "../lib/supabase";
@@ -97,7 +99,10 @@ export default function RootLayout() {
 
     const checkSupabaseHealth = async () => {
       if (!__DEV__ || !supabaseUrl) return;
-      console.log("🔍 Checking Supabase health at:", `${supabaseUrl}/auth/v1/health`);
+      console.log(
+        "🔍 Checking Supabase health at:",
+        `${supabaseUrl}/auth/v1/health`,
+      );
 
       try {
         const controller = new AbortController();
@@ -110,7 +115,10 @@ export default function RootLayout() {
         if (response.ok) {
           console.log("✅ Supabase health check SUCCESS");
         } else {
-          console.error("❌ Supabase health check FAILED - Status:", response.status);
+          console.error(
+            "❌ Supabase health check FAILED - Status:",
+            response.status,
+          );
           Alert.alert(
             "Supabase Not Running",
             "Supabase returned an error. Make sure Docker is running and run `supabase start`.",
@@ -133,6 +141,19 @@ export default function RootLayout() {
 
     checkBackendHealth();
     checkSupabaseHealth();
+  }, []);
+
+  useEffect(() => {
+    const initMeta = async () => {
+      Settings.initializeSDK();
+      if (Platform.OS === "ios") {
+        const { status } = await requestTrackingPermissionsAsync();
+        if (status === "granted") {
+          await Settings.setAdvertiserTrackingEnabled(true);
+        }
+      }
+    };
+    initMeta();
   }, []);
 
   return (

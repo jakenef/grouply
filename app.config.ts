@@ -47,6 +47,20 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-router",
     "react-native-iap",
     [
+      "react-native-fbsdk-next",
+      {
+        appID: process.env.FACEBOOK_APP_ID || "",
+        clientToken: process.env.FACEBOOK_CLIENT_TOKEN || "",
+        displayName: "Grouply",
+        scheme: `fb${process.env.FACEBOOK_APP_ID || ""}`,
+        autoLogAppEventsEnabled: true,
+        advertiserIDCollectionEnabled: true,
+        isAutoInitEnabled: true,
+        iosUserTrackingPermission:
+          "This identifier will be used to deliver personalized ads to you.",
+      },
+    ],
+    [
       "expo-splash-screen",
       {
         image: "./assets/images/grouplyAppIcon.png",
