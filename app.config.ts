@@ -1,10 +1,13 @@
 import { ConfigContext, ExpoConfig } from "expo/config";
 
+const facebookAppId = process.env.FACEBOOK_APP_ID;
+const facebookClientToken = process.env.FACEBOOK_CLIENT_TOKEN;
+
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "Grouply",
   slug: "grouply",
-  version: "1.0.4",
+  version: "1.0.5",
   orientation: "portrait",
   icon: "./assets/images/grouplyAppIcon.png",
   scheme: "grouply",
@@ -46,6 +49,24 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   plugins: [
     "expo-router",
     "react-native-iap",
+    ...(facebookAppId && facebookClientToken
+      ? [
+          [
+            "react-native-fbsdk-next",
+            {
+              appID: facebookAppId,
+              clientToken: facebookClientToken,
+              displayName: "Grouply",
+              scheme: `fb${facebookAppId}`,
+              autoLogAppEventsEnabled: true,
+              advertiserIDCollectionEnabled: true,
+              isAutoInitEnabled: true,
+              iosUserTrackingPermission:
+                "This identifier will be used to deliver personalized ads to you.",
+            },
+          ] as [string, any],
+        ]
+      : []),
     [
       "expo-splash-screen",
       {
